@@ -21,6 +21,7 @@ package io.ecarf.core.cloud.impl.google;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import io.ecarf.core.utils.Callback;
+import io.ecarf.core.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,11 +78,10 @@ public class GoogleCloudServiceTest {
 
 	@Test
 	public void testDownloadFileFromCloudStorage() throws IOException {
-		this.service.setAccessToken("ya29.1.AADtN_V_me1uBqRc_mSp_XVYQB23DLg0Dv3mNo1htL5Wn9QukUD8OJBGVjsLbQLqkSouUfA");
-		this.service.setProjectId("315344313954");//"ecarf-1000");
+		this.service.inti();
 		
 		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
-				"/Users/omerio/Documents/phd/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+				  Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
 					@Override
 					public void execute() {
 						System.out.println("Download complete");
