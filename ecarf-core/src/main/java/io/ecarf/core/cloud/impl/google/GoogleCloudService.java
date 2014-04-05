@@ -261,7 +261,7 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public void createCloudStorageBucket(String bucket, String location) throws IOException {
 
-		Storage.Buckets.Insert insertBucket = storage.buckets()
+		Storage.Buckets.Insert insertBucket = this.getStorage().buckets()
 				.insert(this.projectId, new Bucket().setName(bucket).setLocation(location)
 				// .setDefaultObjectAcl(ImmutableList.of(
 				// new ObjectAccessControl().setEntity("allAuthenticatedUsers").setRole("READER")))
@@ -297,7 +297,7 @@ public class GoogleCloudService implements CloudService {
 		mediaContent.setLength(fileStream.available());
 
 		Storage.Objects.Insert insertObject =
-				getStorage().objects().insert(bucket, null, mediaContent);
+				getStorage().objects().insert(bucket, null, mediaContent).setOauthToken(this.getOAuthToken());
 
 		insertObject.getMediaHttpUploader().setProgressListener(
 				new UploadProgressListener(callback)).setDisableGZipContent(true);
@@ -325,7 +325,7 @@ public class GoogleCloudService implements CloudService {
 		FileOutputStream out = new FileOutputStream(outFile);
 	
 		Storage.Objects.Get getObject =
-				getStorage().objects().get(bucket, object);
+				getStorage().objects().get(bucket, object).setOauthToken(this.getOAuthToken());
 
 		
 		getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true)
