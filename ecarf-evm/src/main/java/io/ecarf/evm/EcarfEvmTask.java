@@ -20,6 +20,9 @@ package io.ecarf.evm;
 
 import static io.ecarf.core.utils.Constants.AMAZON;
 import static io.ecarf.core.utils.Constants.GOOGLE;
+
+import java.io.IOException;
+
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 
@@ -52,6 +55,7 @@ public class EcarfEvmTask {
 	 */
 	public void setService(CloudService service) {
 		this.service = service;
+		
 	}
 
 	/**
@@ -60,8 +64,9 @@ public class EcarfEvmTask {
 	 * 3- Update Status metadata
 	 * 
 	 * @param args
+	 * @throws IOException 
 	 */
-	public static void main(String [] args) {
+	public static void main(String [] args) throws IOException {
 		String platform = GOOGLE;
 		if(args.length > 0) {
 			platform = args[0];
@@ -71,17 +76,24 @@ public class EcarfEvmTask {
 		
 		switch(platform) {
 		case GOOGLE:
-			task.setService(new GoogleCloudService());
+			CloudService service = new GoogleCloudService();
+			try {
+				service.inti();
+				task.setService(service);
+			} catch(IOException e) {
+				e.printStackTrace();
+				throw e;
+			}
 			break;
-			
+
 		case AMAZON:
 			break; 
-			
+
 		default:
 			System.out.println("usage EcarfEvmTask <platform>");
 			System.exit(1);
 		}
-		
+
 		task.run();
 	}
 

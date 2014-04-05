@@ -33,4 +33,6 @@ public class Constants {
 	public static final String GZIP_EXT = ".gz";
 	
 	public static final String APP_NAME = "ecarf";
+	
+	public static final String BINARY_CONTENT_TYPE = "application/octet-stream";
 }

@@ -18,41 +18,51 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
-import io.ecarf.core.gzip.Callback;
+import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
+import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
 import io.ecarf.core.gzip.GzipProcessor;
+import io.ecarf.core.gzip.GzipProcessorCallback;
 import io.ecarf.core.triple.TripleUtils;
+import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.compute.Compute;
+import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
-import com.google.gson.Gson;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -70,7 +80,7 @@ public class GoogleCloudService implements CloudService {
 	
 	private static final String PROJECT_ALL_PATH = "project/?recursive=true";
 	
-	private static final String PROJECT_ID_PATH = "project/projectId";
+	private static final String PROJECT_ID_PATH = "project/project-id";
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -92,24 +102,36 @@ public class GoogleCloudService implements CloudService {
 	
 	private String zone;
 	
-	private Long instanceId;
+	private String instanceId;
 	
 	/**
 	 * Perform initialization before
 	 * this cloud service is used
 	 * @throws IOException 
 	 */
-	public void inti() throws IOException {
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String, String> inti() throws IOException {
 		Map<String, String> attributes;
 		this.projectId = getMetaData(PROJECT_ID_PATH);
 		Map<String, Object> metaData = Utils.jsonToMap(getMetaData(INSTANCE_ALL_PATH));
 		attributes = (Map<String, String>) metaData.get(ATTRIBUTES);
+		
+		// strangely zone looks like this: "projects/315344313954/zones/us-central1-a"
 		this.zone = (String) metaData.get(ZONE);
-		this.instanceId = (Long) metaData.get(ID);
+		this.zone = StringUtils.substringAfterLast(this.zone, "/");
+		
+		// the name isn't returned!, but the hostname looks like this:
+		// "ecarf-evm-1.c.ecarf-1000.internal"
+		this.instanceId = (String) metaData.get(HOSTNAME);
+		this.instanceId = StringUtils.substringBefore(this.instanceId, ".");
+		
 		this.authorise();
 		this.getHttpTransport();
 		this.getCompute();
 		this.getStorage();
+		log.info("Successfully initialized Google Cloud Service: " + this);
+		return attributes;
 		
 	}
 	
@@ -162,7 +184,6 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException 
 	 * @see https://developers.google.com/compute/docs/authentication
 	 */
-	@SuppressWarnings({ "unused", "unchecked" })
 	private void authorise() throws IOException {
 		
 		log.fine("Refreshing OAuth token from metadata server");
@@ -237,6 +258,7 @@ public class GoogleCloudService implements CloudService {
 	 * @param bucket
 	 * @throws IOException 
 	 */
+	@Override
 	public void createCloudStorageBucket(String bucket, String location) throws IOException {
 
 		Storage.Buckets.Insert insertBucket = storage.buckets()
@@ -259,18 +281,74 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
+	 * Upload the provided file into cloud storage
+	 * @param filename
+	 * @param bucket
+	 * @throws IOException 
+	 */
+	@Override
+	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
+		
+		FileInputStream fileStream = new FileInputStream(filename);
+		
+		InputStreamContent mediaContent = new InputStreamContent(Constants.BINARY_CONTENT_TYPE, fileStream);
+		
+		// Not strictly necessary, but allows optimization in the cloud.
+		mediaContent.setLength(fileStream.available());
+
+		Storage.Objects.Insert insertObject =
+				getStorage().objects().insert(bucket, null, mediaContent);
+
+		insertObject.getMediaHttpUploader().setProgressListener(
+				new UploadProgressListener(callback)).setDisableGZipContent(true);
+		// For small files, you may wish to call setDirectUploadEnabled(true), to
+		// reduce the number of HTTP requests made to the server.
+		if (mediaContent.getLength() > 0 && mediaContent.getLength() <=  2 * FileUtils.ONE_MB /* 2MB */) {
+			insertObject.getMediaHttpUploader().setDirectUploadEnabled(true);
+		}
+		
+		insertObject.execute();
+	}
+	
+	/**
+	 * Download an object from cloud storage to a file
+	 * @param object
+	 * @param outFile
+	 * @param bucket
+	 * @param callback
+	 * @throws IOException
+	 */
+	@Override
+	public void downloadObjectFromCloudStorage(String object, String outFile, 
+			String bucket, Callback callback) throws IOException {
+		
+		FileOutputStream out = new FileOutputStream(outFile);
+	
+		Storage.Objects.Get getObject =
+				getStorage().objects().get(bucket, object);
+
+		
+		getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true)
+			.setProgressListener(new DownloadProgressListener(callback));
+		
+		getObject.executeMediaAndDownloadTo(out);
+		
+	}
+	
+	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
 	 * 
 	 * @param filename
 	 * @return
 	 * @throws IOException 
 	 */
+	@Override
 	public String prepareForCloudDatabaseImport(String filename) throws IOException {
 		/*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
 			.append(File.separator).append("out_").append(filename).toString();*/
 		GzipProcessor processor = new GzipProcessor(filename);
 		
-		String outFilename = processor.process(new Callback() {
+		String outFilename = processor.process(new GzipProcessorCallback() {
 
 			@Override
 			public String process(String line) {
@@ -291,5 +369,59 @@ public class GoogleCloudService implements CloudService {
 		return outFilename;
 	}
 	
+	/**
+	 * Update the meta data of the current instance
+	 * @param key
+	 * @param value
+	 * @throws IOException
+	 */
+	@Override
+	public void updateInstanceMetadata(String key, String value) throws IOException {
+		this.updateInstanceMetadata(key, value, this.zone, this.instanceId);
+	}
+	
+	/**
+	 * Update the meta data of the current instance
+	 * @param key
+	 * @param value
+	 * @throws IOException
+	 */
+	@Override
+	public void updateInstanceMetadata(String key, String value, String zone, String instanceId) throws IOException {
+		Metadata metadata = new Metadata();
+		metadata.set(key, value);
+		this.getCompute().instances().setMetadata(projectId, zone, instanceId, metadata).execute();
+	}
+
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).
+				append("projectId", this.projectId).
+				append("instanceId", this.instanceId).
+				append("zone", this.zone).
+				append("token", this.accessToken).
+				append("tokenStart", this.tokenStart).
+				toString();
+	}
+
+
+	/**
+	 * @param accessToken the accessToken to set
+	 */
+	protected void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+
+	/**
+	 * @param projectId the projectId to set
+	 */
+	protected void setProjectId(String projectId) {
+		this.projectId = projectId;
+	}
 
 }

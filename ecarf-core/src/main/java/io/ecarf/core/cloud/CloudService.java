@@ -18,10 +18,79 @@
  */
 package io.ecarf.core.cloud;
 
+import io.ecarf.core.utils.Callback;
+
+import java.io.IOException;
+import java.util.Map;
+
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
 public interface CloudService {
+
+	/**
+	 * Perform initialization before
+	 * this cloud service is used
+	 * @return
+	 * @throws IOException
+	 */
+	public Map<String, String> inti() throws IOException;
+
+	/**
+	 * Create a bucket on the mass cloud storage
+	 * @param bucket
+	 * @param location
+	 * @throws IOException
+	 */
+	public void createCloudStorageBucket(String bucket, String location) throws IOException;
+
+	/**
+	 * Upload the provided file into cloud storage
+	 * @param filename
+	 * @param bucket
+	 * @param callback
+	 * @throws IOException
+	 */
+	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException;
+
+	/**
+	 * Download an object from cloud storage to a file
+	 * @param object
+	 * @param outFile
+	 * @param bucket
+	 * @param callback
+	 * @throws IOException
+	 */
+	public void downloadObjectFromCloudStorage(String object, String outFile,
+			String bucket, Callback callback) throws IOException;
+
+	/**
+	 * Convert the provided file to a format that can be imported to the Cloud Database
+	 * @param filename
+	 * @return
+	 * @throws IOException
+	 */
+	public String prepareForCloudDatabaseImport(String filename) throws IOException;
+
+	/**
+	 * Update the meta data of the current instance
+	 * @param key
+	 * @param value
+	 * @throws IOException
+	 */
+	public void updateInstanceMetadata(String key, String value) throws IOException;
+
+	/**
+	 * Update the meta data of the current instance
+	 * @param key
+	 * @param value
+	 * @param zone
+	 * @param instanceId
+	 * @throws IOException
+	 */
+	public void updateInstanceMetadata(String key, String value, String zone, String instanceId) throws IOException;
+	
+	
 
 }

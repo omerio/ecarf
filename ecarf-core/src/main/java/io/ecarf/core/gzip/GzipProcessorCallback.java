@@ -22,7 +22,7 @@ package io.ecarf.core.gzip;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public interface Callback {
+public interface GzipProcessorCallback {
 	
 	public String process(String line);
 

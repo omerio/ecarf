@@ -16,21 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.impl.google;
+package io.ecarf.core.utils;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class GoogleMetaData {
+public interface Callback {
 	
-	public static final String ACCESS_TOKEN = "access_token";
-	public static final String PROJECT_ID = "projectId";
-	public static final String ID = "id";
-	public static final String HOSTNAME = "hostname";
-	public static final String ZONE = "zone";
-	public static final String ATTRIBUTES = "attributes";
-	
-	
+	public void execute();
 
 }

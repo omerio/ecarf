@@ -25,6 +25,6 @@ package io.ecarf.core.cloud.types;
  */
 public enum VMStatus {
 	
-	IDLE, BUSY, ERROR;
+	READY, BUSY, ERROR;
 
 }

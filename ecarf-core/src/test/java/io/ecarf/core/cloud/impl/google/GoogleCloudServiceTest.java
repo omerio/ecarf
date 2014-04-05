@@ -16,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core;
+package io.ecarf.core.cloud.impl.google;
 
-import static org.junit.Assert.*;
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import io.ecarf.core.utils.Callback;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.net.URL;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -63,6 +65,7 @@ public class GoogleCloudServiceTest {
 	 * @throws URISyntaxException 
 	 */
 	@Test
+	@Ignore
 	public void testPrepareForCloudDatabaseImport() throws IOException, URISyntaxException {
 		URL url = this.getClass().getResource("/linkedgeodata_links.nt.gz");
 		File inputFile = new File(url.toURI());
@@ -72,4 +75,18 @@ public class GoogleCloudServiceTest {
 		assertTrue(outFile.endsWith("_out.gz"));
 	}
 
+	@Test
+	public void testDownloadFileFromCloudStorage() throws IOException {
+		this.service.setAccessToken("ya29.1.AADtN_V_me1uBqRc_mSp_XVYQB23DLg0Dv3mNo1htL5Wn9QukUD8OJBGVjsLbQLqkSouUfA");
+		this.service.setProjectId("315344313954");//"ecarf-1000");
+		
+		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
+				"/Users/omerio/Documents/phd/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+					@Override
+					public void execute() {
+						System.out.println("Download complete");
+						
+					}
+		});
+	}
 }

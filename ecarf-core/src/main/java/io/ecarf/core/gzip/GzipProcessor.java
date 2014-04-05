@@ -69,7 +69,7 @@ public class GzipProcessor {
 	 * @param callback
 	 * @throws IOException 
 	 */
-	public String process(Callback callback) throws IOException {
+	public String process(GzipProcessorCallback callback) throws IOException {
 
 		try(InputStream fileIn = new FileInputStream(this.inputFile);) {
 
