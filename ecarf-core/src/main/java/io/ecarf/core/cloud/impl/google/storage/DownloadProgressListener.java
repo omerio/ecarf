@@ -41,6 +41,7 @@ public  class DownloadProgressListener implements MediaHttpDownloaderProgressLis
 
 	public DownloadProgressListener(Callback callback) {
 		this.stopwatch = new Stopwatch();
+		this.stopwatch.start();
 		this.callback = callback;
 	}
 

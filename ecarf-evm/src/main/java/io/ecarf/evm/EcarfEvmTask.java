@@ -25,6 +25,8 @@ import java.io.IOException;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.utils.Callback;
+import io.ecarf.core.utils.Utils;
 
 /**
  * The program p of the Ecarf framework
@@ -37,17 +39,26 @@ public class EcarfEvmTask {
 	private CloudService service;
 	
 	/**
+	 * @throws IOException 
 	 * 
 	 */
-	public void run() {
-		while(true) {
+	public void run() throws IOException {
+		//while(true) {
 			
 			// Load task
 			// read the files from http:// or from gs://
 			// download files locally (gziped)
 			// read through the files counting the relevant terms and rewriting into bigquery format (comma separated)
 			
-		}
+		//}
+		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
+				  Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+					@Override
+					public void execute() {
+						System.out.println("Download complete");
+						
+					}
+		});
 	}
 	
 	/**
