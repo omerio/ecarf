@@ -1,0 +1,46 @@
+package io.ecarf.core.cloud.impl.google;
+
+import java.io.IOException;
+import java.util.logging.Logger;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
+
+/**
+ * 
+ * @author Omer Dawelbeit (omerio)
+ *
+ */
+public class RedirectHandler implements HttpUnsuccessfulResponseHandler {
+
+	private final static Logger log = Logger.getLogger(RedirectHandler.class.getName()); 
+
+	private static final String OAUTH_TOKEN_PARAM = "?oauth_token=";
+	/*
+	 * (non-Javadoc)
+	 * @see com.google.api.client.http.HttpUnsuccessfulResponseHandler#handleResponse(
+	 * com.google.api.client.http.HttpRequest, com.google.api.client.http.HttpResponse, boolean)
+	 */
+	public boolean handleResponse(
+			HttpRequest request, HttpResponse response, boolean retrySupported) throws IOException {
+		if (response.getStatusCode() == HttpStatusCodes.STATUS_CODE_TEMPORARY_REDIRECT) {
+
+			String redirectLocation = response.getHeaders().getLocation();
+			if (request.getFollowRedirects() && redirectLocation != null) {
+				
+				String url = request.getUrl().toString();
+				String oauthToken = StringUtils.substringAfterLast(url, OAUTH_TOKEN_PARAM);
+				// resolve the redirect location relative to the current location
+				// re-append the oauth token request parameter
+				request.setUrl(new GenericUrl(request.getUrl().toURL(redirectLocation + OAUTH_TOKEN_PARAM + oauthToken)));
+				return true;
+			}
+		}
+		return false;
+	}
+}

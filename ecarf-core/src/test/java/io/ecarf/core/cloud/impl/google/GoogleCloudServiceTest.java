@@ -27,7 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -73,20 +75,36 @@ public class GoogleCloudServiceTest {
 		System.out.println(inputFile.getAbsolutePath());
 		String outFile = this.service.prepareForCloudDatabaseImport(inputFile.getAbsolutePath());
 		assertNotNull(outFile);
-		assertTrue(outFile.endsWith("_out.gz"));
+		assertTrue(outFile.endsWith("_out.gz")); //
 	}
 
 	@Test
+	@Ignore
 	public void testDownloadFileFromCloudStorage() throws IOException {
 		this.service.inti();
 		
 		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
-				  Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
-					@Override
-					public void execute() {
-						System.out.println("Download complete");
-						
-					}
+				Utils.TEMP_FOLDER + "linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+			@Override
+			public void execute() {
+				System.out.println("Download complete");
+
+			}
+		});
+	}
+	
+	@Test
+	public void testDownloadFileFromCloudStorage1() throws IOException {
+		this.service.setAccessToken("ya29.1.AADtN_XP6QG8iTv295o11ozn0sAJAmvS2TWsj5fiUIRafCcULqQLd7-jn_KERBoLGtQdM9g");
+		this.service.setTokenExpire(DateUtils.addHours(new Date(), 1));
+		
+		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
+				Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+			@Override
+			public void execute() {
+				System.out.println("Download complete");
+
+			}
 		});
 	}
 }

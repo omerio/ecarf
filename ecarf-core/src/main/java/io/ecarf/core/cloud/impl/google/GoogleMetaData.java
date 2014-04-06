@@ -25,6 +25,7 @@ package io.ecarf.core.cloud.impl.google;
 public class GoogleMetaData {
 	
 	public static final String ACCESS_TOKEN = "access_token";
+	public static final String EXPIRES_IN = "expires_in";
 	public static final String PROJECT_ID = "projectId";
 	public static final String ID = "id";
 	public static final String HOSTNAME = "hostname";

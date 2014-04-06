@@ -20,6 +20,7 @@ package io.ecarf.core.cloud.impl.google;
 
 import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
 import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
 import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
 import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
@@ -55,6 +56,9 @@ import org.apache.commons.lang3.time.DateUtils;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
@@ -94,9 +98,11 @@ public class GoogleCloudService implements CloudService {
 	
 	private Compute compute;
 	
+	// service account access token retrieved from the metadata server
 	private String accessToken;
 	
-	private Date tokenStart;
+	// the expiry time of the token
+	private Date tokenExpire;
 	
 	private String projectId;
 	
@@ -187,8 +193,12 @@ public class GoogleCloudService implements CloudService {
 	private void authorise() throws IOException {
 		
 		log.fine("Refreshing OAuth token from metadata server");
-		this.accessToken = Utils.getStringPropertyFromJson(getMetaData(TOKEN_PATH), ACCESS_TOKEN);
-		this.tokenStart = new Date();
+		Map<String, Object> token = Utils.jsonToMap(getMetaData(TOKEN_PATH));
+		this.accessToken = (String) token.get(ACCESS_TOKEN);
+		
+		Integer expiresIn = (Integer) token.get(EXPIRES_IN);
+		this.tokenExpire = DateUtils.addSeconds(new Date(), expiresIn);
+		
 		log.fine("Successfully refreshed OAuth token from metadata server");
 	
 	}
@@ -218,8 +228,8 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	private String getOAuthToken() throws IOException {
-		Date now = new Date();
-		if(now.after(DateUtils.addHours(tokenStart, TOKEN_EXPIRE))) {
+	
+		if((this.tokenExpire == null) || (new Date()).after(this.tokenExpire)) {
 			this.authorise();
 		}
 		return this.accessToken;
@@ -247,8 +257,12 @@ public class GoogleCloudService implements CloudService {
 	 */
 	private Storage getStorage() throws IOException {
 		if(this.storage == null) {
-			this.storage = new  Storage.Builder(getHttpTransport(), JSON_FACTORY, null)
-				.setApplicationName(Constants.APP_NAME).build();
+			this.storage = new  Storage.Builder(getHttpTransport(), JSON_FACTORY, new HttpRequestInitializer() {
+				public void initialize(HttpRequest request) {
+					request.setUnsuccessfulResponseHandler(new RedirectHandler());
+				}
+			})
+			.setApplicationName(Constants.APP_NAME).build();
 		}
 		return this.storage;
 	}
@@ -322,11 +336,12 @@ public class GoogleCloudService implements CloudService {
 	public void downloadObjectFromCloudStorage(String object, String outFile, 
 			String bucket, Callback callback) throws IOException {
 		
+		log.info("Downloading cloud storage file " + object + ", to: " + outFile);
+		
 		FileOutputStream out = new FileOutputStream(outFile);
 	
 		Storage.Objects.Get getObject =
 				getStorage().objects().get(bucket, object).setOauthToken(this.getOAuthToken());
-
 		
 		getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true)
 			.setProgressListener(new DownloadProgressListener(callback));
@@ -392,6 +407,21 @@ public class GoogleCloudService implements CloudService {
 		metadata.set(key, value);
 		this.getCompute().instances().setMetadata(projectId, zone, instanceId, metadata).execute();
 	}
+	
+	
+	/**
+	 * 
+	 * @param transport
+	 * @return
+	 */
+	private static HttpRequestFactory createRequestFactory(HttpTransport transport) {
+		final RedirectHandler handler = new RedirectHandler();
+		return transport.createRequestFactory(new HttpRequestInitializer() {
+			public void initialize(HttpRequest request) {
+				request.setUnsuccessfulResponseHandler(handler);
+			}
+		});
+	}
 
 
 	/* (non-Javadoc)
@@ -404,7 +434,7 @@ public class GoogleCloudService implements CloudService {
 				append("instanceId", this.instanceId).
 				append("zone", this.zone).
 				append("token", this.accessToken).
-				append("tokenStart", this.tokenStart).
+				append("tokenExpire", this.tokenExpire).
 				toString();
 	}
 
@@ -424,4 +454,13 @@ public class GoogleCloudService implements CloudService {
 		this.projectId = projectId;
 	}
 
+
+	/**
+	 * @param tokenExpire the tokenExpire to set
+	 */
+	protected void setTokenExpire(Date tokenExpire) {
+		this.tokenExpire = tokenExpire;
+	}
+
+	
 }
