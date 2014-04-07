@@ -35,7 +35,7 @@ public interface CloudService {
 	 * @return
 	 * @throws IOException
 	 */
-	public Map<String, String> inti() throws IOException;
+	public VMMetaData inti() throws IOException;
 
 	/**
 	 * Create a bucket on the mass cloud storage
@@ -89,8 +89,31 @@ public interface CloudService {
 	 * @param instanceId
 	 * @throws IOException
 	 */
-	public void updateInstanceMetadata(String key, String value, String zone, String instanceId) throws IOException;
-	
-	
+	public void updateInstanceMetadata(Map<String, String> items, String zone, String instanceId) throws IOException;
+
+	/**
+	 * Update the meta data of the current instance
+	 * @param items
+	 * @throws IOException
+	 */
+	public void updateInstanceMetadata(Map<String, String> items) throws IOException;
+
+	/**
+	 * Get the meta data of the current instance, this will simply call the metadata server
+	 * @return
+	 * @throws IOException
+	 */
+	public VMMetaData getEcarfMetaData() throws IOException;
+
+	/**
+	 * Get the meta data for the provided instance id
+	 * @param instanceId
+	 * @param zoneId
+	 * @return
+	 * @throws IOException
+	 */
+	public VMMetaData getEcarfMetaData(String instanceId, String zoneId) throws IOException;
+
+
 
 }

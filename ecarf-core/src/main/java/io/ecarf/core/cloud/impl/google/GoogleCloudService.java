@@ -18,13 +18,11 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.VMConfig;
+import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
 import io.ecarf.core.gzip.GzipProcessor;
@@ -43,7 +41,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,16 +58,21 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.compute.Compute;
+import com.google.api.services.compute.Compute.Instances.Insert;
+import com.google.api.services.compute.model.AttachedDisk;
+import com.google.api.services.compute.model.Instance;
 import com.google.api.services.compute.model.Metadata;
+import com.google.api.services.compute.model.Operation;
+import com.google.api.services.compute.model.ServiceAccount;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
+import com.google.common.collect.Lists;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -80,16 +86,18 @@ public class GoogleCloudService implements CloudService {
 	
 	private static final String TOKEN_PATH = "instance/service-accounts/default/token";
 	
+	//private static final String SERVICE_ACCOUNT_PATH = "service-accounts/default/?recursive=true";
+	
 	private static final String INSTANCE_ALL_PATH = "instance/?recursive=true";
 	
 	private static final String PROJECT_ALL_PATH = "project/?recursive=true";
 	
 	private static final String PROJECT_ID_PATH = "project/project-id";
+	
+	private static final String ATTRIBUTES_PATH = "instance/attributes/?recursive=true";
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-	
-	private static final int TOKEN_EXPIRE = 1;
 	
 	/** Global instance of the HTTP transport. */
 	private HttpTransport httpTransport;
@@ -110,18 +118,22 @@ public class GoogleCloudService implements CloudService {
 	
 	private String instanceId;
 	
+	private String serviceAccount;
+	
+	private List<String> scopes;
+	
 	/**
 	 * Perform initialization before
 	 * this cloud service is used
 	 * @throws IOException 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Map<String, String> inti() throws IOException {
-		Map<String, String> attributes;
+	public VMMetaData inti() throws IOException {
+		Map<String, Object> attributes;
 		this.projectId = getMetaData(PROJECT_ID_PATH);
 		Map<String, Object> metaData = Utils.jsonToMap(getMetaData(INSTANCE_ALL_PATH));
-		attributes = (Map<String, String>) metaData.get(ATTRIBUTES);
+		attributes = (Map<String, Object>) metaData.get(ATTRIBUTES);
 		
 		// strangely zone looks like this: "projects/315344313954/zones/us-central1-a"
 		this.zone = (String) metaData.get(ZONE);
@@ -132,18 +144,25 @@ public class GoogleCloudService implements CloudService {
 		this.instanceId = (String) metaData.get(HOSTNAME);
 		this.instanceId = StringUtils.substringBefore(this.instanceId, ".");
 		
+		// get the default service account
+		Map<String, Object> serviceAccountConfig = ((Map) ((Map) metaData.get(SERVICE_ACCOUNTS)).get(DEFAULT));
+		this.serviceAccount = (String) serviceAccountConfig.get(EMAIL);
+		this.scopes = (List) serviceAccountConfig.get(SCOPES);
+		
 		this.authorise();
 		this.getHttpTransport();
 		this.getCompute();
 		this.getStorage();
 		log.info("Successfully initialized Google Cloud Service: " + this);
-		return attributes;
+		return new VMMetaData(attributes);
 		
 	}
 	
 	
 	/**
-	 * Call the metadata server 
+	 * Call the metadata server, this returns details for the current instance not for
+	 * different instances. In order to retrieve the meta data of different instances
+	 * we just use the compute api, see getInstance
 	 * @param path
 	 * @return
 	 * @throws IOException
@@ -267,6 +286,7 @@ public class GoogleCloudService implements CloudService {
 		return this.storage;
 	}
 	
+	//------------------------------------------------- Storage -------------------------------
 	/**
 	 * Create a bucket on the mass cloud storage
 	 * @param bucket
@@ -350,6 +370,7 @@ public class GoogleCloudService implements CloudService {
 		
 	}
 	
+	
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
 	 * 
@@ -384,6 +405,54 @@ public class GoogleCloudService implements CloudService {
 		return outFilename;
 	}
 	
+	//------------------------------------------------- Compute -------------------------------
+	
+	/**
+	 * 
+	 * @param instanceId
+	 * @param zoneId
+	 * @return
+	 * @throws IOException
+	 */
+	private Instance getInstance(String instanceId, String zoneId) throws IOException {
+		return this.getCompute().instances().get(this.projectId, 
+				zoneId != null ? zoneId : this.zone, instanceId)
+				.setOauthToken(this.getOAuthToken())
+				.execute();
+	}
+	
+	
+	/**
+	 * Get the meta data of the current instance, this will simply call the metadata server
+	 * @return
+	 * @throws IOException 
+	 */
+	@Override
+	public VMMetaData getEcarfMetaData() throws IOException {
+		String metaData = this.getMetaData(ATTRIBUTES_PATH);
+		
+		Map<String, Object> attributes = Utils.jsonToMap(metaData);
+		
+		return new VMMetaData(attributes);
+		
+	}
+	
+	/**
+	 * Get the meta data for the provided instance id
+	 * @param instanceId
+	 * @param zoneId
+	 * @return
+	 * @throws IOException 
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public VMMetaData getEcarfMetaData(String instanceId, String zoneId) throws IOException {
+		Instance instance = this.getInstance(instanceId, zoneId);
+		Map<String, Object> attributes = (Map<String, Object>) instance.getMetadata().get(ATTRIBUTES);
+		
+		return new VMMetaData(attributes);
+	}
+	
 	/**
 	 * Update the meta data of the current instance
 	 * @param key
@@ -392,35 +461,118 @@ public class GoogleCloudService implements CloudService {
 	 */
 	@Override
 	public void updateInstanceMetadata(String key, String value) throws IOException {
-		this.updateInstanceMetadata(key, value, this.zone, this.instanceId);
+		Map<String, String> items = new HashMap<>();
+		items.put(key, value);
+		this.updateInstanceMetadata(items, this.zone, this.instanceId);
 	}
 	
 	/**
+	 *TODO change to VMMetaData
 	 * Update the meta data of the current instance
 	 * @param key
 	 * @param value
 	 * @throws IOException
 	 */
 	@Override
-	public void updateInstanceMetadata(String key, String value, String zone, String instanceId) throws IOException {
-		Metadata metadata = new Metadata();
-		metadata.set(key, value);
-		this.getCompute().instances().setMetadata(projectId, zone, instanceId, metadata).execute();
+	public void updateInstanceMetadata(Map<String, String> items) throws IOException {
+		this.updateInstanceMetadata(items, this.zone, this.instanceId);
 	}
 	
+	/**
+	 * TODO change to VMMetaData
+	 * Update the meta data of the the provided instance
+	 * @param key
+	 * @param value
+	 * @throws IOException
+	 */
+	@Override
+	public void updateInstanceMetadata(Map<String, String> items, 
+			String zone, String instanceId) throws IOException {
+		Metadata metadata = new Metadata();
+		
+		for(Entry<String, String> entry: items.entrySet()) {
+			metadata.set(entry.getKey(), entry.getValue());
+		}
+		
+		this.getCompute().instances().setMetadata(projectId, zone, instanceId, metadata)
+			.setOauthToken(this.getOAuthToken()).execute();
+	}
 	
 	/**
-	 * 
-	 * @param transport
+	 *  body = {
+    'name': NEW_INSTANCE_NAME,
+    'machineType': <fully-qualified-machine-type-url>,
+    'networkInterfaces': [{
+      'accessConfigs': [{
+        'type': 'ONE_TO_ONE_NAT',
+        'name': 'External NAT'
+       }],
+      'network': <fully-qualified-network-url>
+    }],
+    'disk': [{
+       'autoDelete': 'true',
+       'boot': 'true',
+       'type': 'PERSISTENT',
+       'initializeParams': {
+          'diskName': 'my-root-disk',
+          'sourceImage': '<fully-qualified-image-url>',
+       }
+     }]
+  }
+	 * @param config
+	 * @param block
+	 * @throws IOException
+	 */
+	public void startInstance(VMConfig config, boolean block) throws IOException {
+		String zoneId = config.getZoneId();
+		zoneId = zoneId != null ? zoneId : this.zone;
+		Instance content = new Instance();
+		
+		content.setMachineType(config.getVmType());
+		content.setName(config.getInstanceId());
+		content.setZone(zoneId);
+		content.setMetadata(this.getMetaData(config.getMetaData()));
+		ServiceAccount sa = new ServiceAccount();
+		sa.setEmail(this.serviceAccount).setScopes(this.scopes);
+		content.setServiceAccounts(Lists.newArrayList(sa));
+		content.set(IMAGE, config.getImageId());
+		content.set(DELETE_DISK, true);
+		
+		/*AttachedDisk disk = new AttachedDisk();
+		disk.setAutoDelete(true).setBoot(true)
+			.setDeviceName(config.getInstanceId())
+			.setType(PERSISTENT);
+		
+		content.setDisks(Lists.newArrayList(disk));*/
+		
+		Insert insert = this.getCompute().instances()
+				.insert(this.projectId, zoneId, content)
+				.setOauthToken(this.getOAuthToken());
+		
+		Operation op = insert.execute();
+		
+		if(block) {
+			
+		}
+	}
+	
+	public void shutdownInstance(VMConfig config) {
+		
+	}
+	
+	/**
+	 * Create an API Metadata
+	 * @param vmMetaData
 	 * @return
 	 */
-	private static HttpRequestFactory createRequestFactory(HttpTransport transport) {
-		final RedirectHandler handler = new RedirectHandler();
-		return transport.createRequestFactory(new HttpRequestInitializer() {
-			public void initialize(HttpRequest request) {
-				request.setUnsuccessfulResponseHandler(handler);
-			}
-		});
+	private Metadata getMetaData(VMMetaData vmMetaData) {
+		Metadata metadata = new Metadata();
+		
+		for(Entry<String, Object> entry: vmMetaData.getAttributes().entrySet()) {
+			metadata.set(entry.getKey(), entry.getValue());
+		}
+		
+		return metadata;
 	}
 
 

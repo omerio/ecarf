@@ -31,6 +31,13 @@ public class GoogleMetaData {
 	public static final String HOSTNAME = "hostname";
 	public static final String ZONE = "zone";
 	public static final String ATTRIBUTES = "attributes";
+	public static final String EMAIL = "email";
+	public static final String SCOPES = "scopes";
+	public static final String SERVICE_ACCOUNTS = "serviceAccounts";
+	public static final String DEFAULT = "default";
+	public static final String IMAGE = "image";
+	public static final String PERSISTENT = "PERSISTENT";
+	public static final String DELETE_DISK = "auto_delete_boot_disk";
 	
 	
 
