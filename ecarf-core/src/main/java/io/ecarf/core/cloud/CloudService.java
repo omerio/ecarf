@@ -21,6 +21,7 @@ package io.ecarf.core.cloud;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -113,6 +114,22 @@ public interface CloudService {
 	 * @throws IOException
 	 */
 	public VMMetaData getEcarfMetaData(String instanceId, String zoneId) throws IOException;
+
+	/**
+	 * Create VM instances, optionally block until all are created. If any fails then the returned flag is false
+	 * @param configs
+	 * @param block
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean startInstance(List<VMConfig> configs, boolean block) throws IOException;
+
+	/**
+	 * Delete the VMs provided in this config
+	 * @param configs
+	 * @throws IOException
+	 */
+	public void shutdownInstance(List<VMConfig> configs) throws IOException;
 
 
 

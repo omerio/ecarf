@@ -40,11 +40,13 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,10 +67,15 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.Compute.Instances.Insert;
+import com.google.api.services.compute.model.AccessConfig;
 import com.google.api.services.compute.model.AttachedDisk;
+import com.google.api.services.compute.model.AttachedDiskInitializeParams;
 import com.google.api.services.compute.model.Instance;
 import com.google.api.services.compute.model.Metadata;
+import com.google.api.services.compute.model.Metadata.Items;
+import com.google.api.services.compute.model.NetworkInterface;
 import com.google.api.services.compute.model.Operation;
+import com.google.api.services.compute.model.Scheduling;
 import com.google.api.services.compute.model.ServiceAccount;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
@@ -81,20 +88,6 @@ import com.google.common.collect.Lists;
 public class GoogleCloudService implements CloudService {
 	
 	private final static Logger log = Logger.getLogger(GoogleCloudService.class.getName()); 
-	
-	private static final String METADATA_SERVER_URL = "http://metadata/computeMetadata/v1/";
-	
-	private static final String TOKEN_PATH = "instance/service-accounts/default/token";
-	
-	//private static final String SERVICE_ACCOUNT_PATH = "service-accounts/default/?recursive=true";
-	
-	private static final String INSTANCE_ALL_PATH = "instance/?recursive=true";
-	
-	private static final String PROJECT_ALL_PATH = "project/?recursive=true";
-	
-	private static final String PROJECT_ID_PATH = "project/project-id";
-	
-	private static final String ATTRIBUTES_PATH = "instance/attributes/?recursive=true";
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -499,6 +492,8 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
+	 * Create VM instances, optionally block until all are created. If any fails then the returned flag is false
+	 * 
 	 *  body = {
     'name': NEW_INSTANCE_NAME,
     'machineType': <fully-qualified-machine-type-url>,
@@ -523,41 +518,109 @@ public class GoogleCloudService implements CloudService {
 	 * @param block
 	 * @throws IOException
 	 */
-	public void startInstance(VMConfig config, boolean block) throws IOException {
-		String zoneId = config.getZoneId();
-		zoneId = zoneId != null ? zoneId : this.zone;
-		Instance content = new Instance();
-		
-		content.setMachineType(config.getVmType());
-		content.setName(config.getInstanceId());
-		content.setZone(zoneId);
-		content.setMetadata(this.getMetaData(config.getMetaData()));
-		ServiceAccount sa = new ServiceAccount();
-		sa.setEmail(this.serviceAccount).setScopes(this.scopes);
-		content.setServiceAccounts(Lists.newArrayList(sa));
-		content.set(IMAGE, config.getImageId());
-		content.set(DELETE_DISK, true);
-		
-		/*AttachedDisk disk = new AttachedDisk();
-		disk.setAutoDelete(true).setBoot(true)
+	@Override
+	public boolean startInstance(List<VMConfig> configs, boolean block) throws IOException {
+
+		for(VMConfig config: configs) {
+			log.info("Creating VM for config: " + config);
+			String zoneId = config.getZoneId();
+			zoneId = zoneId != null ? zoneId : this.zone;
+			Instance content = new Instance();
+
+			// Instance config
+			content.setMachineType(RESOURCE_BASE_URL + 
+					this.projectId + ZONES + zoneId + MACHINE_TYPES+ config.getVmType());
+			content.setName(config.getInstanceId());
+			//content.setZone(zoneId);
+			content.setMetadata(this.getMetaData(config.getMetaData()));
+
+			// service account
+			ServiceAccount sa = new ServiceAccount();
+			sa.setEmail(this.serviceAccount).setScopes(this.scopes);
+			content.setServiceAccounts(Lists.newArrayList(sa));
+
+			// network
+			NetworkInterface inf = new NetworkInterface(); 
+			inf.setNetwork(RESOURCE_BASE_URL + 
+					this.projectId + NETWORK + config.getNetworkId());
+			AccessConfig accessConf = new AccessConfig();
+			accessConf.setType(ONE_TO_ONE_NAT).setName(EXT_NAT);
+			inf.setAccessConfigs(Lists.newArrayList(accessConf));
+			content.setNetworkInterfaces(Lists.newArrayList(inf));
+
+			// scheduling
+			Scheduling scheduling = new Scheduling();
+			scheduling.setAutomaticRestart(false);
+			scheduling.setOnHostMaintenance(MIGRATE);
+			content.setScheduling(scheduling);
+
+			// Disk
+			AttachedDisk disk = new AttachedDisk();
+
+			AttachedDiskInitializeParams params = new AttachedDiskInitializeParams();
+			params.setDiskName(config.getInstanceId());
+			params.setSourceImage(RESOURCE_BASE_URL + config.getImageId());
+
+			disk.setAutoDelete(true).setBoot(true)
 			.setDeviceName(config.getInstanceId())
-			.setType(PERSISTENT);
-		
-		content.setDisks(Lists.newArrayList(disk));*/
-		
-		Insert insert = this.getCompute().instances()
-				.insert(this.projectId, zoneId, content)
-				.setOauthToken(this.getOAuthToken());
-		
-		Operation op = insert.execute();
-		
-		if(block) {
-			
+			.setType(PERSISTENT)
+			.setInitializeParams(params);
+
+			content.setDisks(Lists.newArrayList(disk));
+
+			Insert insert = this.getCompute().instances()
+					.insert(this.projectId, zoneId, content)
+					.setOauthToken(this.getOAuthToken());
+
+			Operation operation = insert.execute();
+			log.info("Successuflly initiated operation: " + operation);
 		}
+		
+		boolean success = true;
+
+		// we have to block until all instances are provisioned
+		if(block) {
+			for(VMConfig config: configs) {
+				String status = InstanceStatus.PROVISIONING.toString();
+				do {
+					try {
+						// sleep for 10 seconds before checking the vm status
+						TimeUnit.SECONDS.sleep(10);
+					} catch (InterruptedException e) {
+						log.log(Level.WARNING, "thread interrupted!", e);
+					}
+					String zoneId = config.getZoneId();
+					zoneId = zoneId != null ? zoneId : this.zone;
+					// check the instance status
+					Instance instance = this.getInstance(config.getInstanceId(), zoneId);
+					status = instance.getStatus();
+					log.info(config.getInstanceId() + ", current status is: " + status);
+
+				} while (InstanceStatus.IN_PROGRESS.contains(status));
+
+				if(InstanceStatus.TERMINATED.equals(status)) {
+					success = false;
+				}
+			}
+		}
+		
+		return success;
 	}
 	
-	public void shutdownInstance(VMConfig config) {
-		
+	/**
+	 * Delete the VMs provided in this config
+	 * @param configs
+	 * @throws IOException 
+	 */
+	@Override
+	public void shutdownInstance(List<VMConfig> configs) throws IOException {
+		for(VMConfig config: configs) {
+			log.info("Deleting VM: " + config);
+			String zoneId = config.getZoneId();
+			zoneId = zoneId != null ? zoneId : this.zone;
+			this.getCompute().instances().delete(this.projectId, zoneId, config.getInstanceId())
+				.setOauthToken(this.getOAuthToken()).execute();
+		}
 	}
 	
 	/**
@@ -568,9 +631,14 @@ public class GoogleCloudService implements CloudService {
 	private Metadata getMetaData(VMMetaData vmMetaData) {
 		Metadata metadata = new Metadata();
 		
+		Items item;
+		List<Items> items = new ArrayList<>();
 		for(Entry<String, Object> entry: vmMetaData.getAttributes().entrySet()) {
-			metadata.set(entry.getKey(), entry.getValue());
+			item = new Items();
+			item.setKey(entry.getKey()).setValue((String) (entry.getValue()));
+			items.add(item);
 		}
+		metadata.setItems(items);
 		
 		return metadata;
 	}
@@ -612,6 +680,30 @@ public class GoogleCloudService implements CloudService {
 	 */
 	protected void setTokenExpire(Date tokenExpire) {
 		this.tokenExpire = tokenExpire;
+	}
+
+
+	/**
+	 * @param zone the zone to set
+	 */
+	protected void setZone(String zone) {
+		this.zone = zone;
+	}
+
+
+	/**
+	 * @param serviceAccount the serviceAccount to set
+	 */
+	protected void setServiceAccount(String serviceAccount) {
+		this.serviceAccount = serviceAccount;
+	}
+
+
+	/**
+	 * @param scopes the scopes to set
+	 */
+	protected void setScopes(List<String> scopes) {
+		this.scopes = scopes;
 	}
 
 	

@@ -24,6 +24,21 @@ package io.ecarf.core.cloud.impl.google;
  */
 public class GoogleMetaData {
 	
+	// metadata server urls
+	public static final String METADATA_SERVER_URL = "http://metadata/computeMetadata/v1/";
+	public static final String TOKEN_PATH = "instance/service-accounts/default/token";
+	//private static final String SERVICE_ACCOUNT_PATH = "service-accounts/default/?recursive=true";
+	public static final String INSTANCE_ALL_PATH = "instance/?recursive=true";
+	//private static final String PROJECT_ALL_PATH = "project/?recursive=true";
+	public static final String PROJECT_ID_PATH = "project/project-id";
+	public static final String ATTRIBUTES_PATH = "instance/attributes/?recursive=true";
+	
+	
+	public static final String RESOURCE_BASE_URL = "https://www.googleapis.com/compute/v1/projects/";
+	public static final String NETWORK = "/global/networks/";
+	public static final String ZONES = "/zones/";
+	public static final String MACHINE_TYPES = "/machineTypes/";
+	public static final String CENTO_IMAGE = "/centos-cloud/global/images/centos-6-v20140318";
 	public static final String ACCESS_TOKEN = "access_token";
 	public static final String EXPIRES_IN = "expires_in";
 	public static final String PROJECT_ID = "projectId";
@@ -37,7 +52,9 @@ public class GoogleMetaData {
 	public static final String DEFAULT = "default";
 	public static final String IMAGE = "image";
 	public static final String PERSISTENT = "PERSISTENT";
-	public static final String DELETE_DISK = "auto_delete_boot_disk";
+	public static final String MIGRATE = "MIGRATE";
+	public static final String EXT_NAT = "External NAT";
+	public static final String ONE_TO_ONE_NAT = "ONE_TO_ONE_NAT";
 	
 	
 

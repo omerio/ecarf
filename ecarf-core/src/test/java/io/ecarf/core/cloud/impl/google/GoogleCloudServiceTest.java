@@ -18,8 +18,10 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import io.ecarf.core.cloud.VMConfig;
+import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Utils;
 
@@ -36,6 +38,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -94,6 +98,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testDownloadFileFromCloudStorage1() throws IOException {
 		this.service.setAccessToken("ya29.1.AADtN_XP6QG8iTv295o11ozn0sAJAmvS2TWsj5fiUIRafCcULqQLd7-jn_KERBoLGtQdM9g");
 		this.service.setTokenExpire(DateUtils.addHours(new Date(), 1));
@@ -107,4 +112,50 @@ public class GoogleCloudServiceTest {
 			}
 		});
 	}
+	
+	@Test
+	@Ignore
+	public void testCreateInstance() throws IOException {
+		
+		this.prepare();
+		VMMetaData metaData = new VMMetaData();
+		metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
+			.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
+		
+		VMConfig conf = new VMConfig();
+		conf.setImageId("centos-cloud/global/images/centos-6-v20140318")
+			.setInstanceId("ecarf-evm-2")
+			.setMetaData(metaData)
+			.setNetworkId("default")
+			.setVmType("f1-micro");
+		
+		boolean success = this.service.startInstance(Lists.newArrayList(conf), true);
+		
+		assertEquals(true, success);
+		
+	}
+	
+	@Test
+	//@Ignore
+	public void testShutdownInstance() throws IOException {
+		this.prepare();
+		VMConfig conf = new VMConfig();
+		conf.setInstanceId("ecarf-evm-2");
+		
+		this.service.shutdownInstance(Lists.newArrayList(conf));
+	}
+	
+	private void prepare() {
+		this.service.setAccessToken("ya29.1.AADtN_UqJQO1oTpM7uP7HR_S-E_7ivhaLnM5ngNiF5v6xdS6fGlcyKfwk9lGgTf9w8X-7is");
+		this.service.setTokenExpire(DateUtils.addHours(new Date(), 1));
+		this.service.setProjectId("ecarf-1000");
+		this.service.setZone("us-central1-a");
+		this.service.setServiceAccount("default");
+		this.service.setScopes(Lists.newArrayList("https://www.googleapis.com/auth/userinfo.email",
+	        "https://www.googleapis.com/auth/compute",
+	        "https://www.googleapis.com/auth/devstorage.full_control",
+	        "https://www.googleapis.com/auth/bigquery"));
+	}
+	
+	
 }

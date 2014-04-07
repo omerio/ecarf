@@ -28,11 +28,19 @@ public class VMConfig {
 
 	private String instanceId;
 
+	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/zones/us-central1-a
 	private String zoneId;
 
+	// for Google, this is an example
+	// https://www.googleapis.com/compute/v1/projects/centos-cloud/global/images/centos-6-v20140318
 	private String imageId;
-	
+
+	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/zones/us-central1-a/machineTypes/f1-micro
 	private String vmType;
+
+	// for Google, this is an example
+	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/global/networks/default
+	private String networkId;
 
 	private VMMetaData metaData;
 
@@ -46,8 +54,9 @@ public class VMConfig {
 	/**
 	 * @param instanceId the instanceId to set
 	 */
-	public void setInstanceId(String instanceId) {
+	public VMConfig setInstanceId(String instanceId) {
 		this.instanceId = instanceId;
+		return this;
 	}
 
 	/**
@@ -60,8 +69,9 @@ public class VMConfig {
 	/**
 	 * @param zoneId the zoneId to set
 	 */
-	public void setZoneId(String zoneId) {
+	public VMConfig setZoneId(String zoneId) {
 		this.zoneId = zoneId;
+		return this;
 	}
 
 	/**
@@ -74,8 +84,9 @@ public class VMConfig {
 	/**
 	 * @param imageId the imageId to set
 	 */
-	public void setImageId(String imageId) {
+	public VMConfig setImageId(String imageId) {
 		this.imageId = imageId;
+		return this;
 	}
 
 	/**
@@ -88,17 +99,11 @@ public class VMConfig {
 	/**
 	 * @param metaData the metaData to set
 	 */
-	public void setMetaData(VMMetaData metaData) {
+	public VMConfig setMetaData(VMMetaData metaData) {
 		this.metaData = metaData;
+		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return ReflectionToStringBuilder.toString(this);
-	}
 
 	/**
 	 * @return the vmType
@@ -110,10 +115,32 @@ public class VMConfig {
 	/**
 	 * @param vmType the vmType to set
 	 */
-	public void setVmType(String vmType) {
+	public VMConfig setVmType(String vmType) {
 		this.vmType = vmType;
+		return this;
 	}
 
+	/**
+	 * @return the networkId
+	 */
+	public String getNetworkId() {
+		return networkId;
+	}
 
+	/**
+	 * @param networkId the networkId to set
+	 */
+	public VMConfig setNetworkId(String networkId) {
+		this.networkId = networkId;
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this);
+	}
 
 }
