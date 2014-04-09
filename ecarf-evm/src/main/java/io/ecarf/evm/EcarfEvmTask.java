@@ -20,13 +20,21 @@ package io.ecarf.evm;
 
 import static io.ecarf.core.utils.Constants.AMAZON;
 import static io.ecarf.core.utils.Constants.GOOGLE;
+import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.types.VMStatus;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.locks.LockSupport;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import io.ecarf.core.cloud.CloudService;
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.utils.Callback;
-import io.ecarf.core.utils.Utils;
+import org.apache.commons.lang3.time.DateUtils;
 
 /**
  * The program p of the Ecarf framework
@@ -36,29 +44,108 @@ import io.ecarf.core.utils.Utils;
  */
 public class EcarfEvmTask {
 	
-	private CloudService service;
+	private final static Logger log = Logger.getLogger(EcarfEvmTask.class.getName()); 
 	
 	/**
-	 * @throws IOException 
-	 * 
+	 * Sleep for 10 seconds
+	 */
+	private static final long TIMER_DELAY = 10 * DateUtils.MILLIS_PER_SECOND;
+	
+	private CloudService service;
+	
+	private VMMetaData metadata;
+	
+	
+	/**
+	 * Continously run until we are shutdown by the ccvm
+	 * @param metadata - the initial meta data
+	 * @throws IOException
 	 */
 	public void run() throws IOException {
-		//while(true) {
+		
+		final Thread currentThread = Thread.currentThread();
+		Map<String, String> items = new HashMap<>();
+		
+		while(true) {
 			
 			// Load task
 			// read the files from http:// or from gs://
 			// download files locally (gziped)
 			// read through the files counting the relevant terms and rewriting into bigquery format (comma separated)
+			// set status to BUSY
+			items.put(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
 			
-		//}
-		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
-				  Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {
-					@Override
-					public void execute() {
-						System.out.println("Download complete");
-						
+			this.service.updateInstanceMetadata(items);
+			
+			switch(metadata.getTaskType()) {
+			case LOAD:
+				log.info("Current Task LOAD");
+				try {
+					Thread.sleep(DateUtils.MILLIS_PER_SECOND * 20);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				break;
+				
+			case REASON:
+				log.info("Current Task REASON");
+				try {
+					Thread.sleep(DateUtils.MILLIS_PER_SECOND * 20);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				break;
+			
+			}
+			// finished processing
+			// blank the task type and set the status to READY
+			items.put(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
+			items.put(VMMetaData.ECARF_TASK, "");
+			this.service.updateInstanceMetadata(items); 
+			
+			// create timer, then sleep
+			final Timer timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+
+				@Override
+				public void run() {
+					log.info("--------- Metadata check Timer ---------");
+					
+					try {
+						VMMetaData md = service.getEcarfMetaData();
+						if(md.getTaskType() != null) {
+							metadata = md;
+							timer.cancel();
+							// wake if asleep
+							LockSupport.unpark(currentThread);
+						}
+					} catch (IOException e) {
+						log.log(Level.SEVERE, "Failed to retrieve the metadata from the server", e);
 					}
-		});
+				}
+			}, TIMER_DELAY, TIMER_DELAY);
+			
+			// wait for further instructions from ccvm
+			LockSupport.park();
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @author Omer Dawelbeit (omerio)
+	 *
+	 */
+	private static class MetadataCheckTimer extends TimerTask {
+
+		@Override
+		public void run() {
+			
+			
+		}
+		
 	}
 	
 	/**
@@ -67,6 +154,13 @@ public class EcarfEvmTask {
 	public void setService(CloudService service) {
 		this.service = service;
 		
+	}
+	
+	/**
+	 * @param metadata the metadata to set
+	 */
+	public void setMetadata(VMMetaData metadata) {
+		this.metadata = metadata;
 	}
 
 	/**
@@ -84,15 +178,18 @@ public class EcarfEvmTask {
 		}
 		
 		EcarfEvmTask task = new EcarfEvmTask();
+		VMMetaData metadata = null;
 		
 		switch(platform) {
 		case GOOGLE:
 			CloudService service = new GoogleCloudService();
 			try {
-				service.inti();
+				metadata = service.inti();
 				task.setService(service);
+				task.setMetadata(metadata);
+				
 			} catch(IOException e) {
-				e.printStackTrace();
+				log.log(Level.SEVERE, "Failed to start evm program", e);
 				throw e;
 			}
 			break;
@@ -107,5 +204,7 @@ public class EcarfEvmTask {
 
 		task.run();
 	}
+
+	
 
 }
