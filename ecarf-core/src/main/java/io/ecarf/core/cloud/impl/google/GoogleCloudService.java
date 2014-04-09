@@ -208,8 +208,8 @@ public class GoogleCloudService implements CloudService {
 		Map<String, Object> token = Utils.jsonToMap(getMetaData(TOKEN_PATH));
 		this.accessToken = (String) token.get(ACCESS_TOKEN);
 		
-		Integer expiresIn = (Integer) token.get(EXPIRES_IN);
-		this.tokenExpire = DateUtils.addSeconds(new Date(), expiresIn);
+		Double expiresIn = (Double) token.get(EXPIRES_IN);
+		this.tokenExpire = DateUtils.addSeconds(new Date(), expiresIn.intValue());
 		
 		log.fine("Successfully refreshed OAuth token from metadata server");
 	
