@@ -74,7 +74,6 @@ public class EcarfEvmTask {
 			// read through the files counting the relevant terms and rewriting into bigquery format (comma separated)
 			// set status to BUSY
 			items.put(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
-			
 			this.service.updateInstanceMetadata(items);
 			
 			switch(metadata.getTaskType()) {
@@ -129,21 +128,6 @@ public class EcarfEvmTask {
 			
 			// wait for further instructions from ccvm
 			LockSupport.park();
-		}
-		
-	}
-	
-	/**
-	 * 
-	 * @author Omer Dawelbeit (omerio)
-	 *
-	 */
-	private static class MetadataCheckTimer extends TimerTask {
-
-		@Override
-		public void run() {
-			
-			
 		}
 		
 	}
