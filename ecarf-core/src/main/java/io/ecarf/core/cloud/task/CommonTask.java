@@ -20,12 +20,10 @@ package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.time.DateUtils;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -55,22 +53,4 @@ public class CommonTask implements Task {
 		throw new UnsupportedOperationException("Not implemented");
 	}
 	
-	/**
-	 * Wait until two values become equal
-	 * @param value1
-	 * @param value2
-	 */
-	public void waitForEquality(Object value1, Object value2) {
-		// wait until all files have downloaded successfully
-		while(!value1.equals(value2)) {
-			try {
-				Thread.sleep(DateUtils.MILLIS_PER_SECOND * 20);
-			} catch (InterruptedException e1) {
-				log.log(Level.WARNING, "wait interrupted", e1);
-			}
-		}
-	}
-	
-	
-
 }

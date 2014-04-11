@@ -18,27 +18,28 @@
  */
 package io.ecarf.core.utils;
 
+
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class Constants {
+public class FutureTask {
 	
-	public static final String GOOGLE = "google";
+	private boolean done;
+
+	/**
+	 * @return the done
+	 */
+	public boolean isDone() {
+		return done;
+	}
+
+	/**
+	 * @param done the done to set
+	 */
+	public void setDone(boolean done) {
+		this.done = done;
+	}
 	
-	public static final String AMAZON = "amazon";
-	
-	public static final String UTF8 = "UTF-8";
-	
-	public static final String GZIP_EXT = ".gz";
-	
-	public static final String APP_NAME = "ecarf";
-	
-	public static final String BINARY_CONTENT_TYPE = "application/octet-stream";
-	
-	public static final String GZIP_CONTENT_TYPE = "application/x-gzip";
-	
-	public static final String DOT_JSON = ".json";
-	
-	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
+
 }

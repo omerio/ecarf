@@ -49,6 +49,9 @@ public class VMMetaData {
 	// a list of cloud storage or http files that each evm should process
 	public static final String ECARF_FILES = "ecarf-files";
 	
+	// A storage file that contains the closure of the schema triples
+	public static final String ECARF_SCHEMA = "ecarf-schema";
+	
 	// A storage file that contains all the schema terms
 	public static final String ECARF_SCHEMA_TERMS = "ecarf-schema-terms";
 	
@@ -134,6 +137,14 @@ public class VMMetaData {
 	 */
 	public String getBucket() {
 		return (String) this.attributes.get(ECARF_BUCKET);
+	}
+	
+	/**
+	 * Get the schema terms file
+	 * @return
+	 */
+	public String getSchemaTermsFile() {
+		return (String) this.attributes.get(ECARF_SCHEMA_TERMS);
 	}
 	
 	/**

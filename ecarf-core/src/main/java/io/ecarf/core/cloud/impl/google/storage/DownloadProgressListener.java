@@ -52,7 +52,9 @@ public  class DownloadProgressListener implements MediaHttpDownloaderProgressLis
 			log.info("Progress: " + Double.toString(Math.round(downloader.getProgress() * 100.00)));
 			break;
 		case MEDIA_COMPLETE:
-			stopwatch.stop();
+			if(stopwatch.isRunning()) {
+				stopwatch.stop();
+			}
 			log.info(String.format("Download is complete! (%s)", stopwatch));
 			if(this.callback != null) {
 				this.callback.execute();

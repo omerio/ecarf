@@ -123,7 +123,7 @@ public enum SchemaURIType {
 	/**
 	 * @return true if the provided uri is for a rdf axiom
 	 */
-	public boolean isRdf(String uri) {
+	public static boolean isRdf(String uri) {
 		SchemaURIType type = getByUri(uri);
 		return (type != null) ? type.isRdf() : false;
 	}
@@ -132,7 +132,7 @@ public enum SchemaURIType {
 	/**
 	 * @return true if the provided uri is for a owl axiom
 	 */
-	public boolean isOwl(String uri) {
+	public static boolean isOwl(String uri) {
 		SchemaURIType type = getByUri(uri);
 		return (type != null) ? type.isOwl() : false;
 	}
@@ -141,7 +141,7 @@ public enum SchemaURIType {
 	/**
 	 * @return true if the provided uri is for a TBox axiom
 	 */
-	public boolean isTbox(String uri) {
+	public static boolean isTbox(String uri) {
 		SchemaURIType type = getByUri(uri);
 		return (type != null) ? type.isTbox() : false;
 	}
@@ -149,7 +149,7 @@ public enum SchemaURIType {
 	/**
 	 * @return true if the provided uri is for a ABox axiom
 	 */
-	public boolean isAbox(String uri) {
+	public static boolean isAbox(String uri) {
 		SchemaURIType type = getByUri(uri);
 		return (type != null) ? type.isAbox() : false;
 	}
@@ -157,14 +157,14 @@ public enum SchemaURIType {
 	/**
 	 * @return true if the provided uri is for a rdf TBox axiom
 	 */
-	public boolean isRdfTbox(String uri) { 
+	public static boolean isRdfTbox(String uri) { 
 		return isRdf(uri) && isTbox(uri);
 	}
 	
 	/**
 	 * @return true if the provided uri is for a rdf ABox axiom
 	 */
-	public boolean isRdfAbox(String uri) {
+	public static boolean isRdfAbox(String uri) {
 		return isRdf(uri) && isAbox(uri);
 	}
 	

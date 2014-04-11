@@ -71,7 +71,9 @@ public class UploadProgressListener implements MediaHttpUploaderProgressListener
 			
 			break;
 		case MEDIA_COMPLETE:
-			stopwatch.stop();
+			if(stopwatch.isRunning()) {
+				stopwatch.stop();
+			}
 			log.info(String.format("Upload is complete! (%s)", stopwatch));
 			if(this.callback != null) {
 				this.callback.execute();

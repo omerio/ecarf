@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.cloud;
 
+import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
@@ -53,6 +54,15 @@ public interface CloudService {
 	 * @throws IOException
 	 */
 	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException;
+	
+	
+	/**
+	 * Upload a file to cloud storage and block until it's uploaded
+	 * @param filename
+	 * @param bucket
+	 * @throws IOException
+	 */
+	public void uploadFileToCloudStorage(String filename, String bucket) throws IOException;
 
 	/**
 	 * Download an object from cloud storage to a file
@@ -64,6 +74,16 @@ public interface CloudService {
 	 */
 	public void downloadObjectFromCloudStorage(String object, String outFile,
 			String bucket, Callback callback) throws IOException;
+	
+	/**
+	 * Download an object from cloud storage to a file, this method will block until the file is downloaded
+	 * @param object
+	 * @param outFile
+	 * @param bucket
+	 * @throws IOException
+	 */
+	public void downloadObjectFromCloudStorage(String object, String outFile,
+			String bucket) throws IOException;
 
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
@@ -72,7 +92,18 @@ public interface CloudService {
 	 * @throws IOException
 	 */
 	public String prepareForCloudDatabaseImport(String filename) throws IOException;
-
+	
+	/**
+	 * Convert the provided file to a format that can be imported to the Cloud Database, 
+	 * this method will also count the terms using the provided counter
+	 * 
+	 * @param filename
+	 * @param counter
+	 * @return
+	 * @throws IOException
+	 */
+	public String prepareForCloudDatabaseImport(String filename, TermCounter counter) throws IOException;
+	
 	/**
 	 * Update the meta data of the current instance
 	 * @param key
@@ -128,6 +159,12 @@ public interface CloudService {
 	 */
 	public void shutdownInstance() throws IOException;
 
+	/**
+	 * Get the id of the current instance
+	 * @return
+	 */
+	public String getInstanceId();
 
+	
 
 }

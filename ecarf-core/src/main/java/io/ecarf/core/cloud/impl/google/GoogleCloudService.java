@@ -18,7 +18,31 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -27,18 +51,22 @@ import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
 import io.ecarf.core.gzip.GzipProcessor;
 import io.ecarf.core.gzip.GzipProcessorCallback;
+import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.FutureTask;
 import io.ecarf.core.utils.Utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -361,7 +389,10 @@ public class GoogleCloudService implements CloudService {
 			gzipDisabled = true;
 
 		} else {
-			contentType = Constants.BINARY_CONTENT_TYPE;
+			contentType = Files.probeContentType((new File(filename)).toPath());
+			if(contentType == null) {
+				contentType = Constants.BINARY_CONTENT_TYPE;
+			}
 			gzipDisabled = false;
 		}
 
@@ -384,6 +415,34 @@ public class GoogleCloudService implements CloudService {
 		}
 
 		insertObject.execute();
+	}
+	
+	/**
+	 * Upload a file to cloud storage and block until it's uploaded
+	 * @param filename
+	 * @param bucket
+	 * @throws IOException
+	 */
+	@Override
+	public void uploadFileToCloudStorage(String filename, String bucket) throws IOException {
+		
+		final FutureTask task = new FutureTask();
+		
+		Callback callback = new Callback() {
+			@Override
+			public void execute() {
+				log.info("Upload complete");
+				task.setDone(true);
+			}
+		};
+		
+		this.uploadFileToCloudStorage(filename, bucket, callback);
+		
+		// wait for the upload to finish
+		while(!task.isDone()) {
+			Utils.block(5);
+		}
+
 	}
 	
 	/**
@@ -412,6 +471,39 @@ public class GoogleCloudService implements CloudService {
 		
 	}
 	
+	/**
+	 * Download an object from cloud storage to a file, this method will block until the file is downloaded
+	 * @param object
+	 * @param outFile
+	 * @param bucket
+	 * @param callback
+	 * @throws IOException
+	 */
+	@Override
+	public void downloadObjectFromCloudStorage(String object, final String outFile, 
+			String bucket) throws IOException {
+		
+		//final Thread currentThread = Thread.currentThread();
+		final FutureTask task = new FutureTask();
+		
+		Callback callback = new Callback() {
+			@Override
+			public void execute() {
+				log.info("Download complete, file saved to: " + outFile);
+				//LockSupport.unpark(currentThread);
+				task.setDone(true);
+			}
+		};
+
+		this.downloadObjectFromCloudStorage(object, outFile, bucket, callback);
+		
+		// wait for the download to take place
+		//LockSupport.park();
+		while(!task.isDone()) {
+			Utils.block(5);
+		}
+		
+	}
 	
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
@@ -422,6 +514,18 @@ public class GoogleCloudService implements CloudService {
 	 */
 	@Override
 	public String prepareForCloudDatabaseImport(String filename) throws IOException {
+		return this.prepareForCloudDatabaseImport(filename, null);
+	}
+	
+	/**
+	 * Convert the provided file to a format that can be imported to the Cloud Database
+	 * 
+	 * @param filename
+	 * @return
+	 * @throws IOException 
+	 */
+	@Override
+	public String prepareForCloudDatabaseImport(String filename, final TermCounter counter) throws IOException {
 		/*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
 			.append(File.separator).append("out_").append(filename).toString();*/
 		GzipProcessor processor = new GzipProcessor(filename);
@@ -433,6 +537,11 @@ public class GoogleCloudService implements CloudService {
 				String[] terms = TripleUtils.parseTriple(line);
 				String outLine = null;
 				if(terms != null) {
+					
+					if(counter != null) {
+						counter.count(terms);
+					}
+					
 					for(int i = 0; i < terms.length; i++) {
 						// bigquery requires data to be properly escaped
 						terms[i] = StringEscapeUtils.escapeCsv(terms[i]);
@@ -805,6 +914,15 @@ public class GoogleCloudService implements CloudService {
 	 */
 	public void setInstanceId(String instanceId) {
 		this.instanceId = instanceId;
+	}
+
+
+	/**
+	 * @return the instanceId
+	 */
+	@Override
+	public String getInstanceId() {
+		return instanceId;
 	}
 
 	

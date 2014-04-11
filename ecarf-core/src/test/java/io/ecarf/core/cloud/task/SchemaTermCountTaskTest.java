@@ -34,10 +34,10 @@ import org.junit.Test;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class LoadTaskTest {
-
-	private GoogleCloudService service;
+public class SchemaTermCountTaskTest {
 	
+	private GoogleCloudService service;
+
 	/**
 	 * @throws java.lang.Exception
 	 */
@@ -55,16 +55,15 @@ public class LoadTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.LoadTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.SchemaTermCountTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test
 	public void testRun() throws IOException {
 		VMMetaData metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, "ecarf");
-		metadata.addValue(VMMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
-		metadata.addValue(VMMetaData.ECARF_FILES, "linkedgeodata_links.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
-		LoadTask task = new LoadTask(metadata, service);
+		metadata.addValue(VMMetaData.ECARF_SCHEMA, "dbpedia_3.9_gen_closure.nt");
+		SchemaTermCountTask task = new SchemaTermCountTask(metadata, service);
 		task.run();
 	}
 
