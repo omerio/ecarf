@@ -32,7 +32,10 @@ public class GoogleMetaData {
 	//private static final String PROJECT_ALL_PATH = "project/?recursive=true";
 	public static final String PROJECT_ID_PATH = "project/project-id";
 	public static final String ATTRIBUTES_PATH = "instance/attributes/?recursive=true";
+	public static final String WAIT_FOR_CHANGE = "&wait_for_change=true";
 	
+	// scopes
+	public static final String DATASTORE_SCOPE = "https://www.googleapis.com/auth/datastore";
 	
 	public static final String RESOURCE_BASE_URL = "https://www.googleapis.com/compute/v1/projects/";
 	public static final String NETWORK = "/global/networks/";
@@ -46,6 +49,9 @@ public class GoogleMetaData {
 	public static final String HOSTNAME = "hostname";
 	public static final String ZONE = "zone";
 	public static final String ATTRIBUTES = "attributes";
+	public static final String ITEMS = "items";
+	public static final String FINGER_PRINT = "fingerprint";
+	public static final String DONE = "DONE";
 	public static final String EMAIL = "email";
 	public static final String SCOPES = "scopes";
 	public static final String SERVICE_ACCOUNTS = "serviceAccounts";

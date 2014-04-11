@@ -40,21 +40,33 @@ public class VMMetaData {
 	
 	private final static Logger log = Logger.getLogger(VMMetaData.class.getName()); 
 	
+	// the task for the evm, currently load and reason
 	public static final String ECARF_TASK = "ecarf-task";
 	
+	// the status of the evm, ready, busy or error
 	public static final String ECARF_STATUS = "ecarf-status";
 	
+	// a list of cloud storage or http files that each evm should process
 	public static final String ECARF_FILES = "ecarf-files";
 	
-	public static final String ECARF_SCHEMA = "ecarf-schema";
+	// A storage file that contains all the schema terms
+	public static final String ECARF_SCHEMA_TERMS = "ecarf-schema-terms";
 	
+	// a list of terms that the evm should be responsible for
+	public static final String ECARF_TERMS = "ecarf-terms";
+	
+	// the cloud storage bucket to use for processing the relevant ontology files
 	public static final String ECARF_BUCKET = "ecarf-bucket";
 	
 	public static final String ECARF_EXCEPTION = "ecarf-exception";
 	
 	public static final String ECARF_MESSAGE = "ecarf-message";
 	
+	//public static final String ECARF_JOD_ID = "ecarf-job-id";
+	
 	private Map<String, Object> attributes;
+	
+	private String fingerprint;
 
 	/**
 	 * 
@@ -70,6 +82,15 @@ public class VMMetaData {
 	public VMMetaData(Map<String, Object> attributes) {
 		super();
 		this.attributes = attributes;
+	}
+	
+	/**
+	 * @param attributes
+	 */
+	public VMMetaData(Map<String, Object> attributes, String fingerprint) {
+		super();
+		this.attributes = attributes;
+		this.fingerprint = fingerprint;
 	}
 	
 	/**
@@ -168,10 +189,32 @@ public class VMMetaData {
 	}
 
 	/**
+	 * 
+	 * @see java.util.Map#clear()
+	 */
+	public void clearValues() {
+		attributes.clear();
+	}
+
+	/**
 	 * @return the attributes
 	 */
 	public Map<String, Object> getAttributes() {
 		return attributes;
+	}
+
+	/**
+	 * @return the fingerprint
+	 */
+	public String getFingerprint() {
+		return fingerprint;
+	}
+
+	/**
+	 * @param fingerprint the fingerprint to set
+	 */
+	public void setFingerprint(String fingerprint) {
+		this.fingerprint = fingerprint;
 	}
 
 }

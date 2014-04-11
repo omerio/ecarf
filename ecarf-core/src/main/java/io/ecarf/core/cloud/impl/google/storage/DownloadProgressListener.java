@@ -49,7 +49,7 @@ public  class DownloadProgressListener implements MediaHttpDownloaderProgressLis
 	public void progressChanged(MediaHttpDownloader downloader) {
 		switch (downloader.getDownloadState()) {
 		case MEDIA_IN_PROGRESS:
-			log.info(Double.toString(downloader.getProgress()));
+			log.info("Progress: " + Double.toString(Math.round(downloader.getProgress() * 100.00)));
 			break;
 		case MEDIA_COMPLETE:
 			stopwatch.stop();

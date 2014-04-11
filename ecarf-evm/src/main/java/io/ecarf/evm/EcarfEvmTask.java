@@ -23,18 +23,13 @@ import static io.ecarf.core.utils.Constants.GOOGLE;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.task.Task;
+import io.ecarf.core.cloud.task.TaskFactory;
 import io.ecarf.core.cloud.types.VMStatus;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.time.DateUtils;
 
 /**
  * The program p of the Ecarf framework
@@ -49,7 +44,7 @@ public class EcarfEvmTask {
 	/**
 	 * Sleep for 10 seconds
 	 */
-	private static final long TIMER_DELAY = 10 * DateUtils.MILLIS_PER_SECOND;
+	//private static final long TIMER_DELAY = 10 * DateUtils.MILLIS_PER_SECOND;
 	
 	private CloudService service;
 	
@@ -57,80 +52,95 @@ public class EcarfEvmTask {
 	
 	
 	/**
-	 * Continously run until we are shutdown by the ccvm
+	 * Continuously run until we are shutdown by the ccvm
 	 * @param metadata - the initial meta data
 	 * @throws IOException
 	 */
 	public void run() throws IOException {
 		
-		final Thread currentThread = Thread.currentThread();
-		Map<String, String> items = new HashMap<>();
+		//final Thread currentThread = Thread.currentThread();
 		
 		while(true) {
-			
-			// Load task
-			// read the files from http:// or from gs://
-			// download files locally (gziped)
-			// read through the files counting the relevant terms and rewriting into bigquery format (comma separated)
-			// set status to BUSY
-			items.put(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
-			this.service.updateInstanceMetadata(items);
-			
-			switch(metadata.getTaskType()) {
-			case LOAD:
-				log.info("Current Task LOAD");
-				try {
-					Thread.sleep(DateUtils.MILLIS_PER_SECOND * 20);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				break;
+			try {
+				// Load task
 				
-			case REASON:
-				log.info("Current Task REASON");
-				try {
-					Thread.sleep(DateUtils.MILLIS_PER_SECOND * 20);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				break;
-			
-			}
-			// finished processing
-			// blank the task type and set the status to READY
-			items.put(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
-			items.put(VMMetaData.ECARF_TASK, "");
-			this.service.updateInstanceMetadata(items); 
-			
-			// create timer, then sleep
-			final Timer timer = new Timer();
-			timer.scheduleAtFixedRate(new TimerTask() {
+				// set status to BUSY
+				metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
+				this.service.updateInstanceMetadata(metadata);
 
-				@Override
-				public void run() {
-					log.info("--------- Metadata check Timer ---------");
+				// run the task
+				Task task = TaskFactory.getTask(metadata, service);
+				task.run();
+				
+				// finished processing
+				// blank the task type and set the status to READY
+				metadata.clearValues();
+				metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
+
+				this.service.updateInstanceMetadata(metadata);
+
+				// now wait for any change in the metadata
+				log.info("Waiting for new instructions from ccvm");
+				metadata = this.service.getEcarfMetaData(true);
+				
+			} catch(Exception e) {
+				
+				log.log(Level.SEVERE, "An error has occurred whilst running/waiting for tasks", e);
+				// try to update the Metadata to a fail status
+				try {
 					
-					try {
-						VMMetaData md = service.getEcarfMetaData();
-						if(md.getTaskType() != null) {
-							metadata = md;
-							timer.cancel();
-							// wake if asleep
-							LockSupport.unpark(currentThread);
-						}
-					} catch (IOException e) {
-						log.log(Level.SEVERE, "Failed to retrieve the metadata from the server", e);
-					}
+					metadata = this.service.getEcarfMetaData(false);
+					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.ERROR.toString());
+					metadata.addValue(VMMetaData.ECARF_EXCEPTION, e.getClass().toString());
+					metadata.addValue(VMMetaData.ECARF_MESSAGE, e.getMessage());
+					this.service.updateInstanceMetadata(metadata);
+					
+					// wait until we get further instructions
+					// now wait for any change in the metadata
+					log.info("Waiting for new instructions from ccvm");
+					metadata = this.service.getEcarfMetaData(true);
+					
+				} catch(Exception e1) {
+					// all has failed with no hope of recovery
+					log.log(Level.SEVERE, "An error has occurred whilst trying to recover", e);
+					// self terminate :-(
+					this.service.shutdownInstance();
 				}
-			}, TIMER_DELAY, TIMER_DELAY);
-			
-			// wait for further instructions from ccvm
-			LockSupport.park();
+			}
 		}
-		
+
 	}
+	
+	/**
+	 * Wait until we have new instructions to do something else
+	 * @param thread
+	 */
+	/*private void wait(final Thread thread) {
+		// create timer, then sleep
+		final Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				log.info("--------- Metadata check Timer ---------");
+
+				try {
+					VMMetaData md = service.getEcarfMetaData(false);
+					if(md.getTaskType() != null) {
+						metadata = md;
+						timer.cancel();
+						// wake if asleep
+						LockSupport.unpark(thread);
+					}
+				} catch (IOException e) {
+					log.log(Level.SEVERE, "Failed to retrieve the metadata from the server", e);
+				}
+			}
+		}, TIMER_DELAY, TIMER_DELAY);
+
+		// wait for further instructions from ccvm
+		LockSupport.park();
+	}*/
 	
 	/**
 	 * @param service the service to set

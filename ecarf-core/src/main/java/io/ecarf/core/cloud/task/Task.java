@@ -16,25 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.utils;
+package io.ecarf.core.cloud.task;
+
+import java.io.IOException;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class Constants {
+public interface Task {
 	
-	public static final String GOOGLE = "google";
-	
-	public static final String AMAZON = "amazon";
-	
-	public static final String UTF8 = "UTF-8";
-	
-	public static final String GZIP_EXT = ".gz";
-	
-	public static final String APP_NAME = "ecarf";
-	
-	public static final String BINARY_CONTENT_TYPE = "application/octet-stream";
-	
-	public static final String GZIP_CONTENT_TYPE = "application/x-gzip";
+	/**
+	 * Run the task
+	 * @throws IOException
+	 */
+	public void run() throws IOException ;
+
 }

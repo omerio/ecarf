@@ -22,7 +22,6 @@ import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -78,33 +77,25 @@ public interface CloudService {
 	 * Update the meta data of the current instance
 	 * @param key
 	 * @param value
-	 * @throws IOException
-	 */
-	public void updateInstanceMetadata(String key, String value) throws IOException;
-
-	/**
-	 * Update the meta data of the current instance
-	 * @param key
-	 * @param value
 	 * @param zone
 	 * @param instanceId
 	 * @throws IOException
 	 */
-	public void updateInstanceMetadata(Map<String, String> items, String zone, String instanceId) throws IOException;
+	public void updateInstanceMetadata(VMMetaData metaData, String zone, String instanceId, boolean block) throws IOException;
 
 	/**
 	 * Update the meta data of the current instance
 	 * @param items
 	 * @throws IOException
 	 */
-	public void updateInstanceMetadata(Map<String, String> items) throws IOException;
+	public void updateInstanceMetadata(VMMetaData metaData) throws IOException;
 
 	/**
 	 * Get the meta data of the current instance, this will simply call the metadata server
 	 * @return
 	 * @throws IOException
 	 */
-	public VMMetaData getEcarfMetaData() throws IOException;
+	public VMMetaData getEcarfMetaData(boolean waitForChange) throws IOException;
 
 	/**
 	 * Get the meta data for the provided instance id
@@ -130,6 +121,12 @@ public interface CloudService {
 	 * @throws IOException
 	 */
 	public void shutdownInstance(List<VMConfig> configs) throws IOException;
+
+	/**
+	 * Delete the currently running vm, i.e. self terminate
+	 * @throws IOException
+	 */
+	public void shutdownInstance() throws IOException;
 
 
 

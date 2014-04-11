@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.utils;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -38,6 +39,8 @@ public class Utils {
 	private final static Logger log = Logger.getLogger(Utils.class.getName()); 
 
 	public static final String TEMP_FOLDER = System.getProperty("java.io.tmpdir");
+	
+	public static final String PATH_SEPARATOR = File.separator;
 	
 	public static Gson GSON = new Gson();
 	

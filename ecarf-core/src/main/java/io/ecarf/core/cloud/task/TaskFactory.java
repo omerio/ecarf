@@ -16,25 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.utils;
+package io.ecarf.core.cloud.task;
+
+import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.types.TaskType;
 
 /**
+ * Returns a task that a evm should run
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class Constants {
-	
-	public static final String GOOGLE = "google";
-	
-	public static final String AMAZON = "amazon";
-	
-	public static final String UTF8 = "UTF-8";
-	
-	public static final String GZIP_EXT = ".gz";
-	
-	public static final String APP_NAME = "ecarf";
-	
-	public static final String BINARY_CONTENT_TYPE = "application/octet-stream";
-	
-	public static final String GZIP_CONTENT_TYPE = "application/x-gzip";
+public class TaskFactory {
+
+	/**
+	 * Create a task based on the meta data
+	 * @param metadata
+	 * @return
+	 */
+	public static Task getTask(VMMetaData metadata, CloudService cloud) {
+		
+		TaskType type = metadata.getTaskType();
+		Task task;
+		switch(type) {
+		case LOAD:
+			task = new LoadTask(metadata, cloud);
+			break;
+
+		case REASON:
+			task = new ReasonTask(metadata, cloud);
+			break;
+		
+		default:
+			throw new IllegalArgumentException("Unknown task type: " + type);
+		}
+		
+		return task;
+	}
 }

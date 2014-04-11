@@ -16,25 +16,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.utils;
+package io.ecarf.core.cloud.task;
+
+import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.VMMetaData;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class Constants {
+public class ReasonTask extends CommonTask {
+
 	
-	public static final String GOOGLE = "google";
-	
-	public static final String AMAZON = "amazon";
-	
-	public static final String UTF8 = "UTF-8";
-	
-	public static final String GZIP_EXT = ".gz";
-	
-	public static final String APP_NAME = "ecarf";
-	
-	public static final String BINARY_CONTENT_TYPE = "application/octet-stream";
-	
-	public static final String GZIP_CONTENT_TYPE = "application/x-gzip";
+	public ReasonTask(VMMetaData metadata, CloudService cloud) {
+		super(metadata, cloud);
+	}
+
+	/* (non-Javadoc)
+	 * @see io.ecarf.core.cloud.task.Task#run()
+	 */
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+
+	}
+
 }

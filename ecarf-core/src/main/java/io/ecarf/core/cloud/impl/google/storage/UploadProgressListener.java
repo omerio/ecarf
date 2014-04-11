@@ -63,7 +63,7 @@ public class UploadProgressListener implements MediaHttpUploaderProgressListener
 		case MEDIA_IN_PROGRESS:
 			// Progress works iff you have a content length specified.
 			try {
-				log.info("Progress: " + uploader.getProgress());
+				log.info("Progress: " + Math.round(uploader.getProgress() * 100.00) + "%");
 			} catch (IOException e) {
 				log.log(Level.WARNING, "Failed to get progress", e);
 				log.info("Uploaded: " + uploader.getNumBytesUploaded());

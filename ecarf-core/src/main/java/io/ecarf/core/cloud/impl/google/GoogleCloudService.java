@@ -50,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -75,10 +76,12 @@ import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.compute.model.Metadata.Items;
 import com.google.api.services.compute.model.NetworkInterface;
 import com.google.api.services.compute.model.Operation;
+import com.google.api.services.compute.model.Operation.Error.Errors;
 import com.google.api.services.compute.model.Scheduling;
 import com.google.api.services.compute.model.ServiceAccount;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 
 /**
@@ -91,6 +94,11 @@ public class GoogleCloudService implements CloudService {
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+	
+	/**
+	 * 10 seconds before API operations are checked for completion
+	 */
+	private static final int API_RECHECK_DELAY = 10;
 	
 	/** Global instance of the HTTP transport. */
 	private HttpTransport httpTransport;
@@ -141,13 +149,19 @@ public class GoogleCloudService implements CloudService {
 		Map<String, Object> serviceAccountConfig = ((Map) ((Map) metaData.get(SERVICE_ACCOUNTS)).get(DEFAULT));
 		this.serviceAccount = (String) serviceAccountConfig.get(EMAIL);
 		this.scopes = (List) serviceAccountConfig.get(SCOPES);
+		// add the datastore scope as well
+		this.scopes.add(DATASTORE_SCOPE);
 		
 		this.authorise();
 		this.getHttpTransport();
 		this.getCompute();
 		this.getStorage();
+		
+		Instance instance = this.getInstance(instanceId, zone);
+		String fingerprint = instance.getMetadata().getFingerprint();
+		
 		log.info("Successfully initialized Google Cloud Service: " + this);
-		return new VMMetaData(attributes);
+		return new VMMetaData(attributes, fingerprint);
 		
 	}
 	
@@ -309,31 +323,66 @@ public class GoogleCloudService implements CloudService {
 	
 	/**
 	 * Upload the provided file into cloud storage
+	 * THis is what Google returns:
+	 * CONFIG: {
+		 "kind": "storage#object",
+		 "id": "ecarf/umbel_links.nt_out.gz/1397227987451000",
+		 "selfLink": "https://www.googleapis.com/storage/v1beta2/b/ecarf/o/umbel_links.nt_out.gz",
+		 "name": "umbel_links.nt_out.gz",
+		 "bucket": "ecarf",
+		 "generation": "1397227987451000",
+		 "metageneration": "1",
+		 "contentType": "application/x-gzip",
+		 "updated": "2014-04-11T14:53:07.339Z",
+		 "storageClass": "STANDARD",
+		 "size": "8474390",
+		 "md5Hash": "UPhXcZZGbD9198OhQcdnvQ==",
+		 "mediaLink": "https://www.googleapis.com/storage/v1beta2/b/ecarf/o/umbel_links.nt_out.gz?generation=1397227987451000&alt=media",
+		 "owner": {
+		  "entity": "user-00b4903a97e56638621f0643dc282444442a11b19141d3c7b425c4d17895dcf6",
+		  "entityId": "00b4903a97e56638621f0643dc282444442a11b19141d3c7b425c4d17895dcf6"
+		 },
+		 "crc32c": "3twYkA==",
+		 "etag": "CPj48u7X2L0CEAE="
+		}
 	 * @param filename
 	 * @param bucket
 	 * @throws IOException 
 	 */
 	@Override
 	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
-		
+
 		FileInputStream fileStream = new FileInputStream(filename);
-		
-		InputStreamContent mediaContent = new InputStreamContent(Constants.BINARY_CONTENT_TYPE, fileStream);
-		
+		String contentType;
+		boolean gzipDisabled;
+
+		if(GzipUtils.isCompressedFilename(filename)) {
+			contentType = Constants.GZIP_CONTENT_TYPE;
+			gzipDisabled = true;
+
+		} else {
+			contentType = Constants.BINARY_CONTENT_TYPE;
+			gzipDisabled = false;
+		}
+
+		InputStreamContent mediaContent = new InputStreamContent(contentType, fileStream);
+
 		// Not strictly necessary, but allows optimization in the cloud.
 		mediaContent.setLength(fileStream.available());
 
 		Storage.Objects.Insert insertObject =
-				getStorage().objects().insert(bucket, null, mediaContent).setOauthToken(this.getOAuthToken());
+				getStorage().objects().insert(bucket, 
+						new StorageObject().setName(StringUtils.substringAfterLast(filename, Utils.PATH_SEPARATOR)), 
+						mediaContent).setOauthToken(this.getOAuthToken());
 
 		insertObject.getMediaHttpUploader().setProgressListener(
 				new UploadProgressListener(callback)).setDisableGZipContent(true);
 		// For small files, you may wish to call setDirectUploadEnabled(true), to
 		// reduce the number of HTTP requests made to the server.
 		if (mediaContent.getLength() > 0 && mediaContent.getLength() <=  2 * FileUtils.ONE_MB /* 2MB */) {
-			insertObject.getMediaHttpUploader().setDirectUploadEnabled(true);
+			insertObject.getMediaHttpUploader().setDirectUploadEnabled(gzipDisabled);
 		}
-		
+
 		insertObject.execute();
 	}
 	
@@ -416,17 +465,19 @@ public class GoogleCloudService implements CloudService {
 	
 	
 	/**
-	 * Get the meta data of the current instance, this will simply call the metadata server
+	 * Get the meta data of the current instance, this will simply call the metadata server.
+	 * Wait for change will block until there is a change
 	 * @return
 	 * @throws IOException 
 	 */
 	@Override
-	public VMMetaData getEcarfMetaData() throws IOException {
-		String metaData = this.getMetaData(ATTRIBUTES_PATH);
+	public VMMetaData getEcarfMetaData(boolean waitForChange) throws IOException {
+		String metaData = this.getMetaData(ATTRIBUTES_PATH + (waitForChange ? WAIT_FOR_CHANGE : ""));
 		
 		Map<String, Object> attributes = Utils.jsonToMap(metaData);
-		
-		return new VMMetaData(attributes);
+		Instance instance = this.getInstance(instanceId, zone);
+		String fingerprint = instance.getMetadata().getFingerprint();
+		return new VMMetaData(attributes, fingerprint);
 		
 	}
 	
@@ -438,25 +489,16 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException 
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public VMMetaData getEcarfMetaData(String instanceId, String zoneId) throws IOException {
-		Instance instance = this.getInstance(instanceId, zoneId);
-		Map<String, Object> attributes = (Map<String, Object>) instance.getMetadata().get(ATTRIBUTES);
-		
-		return new VMMetaData(attributes);
-	}
-	
-	/**
-	 * Update the meta data of the current instance
-	 * @param key
-	 * @param value
-	 * @throws IOException
-	 */
-	@Override
-	public void updateInstanceMetadata(String key, String value) throws IOException {
-		Map<String, String> items = new HashMap<>();
-		items.put(key, value);
-		this.updateInstanceMetadata(items, this.zone, this.instanceId);
+		Instance instance = this.getInstance(instanceId != null ? instanceId : this.instanceId, 
+				zoneId != null ? zoneId : this.zone);
+		List<Items> items = instance.getMetadata().getItems();
+		Map<String, Object> attributes = new HashMap<>();
+		for(Items item: items) {
+			attributes.put(item.getKey(), item.getValue());
+		}
+		String fingerprint = instance.getMetadata().getFingerprint();
+		return new VMMetaData(attributes, fingerprint);
 	}
 	
 	/**
@@ -467,8 +509,8 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	@Override
-	public void updateInstanceMetadata(Map<String, String> items) throws IOException {
-		this.updateInstanceMetadata(items, this.zone, this.instanceId);
+	public void updateInstanceMetadata(VMMetaData metaData) throws IOException {
+		this.updateInstanceMetadata(metaData, this.zone, this.instanceId, true);
 	}
 	
 	/**
@@ -479,16 +521,53 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	@Override
-	public void updateInstanceMetadata(Map<String, String> items, 
-			String zone, String instanceId) throws IOException {
-		Metadata metadata = new Metadata();
+	public void updateInstanceMetadata(VMMetaData metaData, 
+			String zoneId, String instanceId, boolean block) throws IOException {
 		
-		for(Entry<String, String> entry: items.entrySet()) {
-			metadata.set(entry.getKey(), entry.getValue());
-		}
+		Metadata metadata = this.getMetaData(metaData);
 		
-		this.getCompute().instances().setMetadata(projectId, zone, instanceId, metadata)
+		Operation operation = this.getCompute().instances().setMetadata(projectId, zoneId, instanceId, metadata)
 			.setOauthToken(this.getOAuthToken()).execute();
+		
+		log.info("Successuflly initiated operation: " + operation);
+		
+		// shall we wait until the operation is complete?
+		if(block) {
+			this.blockOnOperation(operation, zoneId);
+			
+			// update the fingerprint of the current metadata
+			Instance instance = this.getInstance(instanceId, zoneId);
+			metaData.setFingerprint(instance.getMetadata().getFingerprint());
+		}
+	}
+	
+	/**
+	 * Wait until the provided operation is done, if the operation returns an error then an IOException 
+	 * will be thrown
+	 * @param operation
+	 * @param zoneId
+	 * @throws IOException
+	 */
+	private void blockOnOperation(Operation operation, String zoneId) throws IOException {
+		do {
+			
+			try {
+				// sleep for 10 seconds before checking the operation status
+				TimeUnit.SECONDS.sleep(API_RECHECK_DELAY);
+			} catch (InterruptedException e) {
+				log.log(Level.WARNING, "thread interrupted!", e);
+			}
+			
+			operation = this.getCompute().zoneOperations().get(projectId, zoneId, operation.getName())
+					.setOauthToken(this.getOAuthToken()).execute();
+			
+			// check if the operation has actually failed
+			if((operation.getError() != null) && (operation.getError().getErrors() != null)) {
+				Errors error = operation.getError().getErrors().get(0);
+				throw new IOException("Operation failed: " + error.getCode() + " - " + error.getMessage());
+			}
+			
+		} while(!DONE.endsWith(operation.getStatus()));
 	}
 	
 	/**
@@ -585,7 +664,7 @@ public class GoogleCloudService implements CloudService {
 				do {
 					try {
 						// sleep for 10 seconds before checking the vm status
-						TimeUnit.SECONDS.sleep(10);
+						TimeUnit.SECONDS.sleep(API_RECHECK_DELAY);
 					} catch (InterruptedException e) {
 						log.log(Level.WARNING, "thread interrupted!", e);
 					}
@@ -624,6 +703,19 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
+	 * Delete the currently running vm, i.e. self terminate
+	 * @throws IOException 
+	 */
+	@Override
+	public void shutdownInstance() throws IOException {
+
+		log.info("Deleting VM: " + this.instanceId);
+		this.getCompute().instances().delete(this.projectId, this.zone, this.instanceId)
+		.setOauthToken(this.getOAuthToken()).execute();
+
+	}
+	
+	/**
 	 * Create an API Metadata
 	 * @param vmMetaData
 	 * @return
@@ -639,6 +731,7 @@ public class GoogleCloudService implements CloudService {
 			items.add(item);
 		}
 		metadata.setItems(items);
+		metadata.setFingerprint(vmMetaData.getFingerprint());
 		
 		return metadata;
 	}
@@ -662,7 +755,7 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param accessToken the accessToken to set
 	 */
-	protected void setAccessToken(String accessToken) {
+	public void setAccessToken(String accessToken) {
 		this.accessToken = accessToken;
 	}
 
@@ -670,7 +763,7 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param projectId the projectId to set
 	 */
-	protected void setProjectId(String projectId) {
+	public void setProjectId(String projectId) {
 		this.projectId = projectId;
 	}
 
@@ -678,7 +771,7 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param tokenExpire the tokenExpire to set
 	 */
-	protected void setTokenExpire(Date tokenExpire) {
+	public void setTokenExpire(Date tokenExpire) {
 		this.tokenExpire = tokenExpire;
 	}
 
@@ -686,7 +779,7 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param zone the zone to set
 	 */
-	protected void setZone(String zone) {
+	public void setZone(String zone) {
 		this.zone = zone;
 	}
 
@@ -694,7 +787,7 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param serviceAccount the serviceAccount to set
 	 */
-	protected void setServiceAccount(String serviceAccount) {
+	public void setServiceAccount(String serviceAccount) {
 		this.serviceAccount = serviceAccount;
 	}
 
@@ -702,8 +795,16 @@ public class GoogleCloudService implements CloudService {
 	/**
 	 * @param scopes the scopes to set
 	 */
-	protected void setScopes(List<String> scopes) {
+	public void setScopes(List<String> scopes) {
 		this.scopes = scopes;
+	}
+
+
+	/**
+	 * @param instanceId the instanceId to set
+	 */
+	public void setInstanceId(String instanceId) {
+		this.instanceId = instanceId;
 	}
 
 	
