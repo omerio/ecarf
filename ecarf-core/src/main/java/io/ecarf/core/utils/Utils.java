@@ -18,6 +18,8 @@
  */
 package io.ecarf.core.utils;
 
+import io.ecarf.core.partition.Item;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +32,7 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -132,10 +135,7 @@ public class Utils {
 			block(seconds);
 		}
 	}
-	
-	
-
-	
+		
 	/**
 	 * 
 	 * @param filename
@@ -191,6 +191,19 @@ public class Utils {
 		Set<String> schemaTerms = Utils.GSON.fromJson(new JsonReader(new FileReader(Utils.TEMP_FOLDER + "test.json")),  
 				new TypeToken<Set<String>>(){}.getType());
 		System.out.println(schemaTerms);
+	}
+	
+	/**
+	 * Sums a list of numbers
+	 * @param items
+	 * @return
+	 */
+	public static Long sum(List<Item> items) {
+		long sum = 0;
+		for(Item item: items) {
+			sum += item.getWeight();
+		}
+		return sum;
 	}
 
 //	/*

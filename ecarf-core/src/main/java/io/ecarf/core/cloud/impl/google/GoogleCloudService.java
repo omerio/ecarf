@@ -49,8 +49,8 @@ import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
-import io.ecarf.core.gzip.GzipProcessor;
-import io.ecarf.core.gzip.GzipProcessorCallback;
+import io.ecarf.core.compress.CompressProcessor;
+import io.ecarf.core.compress.CompressCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
@@ -109,6 +109,7 @@ import com.google.api.services.compute.model.Scheduling;
 import com.google.api.services.compute.model.ServiceAccount;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 
@@ -407,11 +408,11 @@ public class GoogleCloudService implements CloudService {
 						mediaContent).setOauthToken(this.getOAuthToken());
 
 		insertObject.getMediaHttpUploader().setProgressListener(
-				new UploadProgressListener(callback)).setDisableGZipContent(true);
+				new UploadProgressListener(callback)).setDisableGZipContent(gzipDisabled);
 		// For small files, you may wish to call setDirectUploadEnabled(true), to
 		// reduce the number of HTTP requests made to the server.
-		if (mediaContent.getLength() > 0 && mediaContent.getLength() <=  2 * FileUtils.ONE_MB /* 2MB */) {
-			insertObject.getMediaHttpUploader().setDirectUploadEnabled(gzipDisabled);
+		if (mediaContent.getLength() > 0 && mediaContent.getLength() <=  4 * FileUtils.ONE_MB /* 2MB */) {
+			insertObject.getMediaHttpUploader().setDirectUploadEnabled(true);
 		}
 
 		insertObject.execute();
@@ -505,6 +506,25 @@ public class GoogleCloudService implements CloudService {
 		
 	}
 	
+	public List<Object> listCloudStorageObjects(String bucket) throws IOException {
+		List<Object> objects = new ArrayList<>();
+		Storage.Objects.List listObjects =  
+				getStorage().objects().list(bucket).setOauthToken(this.getOAuthToken());
+		// we are not paging, just get everything
+		Objects cloudObjects = listObjects.execute();
+		
+		for (StorageObject cloudObject : cloudObjects.getItems()) {
+			// Do things!
+			io.ecarf.core.cloud.storage.StorageObject object = 
+					new io.ecarf.core.cloud.storage.StorageObject();
+			object.setContentType(cloudObject.getContentType());
+			object.setDirectLink(cloudObject.getSelfLink());
+			object.setName(cloudObject.getName());
+			object.setSize(cloudObject.getSize());
+		}
+		return objects;
+	}
+	
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
 	 * 
@@ -528,9 +548,9 @@ public class GoogleCloudService implements CloudService {
 	public String prepareForCloudDatabaseImport(String filename, final TermCounter counter) throws IOException {
 		/*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
 			.append(File.separator).append("out_").append(filename).toString();*/
-		GzipProcessor processor = new GzipProcessor(filename);
+		CompressProcessor processor = new CompressProcessor(filename);
 		
-		String outFilename = processor.process(new GzipProcessorCallback() {
+		String outFilename = processor.process(new CompressCallback() {
 
 			@Override
 			public String process(String line) {

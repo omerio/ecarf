@@ -106,6 +106,15 @@ public class LoadTask extends CommonTask {
 			Utils.deleteFile(file);
 		}
 		
+		// write term stats to file and upload
+		if(counter != null) {
+			log.info("Saving terms stats");
+			String countStatsFile = Utils.TEMP_FOLDER + this.cloud.getInstanceId() + Constants.DOT_JSON;
+			Utils.objectToJsonFile(countStatsFile, counter.getCount());
+
+			this.cloud.uploadFileToCloudStorage(countStatsFile, bucket);
+		}
+		
 		// now upload the files again
 		for(final String file: localProcessedFiles) {
 			log.info("Uploading file: " + file);
@@ -125,15 +134,6 @@ public class LoadTask extends CommonTask {
 		// now delete all the locally processed files
 		for(final String file: localProcessedFiles) {
 			Utils.deleteFile(file);
-		}
-		
-		// write term stats to file and upload
-		if(counter != null) {
-			log.info("Saving terms stats");
-			String countStatsFile = Utils.TEMP_FOLDER + this.cloud.getInstanceId() + Constants.DOT_JSON;
-			Utils.objectToJsonFile(countStatsFile, counter.getCount());
-			
-			this.cloud.uploadFileToCloudStorage(countStatsFile, bucket);
 		}
 		
 		log.info("All files are processed and uploaded successfully");

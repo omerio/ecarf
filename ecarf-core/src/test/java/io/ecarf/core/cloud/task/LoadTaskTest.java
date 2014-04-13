@@ -63,7 +63,7 @@ public class LoadTaskTest {
 		VMMetaData metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, "ecarf");
 		metadata.addValue(VMMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
-		metadata.addValue(VMMetaData.ECARF_FILES, "linkedgeodata_links.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
+		metadata.addValue(VMMetaData.ECARF_FILES, "redirects_transitive_en.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
 		LoadTask task = new LoadTask(metadata, service);
 		task.run();
 	}

@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
  */
 public class TestUtils {
 	
-	public static final String TOKEN = "ya29.1.AADtN_UViRtRI6y8qSZgZeiNM_PIR4yn_TjtBdwq5BlBhZyDr3Nx9EmCbcvjQS3gjg81UHA";
+	public static final String TOKEN = "ya29.1.AADtN_Uu7_wujRYEr4cJN3CYEhaF94oso0u7hiVbc2P3hTHPLHG-bwwur3OYIjDRq7izXPw";
 	
 	public static void prepare(GoogleCloudService service) {
 		service.setAccessToken(TOKEN);

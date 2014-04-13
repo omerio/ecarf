@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.gzip;
+package io.ecarf.core.compress;
 
 import io.ecarf.core.utils.Constants;
 
@@ -30,6 +30,8 @@ import java.io.PrintWriter;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +43,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class GzipProcessor {
+public class CompressProcessor {
 	
 	private String inputFile;
 	
@@ -53,7 +55,7 @@ public class GzipProcessor {
 	 * @param inputFile
 	 * @param outputFile
 	 */
-	public GzipProcessor(String inputFile) {
+	public CompressProcessor(String inputFile) {
 		super();
 		this.inputFile = inputFile;
 		// get the file name before the ext
@@ -69,14 +71,21 @@ public class GzipProcessor {
 	 * @param callback
 	 * @throws IOException 
 	 */
-	public String process(GzipProcessorCallback callback) throws IOException {
+	public String process(CompressCallback callback) throws IOException {
 
 		try(InputStream fileIn = new FileInputStream(this.inputFile);) {
 
 			InputStream deflated = fileIn;
+			
+			// gzip
 			if(GzipUtils.isCompressedFilename(this.inputFile)) {
 				deflated = new GZIPInputStream(fileIn);
+			
 			} 
+			// bz2
+			else if(BZip2Utils.isCompressedFilename(this.inputFile)) {
+				deflated = new BZip2CompressorInputStream(fileIn);
+			}
 
 			try(BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
 					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile)));) {
@@ -92,6 +101,13 @@ public class GzipProcessor {
 			
 			return this.outputFile;
 		}
+	}
+
+	/**
+	 * @param inputFile the inputFile to set
+	 */
+	public void setInputFile(String inputFile) {
+		this.inputFile = inputFile;
 	}
 
 }

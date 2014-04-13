@@ -40,6 +40,9 @@ public class VMMetaData {
 	
 	private final static Logger log = Logger.getLogger(VMMetaData.class.getName()); 
 	
+	// the prefix of the vm name
+	public static final String ECARF_VM_PREFIX = "ecarf-evm-";
+	
 	// the task for the evm, currently load and reason
 	public static final String ECARF_TASK = "ecarf-task";
 	
@@ -54,6 +57,9 @@ public class VMMetaData {
 	
 	// A storage file that contains all the schema terms
 	public static final String ECARF_SCHEMA_TERMS = "ecarf-schema-terms";
+	
+	// the cloud big data table that should be used for reasoning
+	public static final String ECARF_TABLE = "ecarf-table";
 	
 	// a list of terms that the evm should be responsible for
 	public static final String ECARF_TERMS = "ecarf-terms";

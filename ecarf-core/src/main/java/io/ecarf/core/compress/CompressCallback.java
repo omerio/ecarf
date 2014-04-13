@@ -16,13 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.gzip;
+package io.ecarf.core.compress;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public interface GzipProcessorCallback {
+public interface CompressCallback {
 	
 	public String process(String line);
 
