@@ -20,16 +20,14 @@ package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.utils.Utils;
 
-import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class CommonTask implements Task {
+public abstract class CommonTask implements Task {
 	
 	protected final static Logger log = Logger.getLogger(CommonTask.class.getName()); 
 	
@@ -46,11 +44,20 @@ public class CommonTask implements Task {
 		this.metadata = metadata;
 		this.cloud = cloud;
 	}
-
-
+	
 	@Override
-	public void run() throws IOException {
+	public Object getResults() {
 		throw new UnsupportedOperationException("Not implemented");
 	}
+
+	/* (non-Javadoc)
+	 * @see io.ecarf.core.cloud.task.Task#setInput(java.lang.Object)
+	 */
+	@Override
+	public void setInput(Object input) {
+		throw new UnsupportedOperationException("Not implemented");
+		
+	}
+
 	
 }

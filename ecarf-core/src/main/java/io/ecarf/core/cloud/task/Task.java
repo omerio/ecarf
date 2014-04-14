@@ -27,9 +27,21 @@ import java.io.IOException;
 public interface Task {
 	
 	/**
+	 * The input that this task should handle
+	 * @param input
+	 */
+	public void setInput(Object input);
+	
+	/**
 	 * Run the task
 	 * @throws IOException
 	 */
 	public void run() throws IOException ;
+	
+	/**
+	 * Return the results of this task
+	 * @return
+	 */
+	public Object getResults();
 
 }

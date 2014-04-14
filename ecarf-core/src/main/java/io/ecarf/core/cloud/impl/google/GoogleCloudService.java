@@ -18,31 +18,7 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -506,8 +482,9 @@ public class GoogleCloudService implements CloudService {
 		
 	}
 	
-	public List<Object> listCloudStorageObjects(String bucket) throws IOException {
-		List<Object> objects = new ArrayList<>();
+	@Override
+	public List<io.ecarf.core.cloud.storage.StorageObject> listCloudStorageObjects(String bucket) throws IOException {
+		List<io.ecarf.core.cloud.storage.StorageObject> objects = new ArrayList<>();
 		Storage.Objects.List listObjects =  
 				getStorage().objects().list(bucket).setOauthToken(this.getOAuthToken());
 		// we are not paging, just get everything
@@ -521,6 +498,7 @@ public class GoogleCloudService implements CloudService {
 			object.setDirectLink(cloudObject.getSelfLink());
 			object.setName(cloudObject.getName());
 			object.setSize(cloudObject.getSize());
+			objects.add(object);
 		}
 		return objects;
 	}

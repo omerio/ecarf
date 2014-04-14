@@ -30,6 +30,10 @@ import java.util.Set;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 
 /**
+ * Given a Schema file on cloud storage, download it locally then count the relevant
+ * terms then save the terms count in a schema_terms.json to cloud storage for use by 
+ * the evms
+ * 
  * @author Omer Dawelbeit (omerio)
  *
  */
@@ -73,5 +77,6 @@ public class SchemaTermCountTask extends CommonTask {
 		
 		log.info("Successfully processed schema terms");
 	}
+
 
 }

@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.cloud;
 
+import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Callback;
 
@@ -84,6 +85,14 @@ public interface CloudService {
 	 */
 	public void downloadObjectFromCloudStorage(String object, String outFile,
 			String bucket) throws IOException;
+	
+	/**
+	 * List all the objects in the provided cloud storage bucket
+	 * @param bucket
+	 * @return
+	 * @throws IOException
+	 */
+	public List<StorageObject> listCloudStorageObjects(String bucket) throws IOException;
 
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
@@ -164,6 +173,8 @@ public interface CloudService {
 	 * @return
 	 */
 	public String getInstanceId();
+
+	
 
 	
 
