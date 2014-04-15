@@ -34,10 +34,13 @@ public class Input {
 	
 	private String bucket;
 	
+	// "centos-cloud/global/images/centos-6-v20140318"
 	private String imageId;
 	
+	//"default"
 	private String networkId;
 	
+	//"f1-micro"
 	private String vmType;
 
 	/**
