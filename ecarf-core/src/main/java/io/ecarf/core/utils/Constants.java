@@ -24,6 +24,11 @@ package io.ecarf.core.utils;
  */
 public class Constants {
 	
+	/**
+	 * 10 seconds before API operations are checked for completion
+	 */
+	public static final int API_RECHECK_DELAY = 10;
+	
 	public static final String GOOGLE = "google";
 	
 	public static final String AMAZON = "amazon";

@@ -35,13 +35,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -119,7 +119,8 @@ public class Utils {
 	 */
 	public static void block(int seconds) {
 		try {
-			Thread.sleep(DateUtils.MILLIS_PER_SECOND * seconds);
+			TimeUnit.SECONDS.sleep(seconds);
+			//Thread.sleep(DateUtils.MILLIS_PER_SECOND * seconds);
 		} catch (InterruptedException e1) {
 			log.log(Level.WARNING, "wait interrupted", e1);
 		}

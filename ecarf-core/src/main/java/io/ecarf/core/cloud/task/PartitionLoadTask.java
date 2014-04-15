@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -41,7 +40,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class PartitionLoadTask extends CommonTask {
 	
-	private List<String> filesPerNode;
 
 	public PartitionLoadTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
@@ -55,7 +53,7 @@ public class PartitionLoadTask extends CommonTask {
 		
 		log.info("Processing partition load");
 		
-		String bucket = metadata.getBucket();
+		String bucket = this.input.getBucket();
 		
 		List<StorageObject> objects = this.cloud.listCloudStorageObjects(bucket);
 		
@@ -66,34 +64,15 @@ public class PartitionLoadTask extends CommonTask {
 		}
 		
 		// each node should handle a gigbyte of data
+		// FIXME add this to the configurations
 		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 0.0, FileUtils.ONE_GB);
 		List<List<Item>> bins = function.partition();
 		
-		if(bins.size() > 0) {
-			this.filesPerNode = new ArrayList<>();
-			
-			for(List<Item> bin: bins) {
-				//System.out.println("Set total: " + bin.size() + ", Set" + bin + ", Sum: " + Utils.sum(bin) + "\n");
-				List<String> files = new ArrayList<>();
-				for(Item item: bin) {
-					files.add(item.getKey());
-				}
-				
-				this.filesPerNode.add(StringUtils.join(files, ','));
-			}
-		}
-		
-		for(String files: this.filesPerNode) {
-			log.info("Partitioned files: " + files + "\n");
-		}
+		this.results = new Results();
+		results.setBins(bins);
 		
 		log.info("Successfully processed partition load");
 	}
 	
-	@Override
-	public Object getResults() {
-		
-		return filesPerNode;
-	}
 
 }

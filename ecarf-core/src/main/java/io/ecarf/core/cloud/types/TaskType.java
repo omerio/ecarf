@@ -24,6 +24,6 @@ package io.ecarf.core.cloud.types;
  */
 public enum TaskType {
 	
-	LOAD, REASON;
+	LOAD, REASON, COUNT;
 
 }

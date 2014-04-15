@@ -46,6 +46,9 @@ public class TaskFactory {
 		case REASON:
 			task = new ReasonTask(metadata, cloud);
 			break;
+			
+		case COUNT:
+			task = new SchemaTermCountTask(metadata, cloud);
 		
 		default:
 			throw new IllegalArgumentException("Unknown task type: " + type);

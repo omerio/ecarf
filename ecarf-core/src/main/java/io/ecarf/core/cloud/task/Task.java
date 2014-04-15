@@ -30,7 +30,7 @@ public interface Task {
 	 * The input that this task should handle
 	 * @param input
 	 */
-	public void setInput(Object input);
+	public void setInput(Input input);
 	
 	/**
 	 * Run the task
@@ -42,6 +42,6 @@ public interface Task {
 	 * Return the results of this task
 	 * @return
 	 */
-	public Object getResults();
+	public Results getResults();
 
 }

@@ -18,15 +18,39 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
-import io.ecarf.core.compress.CompressProcessor;
 import io.ecarf.core.compress.CompressCallback;
+import io.ecarf.core.compress.CompressProcessor;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
@@ -50,7 +74,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,12 +122,7 @@ public class GoogleCloudService implements CloudService {
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-	
-	/**
-	 * 10 seconds before API operations are checked for completion
-	 */
-	private static final int API_RECHECK_DELAY = 10;
-	
+		
 	/** Global instance of the HTTP transport. */
 	private HttpTransport httpTransport;
 	
@@ -657,23 +675,18 @@ public class GoogleCloudService implements CloudService {
 	 */
 	private void blockOnOperation(Operation operation, String zoneId) throws IOException {
 		do {
-			
-			try {
-				// sleep for 10 seconds before checking the operation status
-				TimeUnit.SECONDS.sleep(API_RECHECK_DELAY);
-			} catch (InterruptedException e) {
-				log.log(Level.WARNING, "thread interrupted!", e);
-			}
-			
+			// sleep for 10 seconds before checking the operation status
+			Utils.block(Constants.API_RECHECK_DELAY);
+
 			operation = this.getCompute().zoneOperations().get(projectId, zoneId, operation.getName())
 					.setOauthToken(this.getOAuthToken()).execute();
-			
+
 			// check if the operation has actually failed
 			if((operation.getError() != null) && (operation.getError().getErrors() != null)) {
 				Errors error = operation.getError().getErrors().get(0);
 				throw new IOException("Operation failed: " + error.getCode() + " - " + error.getMessage());
 			}
-			
+
 		} while(!DONE.endsWith(operation.getStatus()));
 	}
 	
@@ -766,15 +779,14 @@ public class GoogleCloudService implements CloudService {
 
 		// we have to block until all instances are provisioned
 		if(block) {
+			
 			for(VMConfig config: configs) {
 				String status = InstanceStatus.PROVISIONING.toString();
+				
 				do {
-					try {
-						// sleep for 10 seconds before checking the vm status
-						TimeUnit.SECONDS.sleep(API_RECHECK_DELAY);
-					} catch (InterruptedException e) {
-						log.log(Level.WARNING, "thread interrupted!", e);
-					}
+					// sleep for 10 seconds before checking the vm status
+					Utils.block(Constants.API_RECHECK_DELAY);
+
 					String zoneId = config.getZoneId();
 					zoneId = zoneId != null ? zoneId : this.zone;
 					// check the instance status
@@ -789,7 +801,7 @@ public class GoogleCloudService implements CloudService {
 				}
 			}
 		}
-		
+
 		return success;
 	}
 	

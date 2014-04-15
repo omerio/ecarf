@@ -19,18 +19,17 @@
 package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.storage.StorageObject;
-import io.ecarf.core.partition.Item;
-import io.ecarf.core.partition.PartitionFunction;
-import io.ecarf.core.partition.PartitionFunctionFactory;
+import io.ecarf.core.cloud.types.TaskType;
+import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -41,7 +40,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class DistributeLoadTask extends CommonTask {
 	
-	private List<String> filesPerNode;
 
 	public DistributeLoadTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
@@ -52,64 +50,75 @@ public class DistributeLoadTask extends CommonTask {
 	 */
 	@Override
 	public void run() throws IOException {
-		
-		log.info("Processing partition load");
-		
-		String bucket = metadata.getBucket();
-		
-		List<StorageObject> objects = this.cloud.listCloudStorageObjects(bucket);
-		
-		List<Item> items = new ArrayList<>();
-		
-		for(StorageObject object: objects) {
-			items.add(new Item(object.getName(), object.getSize().longValue()));
-		}
-		
-		// each node should handle a gigbyte of data
-		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 0.0, FileUtils.ONE_GB);
-		List<List<Item>> bins = function.partition();
-		
-		if(bins.size() > 0) {
-			this.filesPerNode = new ArrayList<>();
+
+		log.info("Processing distribute load");
+
+		List<String> nodeFiles = this.input.getItems();
+
+		if((nodeFiles != null) && !nodeFiles.isEmpty()) {
 			
-			for(List<Item> bin: bins) {
-				//System.out.println("Set total: " + bin.size() + ", Set" + bin + ", Sum: " + Utils.sum(bin) + "\n");
-				List<String> files = new ArrayList<>();
-				for(Item item: bin) {
-					files.add(item.getKey());
+			this.results = (new Results()).newNodes();
+
+			String bucket = this.input.getBucket();
+
+			List<VMConfig> vms = new ArrayList<>();
+
+			long timestamp = (new Date()).getTime();
+			int count = 0;
+			
+			for(String files: nodeFiles) {
+				VMMetaData metaData = new VMMetaData();
+				metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
+					.addValue(VMMetaData.ECARF_FILES, files)
+					.addValue(VMMetaData.ECARF_BUCKET, bucket);
+				
+				String instanceId = VMMetaData.ECARF_VM_PREFIX + (timestamp + count);
+				VMConfig conf = new VMConfig();
+				conf.setImageId(input.getImageId())
+					.setInstanceId(instanceId)
+					.setMetaData(metaData)
+					.setNetworkId(input.getNetworkId())
+					.setVmType(input.getVmType());
+				
+				this.results.getNodes().add(instanceId);
+
+				log.info("Create VM Config for " + instanceId);
+				count++;
+			}
+			
+			boolean success = this.cloud.startInstance(vms, true);
+
+			if(success) {
+				// wait for the VMs to finish their loading
+				for(String instanceId: this.results.getNodes()) {	
+					boolean ready = false;
+					
+					do {
+						Utils.block(Constants.API_RECHECK_DELAY);
+						
+						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
+						ready = VMStatus.READY.equals(metaData.getVMStatus());
+					
+					} while (!ready);
 				}
 				
-				this.filesPerNode.add(StringUtils.join(files, ','));
+				// all done, now get the results from cloud storage and combine the schema terms stats
+				
+				for(String instanceId: this.results.getNodes()) {	
+					String statsFile = instanceId + Constants.DOT_JSON;
+					
+				}
+
+			} else {
+				// TODO retry and error handling
+				throw new IOException("Some eVMs have failed to start");
 			}
-		}
-		
-		for(String files: this.filesPerNode) {
-			log.info("Partitioned files: " + files + "\n");
-		}
-		
-		log.info("Successfully processed partition load");
-	}
-	
-	@Override
-	public Object getResults() {
-		
-		return filesPerNode;
-	}
+			
 
-	/* (non-Javadoc)
-	 * @see io.ecarf.core.cloud.task.CommonTask#setInput(java.lang.Object)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public void setInput(Object input) {
-		this.filesPerNode = (List<String>) input;
-	}
-	
-	
-	public class Results {
-		private List<String> nodes;
-		
-		private List<Item> items;
-	}
+		}
 
+		log.info("Successfully processed distribute load");
+	}
+	
+	
 }

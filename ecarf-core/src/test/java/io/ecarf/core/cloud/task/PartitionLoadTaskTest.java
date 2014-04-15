@@ -65,18 +65,26 @@ public class PartitionLoadTaskTest {
 	 */
 	@Test
 	public void testRun() throws IOException {
-		VMMetaData metadata = new VMMetaData();
-		metadata.addValue(VMMetaData.ECARF_BUCKET, "dbpedia");
-		PartitionLoadTask task = new PartitionLoadTask(metadata, service);
+		
+		Input input = (new Input()).setBucket("dbpedia");
+		PartitionLoadTask task = new PartitionLoadTask(null, service);
+		task.setInput(input);
 		task.run();
 		
-		List<String> files = (List<String>) task.getResults();
-		assertNotNull(files);
-		assertEquals(5, files.size());
+		Results results = task.getResults();
+		
+		List<String> nodeFiles = results.getBinItems();
+		
+		for(String files: nodeFiles) {
+			System.out.println("Partitioned files: " + files + "\n");
+		}
+		
+		assertNotNull(nodeFiles);
+		assertEquals(5, nodeFiles.size());
 		
 		Set<String> allFiles = new HashSet<>();
 		
-		for(String file: files) {
+		for(String file: nodeFiles) {
 			allFiles.addAll(Arrays.asList(StringUtils.split(file, ',')));
 		}
 		

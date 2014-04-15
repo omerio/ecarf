@@ -35,6 +35,10 @@ public abstract class CommonTask implements Task {
 	
 	protected CloudService cloud;
 	
+	protected Results results;
+	
+	protected Input input;
+	
 
 	/**
 	 * @param metadata
@@ -46,17 +50,16 @@ public abstract class CommonTask implements Task {
 	}
 	
 	@Override
-	public Object getResults() {
-		throw new UnsupportedOperationException("Not implemented");
+	public Results getResults() {
+		return this.results;
 	}
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.Task#setInput(java.lang.Object)
 	 */
 	@Override
-	public void setInput(Object input) {
-		throw new UnsupportedOperationException("Not implemented");
-		
+	public void setInput(Input input) {
+		this.input = input;
 	}
 
 	
