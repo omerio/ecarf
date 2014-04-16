@@ -61,6 +61,7 @@ public class GoogleMetaData {
 	public static final String MIGRATE = "MIGRATE";
 	public static final String EXT_NAT = "External NAT";
 	public static final String ONE_TO_ONE_NAT = "ONE_TO_ONE_NAT";
+	public static final String STARTUP_SCRIPT = "startup-script";
 	
 	
 

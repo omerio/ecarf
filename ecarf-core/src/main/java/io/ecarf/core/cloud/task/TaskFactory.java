@@ -37,21 +37,25 @@ public class TaskFactory {
 	public static Task getTask(VMMetaData metadata, CloudService cloud) {
 		
 		TaskType type = metadata.getTaskType();
-		Task task;
-		switch(type) {
-		case LOAD:
-			task = new LoadTask(metadata, cloud);
-			break;
-
-		case REASON:
-			task = new ReasonTask(metadata, cloud);
-			break;
-			
-		case COUNT:
-			task = new SchemaTermCountTask(metadata, cloud);
+		Task task = null;
 		
-		default:
-			throw new IllegalArgumentException("Unknown task type: " + type);
+		if(type != null) {
+			
+			switch(type) {
+			case LOAD:
+				task = new LoadTask(metadata, cloud);
+				break;
+
+			case REASON:
+				task = new ReasonTask(metadata, cloud);
+				break;
+
+			case COUNT:
+				task = new SchemaTermCountTask(metadata, cloud);
+
+			default:
+				throw new IllegalArgumentException("Unknown task type: " + type);
+			}
 		}
 		
 		return task;

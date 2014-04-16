@@ -138,21 +138,44 @@ public class Utils {
 	}
 		
 	/**
-	 * 
+	 * Convert a json file to set
 	 * @param filename
 	 * @return
 	 * @throws IOException
 	 */
-	public static Set<String> fileToSet(String filename) throws IOException {
+	public static Set<String> jsonFileToSet(String filename) throws IOException {
 		
 		try(FileReader reader = new FileReader(filename)) {
+			
 			return GSON.fromJson(new JsonReader(reader),  
 					new TypeToken<Set<String>>(){}.getType());
+			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "failed to prase json into set", e);
 			throw new IOException(e);
 		}
 	}
+	
+	/**
+	 * Convert a json file to map
+	 * @param filename
+	 * @return
+	 * @throws IOException
+	 */
+	public static Map<String, Long> jsonFileToMap(String filename) throws IOException {
+		
+		try(FileReader reader = new FileReader(filename)) {
+			
+			return GSON.fromJson(new JsonReader(reader),  
+					new TypeToken<Map<String, Long>>(){}.getType());
+			
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "failed to prase json into map", e);
+			throw new IOException(e);
+		}
+	}
+	
+	
 	
 	/**
 	 * 
@@ -205,6 +228,10 @@ public class Utils {
 			sum += item.getWeight();
 		}
 		return sum;
+	}
+	
+	public static int getApiRecheckDelay() {
+		return Config.getIntegerProperty(Constants.API_DELAY_KEY, Constants.API_RECHECK_DELAY);
 	}
 
 //	/*

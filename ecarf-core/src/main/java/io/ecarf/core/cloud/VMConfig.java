@@ -41,6 +41,8 @@ public class VMConfig {
 	// for Google, this is an example
 	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/global/networks/default
 	private String networkId;
+	
+	private String startupScript;
 
 	private VMMetaData metaData;
 
@@ -141,6 +143,20 @@ public class VMConfig {
 	 */
 	public String toString() {
 		return ReflectionToStringBuilder.toString(this);
+	}
+
+	/**
+	 * @return the startupScript
+	 */
+	public String getStartupScript() {
+		return startupScript;
+	}
+
+	/**
+	 * @param startupScript the startupScript to set
+	 */
+	public void setStartupScript(String startupScript) {
+		this.startupScript = startupScript;
 	}
 
 }

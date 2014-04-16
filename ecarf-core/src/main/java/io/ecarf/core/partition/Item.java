@@ -57,8 +57,9 @@ public class Item implements Comparable<Item>	{
 	/**
 	 * @param key the key to set
 	 */
-	public void setKey(String key) {
+	public Item setKey(String key) {
 		this.key = key;
+		return this;
 	}
 
 	/**
@@ -71,8 +72,9 @@ public class Item implements Comparable<Item>	{
 	/**
 	 * @param weight the weight to set
 	 */
-	public void setWeight(Long weight) {
+	public Item setWeight(Long weight) {
 		this.weight = weight;
+		return this;
 	}
 
 	/*

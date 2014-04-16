@@ -102,6 +102,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testUploadFileToCloudStorage() throws IOException {
 
 		this.service.uploadFileToCloudStorage(Utils.TEMP_FOLDER + "umbel_links.nt_out.gz", "ecarf",  new Callback() {
@@ -130,17 +131,17 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void testCreateInstance() throws IOException {
 		
 		
 		VMMetaData metaData = new VMMetaData();
-		metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
-			.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
+		//metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
+			//.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
 		
 		VMConfig conf = new VMConfig();
-		conf.setImageId("centos-cloud/global/images/centos-6-v20140318")
-			.setInstanceId("ecarf-evm-2")
+		conf.setImageId("centos-cloud/global/images/centos-6-v20140408")
+			.setInstanceId("ecarf-evm-1")
 			.setMetaData(metaData)
 			.setNetworkId("default")
 			.setVmType("f1-micro");

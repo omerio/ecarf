@@ -627,7 +627,7 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
-	 *TODO change to VMMetaData
+	 *
 	 * Update the meta data of the current instance
 	 * @param key
 	 * @param value
@@ -639,7 +639,7 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
-	 * TODO change to VMMetaData
+	 * 
 	 * Update the meta data of the the provided instance
 	 * @param key
 	 * @param value
@@ -676,7 +676,7 @@ public class GoogleCloudService implements CloudService {
 	private void blockOnOperation(Operation operation, String zoneId) throws IOException {
 		do {
 			// sleep for 10 seconds before checking the operation status
-			Utils.block(Constants.API_RECHECK_DELAY);
+			Utils.block(Utils.getApiRecheckDelay());
 
 			operation = this.getCompute().zoneOperations().get(projectId, zoneId, operation.getName())
 					.setOauthToken(this.getOAuthToken()).execute();
@@ -731,6 +731,10 @@ public class GoogleCloudService implements CloudService {
 					this.projectId + ZONES + zoneId + MACHINE_TYPES+ config.getVmType());
 			content.setName(config.getInstanceId());
 			//content.setZone(zoneId);
+			// startup script
+			if(StringUtils.isNoneBlank(config.getStartupScript())) {
+				config.getMetaData().addValue(GoogleMetaData.STARTUP_SCRIPT, config.getStartupScript());
+			}
 			content.setMetadata(this.getMetaData(config.getMetaData()));
 
 			// service account
@@ -785,7 +789,7 @@ public class GoogleCloudService implements CloudService {
 				
 				do {
 					// sleep for 10 seconds before checking the vm status
-					Utils.block(Constants.API_RECHECK_DELAY);
+					Utils.block(Utils.getApiRecheckDelay());
 
 					String zoneId = config.getZoneId();
 					zoneId = zoneId != null ? zoneId : this.zone;

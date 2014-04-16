@@ -42,6 +42,15 @@ public class Input {
 	
 	//"f1-micro"
 	private String vmType;
+	
+	private String startupScript;
+	
+	//Config.getLongProperty(Constants.FILE_BIN_CAP_KEY, FileUtils.ONE_GB)
+	private Long fileSizePerNode;
+	
+	//Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1)
+	private Double newBinTermPercent;
+	
 
 	/**
 	 * @return the items
@@ -116,6 +125,48 @@ public class Input {
 	public Input setVmType(String vmType) {
 		this.vmType = vmType;
 		return this;
+	}
+
+	/**
+	 * @return the startupScript
+	 */
+	public String getStartupScript() {
+		return startupScript;
+	}
+
+	/**
+	 * @param startupScript the startupScript to set
+	 */
+	public void setStartupScript(String startupScript) {
+		this.startupScript = startupScript;
+	}
+
+	/**
+	 * @return the fileSizePerNode
+	 */
+	public Long getFileSizePerNode() {
+		return fileSizePerNode;
+	}
+
+	/**
+	 * @param fileSizePerNode the fileSizePerNode to set
+	 */
+	public void setFileSizePerNode(Long fileSizePerNode) {
+		this.fileSizePerNode = fileSizePerNode;
+	}
+
+	/**
+	 * @return the newBinTermPercent
+	 */
+	public Double getNewBinTermPercent() {
+		return newBinTermPercent;
+	}
+
+	/**
+	 * @param newBinTermPercent the newBinTermPercent to set
+	 */
+	public void setNewBinTermPercent(Double newBinTermPercent) {
+		this.newBinTermPercent = newBinTermPercent;
 	}
 
 }

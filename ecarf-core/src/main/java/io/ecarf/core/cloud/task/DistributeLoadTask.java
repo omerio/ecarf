@@ -23,13 +23,19 @@ import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.partition.Item;
+import io.ecarf.core.partition.PartitionFunction;
+import io.ecarf.core.partition.PartitionFunctionFactory;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -78,7 +84,8 @@ public class DistributeLoadTask extends CommonTask {
 					.setInstanceId(instanceId)
 					.setMetaData(metaData)
 					.setNetworkId(input.getNetworkId())
-					.setVmType(input.getVmType());
+					.setVmType(input.getVmType())
+					.setStartupScript(input.getStartupScript());
 				
 				this.results.getNodes().add(instanceId);
 
@@ -94,7 +101,7 @@ public class DistributeLoadTask extends CommonTask {
 					boolean ready = false;
 					
 					do {
-						Utils.block(Constants.API_RECHECK_DELAY);
+						Utils.block(Utils.getApiRecheckDelay());
 						
 						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
 						ready = VMStatus.READY.equals(metaData.getVMStatus());
@@ -103,9 +110,48 @@ public class DistributeLoadTask extends CommonTask {
 				}
 				
 				// all done, now get the results from cloud storage and combine the schema terms stats
+				Map<String, Long> allTermStats = new HashMap<String, Long>();
 				
 				for(String instanceId: this.results.getNodes()) {	
 					String statsFile = instanceId + Constants.DOT_JSON;
+					
+					String localStatsFile = Utils.TEMP_FOLDER + statsFile;
+					this.cloud.downloadObjectFromCloudStorage(statsFile, localStatsFile, bucket);
+					
+					// convert from JSON
+					Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
+					
+					for(Entry<String, Long> term: termStats.entrySet()) {
+						String key = term.getKey();
+						Long value = term.getValue();
+						
+						if(allTermStats.containsKey(key)) {
+							value = allTermStats.get(key) + value;
+						} 
+						
+						allTermStats.put(key, value);
+					}
+					
+				}
+				
+				if(!allTermStats.isEmpty()) {
+					
+					List<Item> items = new ArrayList<>();
+					for(Entry<String, Long> item: allTermStats.entrySet()) {
+						Item anItem = (new Item()).setKey(item.getKey()).setWeight(item.getValue());
+						items.add(anItem);
+					}
+					
+					// each node can handle up to 10% more than the largest term
+					// read from the configurations
+					PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
+							this.input.getNewBinTermPercent(), null);
+					List<List<Item>> bins = function.partition();
+					
+					this.results = new Results();
+					results.setBins(bins);
+					
+					log.info("Successfully created term stats: " + bins);
 					
 				}
 

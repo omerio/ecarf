@@ -70,7 +70,12 @@ public class EcarfEvmTask {
 
 				// run the task
 				Task task = TaskFactory.getTask(metadata, service);
-				task.run();
+				if(task != null) {
+					task.run();
+				} 
+				// else {
+				// no task is set, just set status to ready and wait for tasks
+				//}
 				
 				// finished processing
 				// blank the task type and set the status to READY

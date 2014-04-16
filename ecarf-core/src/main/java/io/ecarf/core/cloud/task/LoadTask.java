@@ -66,7 +66,7 @@ public class LoadTask extends CommonTask {
 			this.cloud.downloadObjectFromCloudStorage(schemaTermsFile, localSchemaTermsFile, bucket);
 			
 			// convert from JSON
-			Set<String> schemaTerms = Utils.fileToSet(localSchemaTermsFile);
+			Set<String> schemaTerms = Utils.jsonFileToSet(localSchemaTermsFile);
 			counter = new TermCounter();
 			counter.setTermsToCount(schemaTerms);
 		} 
@@ -95,7 +95,7 @@ public class LoadTask extends CommonTask {
 			});
 		}
 		
-		Utils.waitForEquality(files.size(), localFiles.size(), 10);
+		Utils.waitForEquality(files.size(), localFiles.size(), Utils.getApiRecheckDelay());
 		
 		// all downloaded, carryon now, process the files
 		for(String file: localFiles) {
@@ -129,7 +129,7 @@ public class LoadTask extends CommonTask {
 			});
 		}
 		
-		Utils.waitForEquality(localProcessedFiles.size(), uploadedFiles.size(), 10);
+		Utils.waitForEquality(localProcessedFiles.size(), uploadedFiles.size(), Utils.getApiRecheckDelay());
 		
 		// now delete all the locally processed files
 		for(final String file: localProcessedFiles) {

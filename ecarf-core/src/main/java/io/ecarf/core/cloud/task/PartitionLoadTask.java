@@ -24,12 +24,11 @@ import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.partition.PartitionFunction;
 import io.ecarf.core.partition.PartitionFunctionFactory;
+import io.ecarf.core.utils.Constants;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -60,12 +59,18 @@ public class PartitionLoadTask extends CommonTask {
 		List<Item> items = new ArrayList<>();
 		
 		for(StorageObject object: objects) {
-			items.add(new Item(object.getName(), object.getSize().longValue()));
+			String filename = object.getName();
+			if(filename.endsWith(Constants.COMPRESSED_N_TRIPLES)) {
+				items.add(new Item(filename, object.getSize().longValue()));
+			} else {
+				log.warning("Skipping file: " + filename);
+			}
 		}
 		
 		// each node should handle a gigbyte of data
-		// FIXME add this to the configurations
-		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 0.0, FileUtils.ONE_GB);
+		// read it the configurations
+		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 0.0, 
+				this.input.getFileSizePerNode());
 		List<List<Item>> bins = function.partition();
 		
 		this.results = new Results();

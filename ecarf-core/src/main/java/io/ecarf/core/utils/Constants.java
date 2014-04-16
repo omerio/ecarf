@@ -46,4 +46,12 @@ public class Constants {
 	public static final String DOT_JSON = ".json";
 	
 	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
+	
+	public static final String COMPRESSED_N_TRIPLES = ".nt.gz";
+	
+	
+	// config keys
+	public static final String TERM_NEW_BIN_KEY = "ecarf.io.term.partition.new.bin.percentage";
+	public static final String FILE_BIN_CAP_KEY = "ecarf.io.file.partition.new.bin.weight";
+	public static final String API_DELAY_KEY = "ecarf.io.api.check.delay.seconds";
 }
