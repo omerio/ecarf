@@ -49,6 +49,8 @@ public class Constants {
 	
 	public static final String COMPRESSED_N_TRIPLES = ".nt.gz";
 	
+	public static final String EVM_EXCEPTION = "EVM Exception: ";
+	
 	
 	// config keys
 	public static final String TERM_NEW_BIN_KEY = "ecarf.io.term.partition.new.bin.percentage";

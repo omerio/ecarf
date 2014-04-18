@@ -51,6 +51,9 @@ public class Input {
 	//Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1)
 	private Double newBinTermPercent;
 	
+	// should be supplied if we want the evms to do term analysis
+	private String schemaTermsFile;
+	
 
 	/**
 	 * @return the items
@@ -169,6 +172,21 @@ public class Input {
 	 */
 	public Input setNewBinTermPercent(Double newBinTermPercent) {
 		this.newBinTermPercent = newBinTermPercent;
+		return this;
+	}
+
+	/**
+	 * @return the schemaTermsFile
+	 */
+	public String getSchemaTermsFile() {
+		return schemaTermsFile;
+	}
+
+	/**
+	 * @param schemaTermsFile the schemaTermsFile to set
+	 */
+	public Input setSchemaTermsFile(String schemaTermsFile) {
+		this.schemaTermsFile = schemaTermsFile;
 		return this;
 	}
 

@@ -86,7 +86,8 @@ public class EcarfCcvmTask {
 				.setNetworkId(Config.getProperty(Constants.NETWORK_ID_KEY))
 				.setVmType(Config.getProperty(Constants.VM_TYPE_KEY))
 				.setStartupScript(Config.getProperty(Constants.STARTUP_SCRIPT_KEY))
-				.setNewBinTermPercent(Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1));
+				.setNewBinTermPercent(Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1))
+				.setSchemaTermsFile(Constants.SCHEMA_TERMS_JSON);;
 		task = new DistributeLoadTask(null, service);
 		task.setInput(input);
 		task.run();

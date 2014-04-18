@@ -36,6 +36,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -77,6 +80,10 @@ public class DistributeLoadTask extends CommonTask {
 				metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
 					.addValue(VMMetaData.ECARF_FILES, files)
 					.addValue(VMMetaData.ECARF_BUCKET, bucket);
+				// do we have a schema terms file
+				if(StringUtils.isNotBlank(this.input.getSchemaTermsFile())) {
+					metaData.addValue(VMMetaData.ECARF_SCHEMA_TERMS, this.input.getSchemaTermsFile());
+				}
 				
 				String instanceId = VMMetaData.ECARF_VM_PREFIX + (timestamp + count);
 				VMConfig conf = new VMConfig();
@@ -107,53 +114,63 @@ public class DistributeLoadTask extends CommonTask {
 						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
 						ready = VMStatus.READY.equals(metaData.getVMStatus());
 						// TODO status can be error ERROR
+						if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
+							// for now we are throwing an exception, in the future need to return a status so tasks can be retried
+							throw Utils.exceptionFromEcarfError(metaData, instanceId);
+							
+						}
+						
 					} while (!ready);
 				}
 				
 				// all done, now get the results from cloud storage and combine the schema terms stats
-				Map<String, Long> allTermStats = new HashMap<String, Long>();
-				
-				for(String instanceId: this.results.getNodes()) {	
-					String statsFile = instanceId + Constants.DOT_JSON;
+				if(StringUtils.isNotBlank(this.input.getSchemaTermsFile())) {
 					
-					String localStatsFile = Utils.TEMP_FOLDER + statsFile;
-					this.cloud.downloadObjectFromCloudStorage(statsFile, localStatsFile, bucket);
+					Map<String, Long> allTermStats = new HashMap<String, Long>();
 					
-					// convert from JSON
-					Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
-					
-					for(Entry<String, Long> term: termStats.entrySet()) {
-						String key = term.getKey();
-						Long value = term.getValue();
-						
-						if(allTermStats.containsKey(key)) {
-							value = allTermStats.get(key) + value;
-						} 
-						
-						allTermStats.put(key, value);
+					for(String instanceId: this.results.getNodes()) {	
+						String statsFile = instanceId + Constants.DOT_JSON;
+
+						String localStatsFile = Utils.TEMP_FOLDER + statsFile;
+						this.cloud.downloadObjectFromCloudStorage(statsFile, localStatsFile, bucket);
+
+						// convert from JSON
+						Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
+
+						for(Entry<String, Long> term: termStats.entrySet()) {
+							String key = term.getKey();
+							Long value = term.getValue();
+
+							if(allTermStats.containsKey(key)) {
+								value = allTermStats.get(key) + value;
+							} 
+
+							allTermStats.put(key, value);
+						}
+
 					}
-					
-				}
-				
-				if(!allTermStats.isEmpty()) {
-					
-					List<Item> items = new ArrayList<>();
-					for(Entry<String, Long> item: allTermStats.entrySet()) {
-						Item anItem = (new Item()).setKey(item.getKey()).setWeight(item.getValue());
-						items.add(anItem);
+
+					if(!allTermStats.isEmpty()) {
+
+						List<Item> items = new ArrayList<>();
+						for(Entry<String, Long> item: allTermStats.entrySet()) {
+							Item anItem = (new Item()).setKey(item.getKey()).setWeight(item.getValue());
+							items.add(anItem);
+						}
+
+						// each node can handle up to 10% more than the largest term
+						// read from the configurations
+						PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
+								this.input.getNewBinTermPercent(), null);
+						
+						List<List<Item>> bins = function.partition();
+
+						this.results = new Results();
+						results.setBins(bins);
+
+						log.info("Successfully created term stats: " + bins);
+
 					}
-					
-					// each node can handle up to 10% more than the largest term
-					// read from the configurations
-					PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
-							this.input.getNewBinTermPercent(), null);
-					List<List<Item>> bins = function.partition();
-					
-					this.results = new Results();
-					results.setBins(bins);
-					
-					log.info("Successfully created term stats: " + bins);
-					
 				}
 
 			} else {

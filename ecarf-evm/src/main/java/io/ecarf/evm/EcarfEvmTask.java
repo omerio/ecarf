@@ -26,6 +26,7 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -95,9 +96,7 @@ public class EcarfEvmTask {
 				try {
 					
 					metadata = this.service.getEcarfMetaData(false);
-					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.ERROR.toString());
-					metadata.addValue(VMMetaData.ECARF_EXCEPTION, e.getClass().toString());
-					metadata.addValue(VMMetaData.ECARF_MESSAGE, e.getMessage());
+					Utils.exceptionToEcarfError(metadata, e);
 					this.service.updateInstanceMetadata(metadata);
 					
 					// wait until we get further instructions

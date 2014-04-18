@@ -18,6 +18,8 @@
  */
 package io.ecarf.core.utils;
 
+import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.types.VMStatus;
 import io.ecarf.core.partition.Item;
 
 import java.io.BufferedInputStream;
@@ -28,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -42,6 +45,7 @@ import java.util.logging.Logger;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -230,8 +234,51 @@ public class Utils {
 		return sum;
 	}
 	
+	/**
+	 * Helper to get the api delay from the configurations
+	 * @return
+	 */
 	public static int getApiRecheckDelay() {
 		return Config.getIntegerProperty(Constants.API_DELAY_KEY, Constants.API_RECHECK_DELAY);
+	}
+	
+	/**
+	 * From an exception populate an ecarf metadata error
+	 * @param metadata
+	 * @param e
+	 */
+	public static void exceptionToEcarfError(VMMetaData metadata, Exception e) {
+		metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.ERROR.toString());
+		metadata.addValue(VMMetaData.ECARF_EXCEPTION, e.getClass().getName());
+		metadata.addValue(VMMetaData.ECARF_MESSAGE, e.getMessage());
+	}
+	
+	/**
+	 * Return an IOException from the metaData error
+	 * @param metaData
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static IOException exceptionFromEcarfError(VMMetaData metaData, String instanceId) {
+		Class clazz = IOException.class;
+		String message = metaData.getMessage();
+		if(StringUtils.isNoneBlank(metaData.getException())) {
+			try {
+				clazz = Class.forName(metaData.getException());
+			} catch (ClassNotFoundException e) {
+				log.log(Level.WARNING, "failed to load exception class from evm");
+			}
+		}
+		Exception cause;
+		try {
+			Constructor ctor = clazz.getDeclaredConstructor(String.class);
+			ctor.setAccessible(true);
+			cause = (Exception) ctor.newInstance(message);
+		} catch (Exception e) {
+			log.log(Level.WARNING, "failed to load exception class from evm");
+			cause = new IOException(message);
+		}
+		return new IOException(Constants.EVM_EXCEPTION + instanceId, cause);
 	}
 
 //	/*

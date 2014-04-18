@@ -67,7 +67,7 @@ public class VMMetaData {
 	// the cloud storage bucket to use for processing the relevant ontology files
 	public static final String ECARF_BUCKET = "ecarf-bucket";
 	
-	// ecarf-exception	class java.io.FileNotFoundException
+	// ecarf-exception	java.io.FileNotFoundException
 	public static final String ECARF_EXCEPTION = "ecarf-exception";
 	
 	// ecarf-message	/tmpswetodblp_2008_2.nt.gz (Permission denied)
