@@ -88,6 +88,7 @@ public class DistributeLoadTask extends CommonTask {
 					.setStartupScript(input.getStartupScript());
 				
 				this.results.getNodes().add(instanceId);
+				vms.add(conf);
 
 				log.info("Create VM Config for " + instanceId);
 				count++;

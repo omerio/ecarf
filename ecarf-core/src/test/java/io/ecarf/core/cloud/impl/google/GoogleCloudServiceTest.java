@@ -21,11 +21,11 @@ package io.ecarf.core.cloud.impl.google;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import io.ecarf.core.cloud.TestUtils;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.utils.Callback;
+import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.File;

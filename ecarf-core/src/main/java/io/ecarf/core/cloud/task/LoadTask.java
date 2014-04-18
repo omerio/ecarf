@@ -32,6 +32,8 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * EVM Task to load the provided cloud files into the big data cloud storage
+ * Does also analyse the terms as they are being processed
  * read the files from http:// or from gs://
  * download files locally (gziped)
  * read through the files counting the relevant terms and rewriting 

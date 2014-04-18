@@ -137,8 +137,9 @@ public class Input {
 	/**
 	 * @param startupScript the startupScript to set
 	 */
-	public void setStartupScript(String startupScript) {
+	public Input setStartupScript(String startupScript) {
 		this.startupScript = startupScript;
+		return this;
 	}
 
 	/**
@@ -151,8 +152,9 @@ public class Input {
 	/**
 	 * @param fileSizePerNode the fileSizePerNode to set
 	 */
-	public void setFileSizePerNode(Long fileSizePerNode) {
+	public Input setFileSizePerNode(Long fileSizePerNode) {
 		this.fileSizePerNode = fileSizePerNode;
+		return this;
 	}
 
 	/**
@@ -165,8 +167,9 @@ public class Input {
 	/**
 	 * @param newBinTermPercent the newBinTermPercent to set
 	 */
-	public void setNewBinTermPercent(Double newBinTermPercent) {
+	public Input setNewBinTermPercent(Double newBinTermPercent) {
 		this.newBinTermPercent = newBinTermPercent;
+		return this;
 	}
 
 }

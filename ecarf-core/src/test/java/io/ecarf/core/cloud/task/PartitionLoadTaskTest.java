@@ -20,9 +20,9 @@ package io.ecarf.core.cloud.task;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import io.ecarf.core.cloud.TestUtils;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.utils.TestUtils;
 
 import java.io.IOException;
 import java.util.Arrays;

@@ -16,15 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud;
+package io.ecarf.core.utils;
 
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import static io.ecarf.core.utils.Constants.*;
 
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
 
-import com.google.common.collect.Lists;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -32,19 +32,17 @@ import com.google.common.collect.Lists;
  */
 public class TestUtils {
 	
-	public static final String TOKEN = "ya29.1.AADtN_VgVyFmkBiq7-e8XOo7IjVg9ht4zl_GEGS-NtbBPeW1RMyC7cbGr0QY_d7KqYm2USM";
+	public static final String TOKEN = "ya29.1.AADtN_UwuKI7T_TX_zrTX4dfT1CoaYsVbtdVO_3Y_uNwtfK7vgVhdKCTBSv-Ysoc_9gDeg";
 	
+	@SuppressWarnings("unchecked")
 	public static void prepare(GoogleCloudService service) {
 		service.setAccessToken(TOKEN);
 		service.setTokenExpire(DateUtils.addHours(new Date(), 1));
-		service.setProjectId("ecarf-1000");
-		service.setZone("us-central1-a");
+		service.setProjectId(Config.getProperty(PROJECT_ID_KEY));
+		service.setZone(Config.getProperty(ZONE_KEY));
 		service.setInstanceId("ecarf-evm-1");
 		service.setServiceAccount("default");
-		service.setScopes(Lists.newArrayList("https://www.googleapis.com/auth/userinfo.email",
-	        "https://www.googleapis.com/auth/compute",
-	        "https://www.googleapis.com/auth/devstorage.full_control",
-	        "https://www.googleapis.com/auth/bigquery"));
+		service.setScopes(Config.getList(ACCESS_SCOPES_KEY));
 	}
 
 }

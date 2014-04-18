@@ -54,4 +54,11 @@ public class Constants {
 	public static final String TERM_NEW_BIN_KEY = "ecarf.io.term.partition.new.bin.percentage";
 	public static final String FILE_BIN_CAP_KEY = "ecarf.io.file.partition.new.bin.weight";
 	public static final String API_DELAY_KEY = "ecarf.io.api.check.delay.seconds";
+	public static final String IMAGE_ID_KEY  = "ecarf.io.vm.image.id";
+	public static final String NETWORK_ID_KEY = "ecarf.io.vm.network.id";
+	public static final String VM_TYPE_KEY = "ecarf.io.vm.type";
+	public static final String PROJECT_ID_KEY = "ecarf.io.vm.project.id";
+	public static final String ZONE_KEY = "ecarf.io.vm.zone";
+	public static final String STARTUP_SCRIPT_KEY = "ecarf.io.vm.startup.script";
+	public static final String ACCESS_SCOPES_KEY = "ecarf.io.vm.access.scopes";
 }

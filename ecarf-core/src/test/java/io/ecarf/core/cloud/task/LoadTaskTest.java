@@ -22,9 +22,9 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import io.ecarf.core.cloud.TestUtils;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
 import org.junit.Before;
