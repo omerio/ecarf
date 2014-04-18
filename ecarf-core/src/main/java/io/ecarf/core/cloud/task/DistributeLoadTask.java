@@ -106,7 +106,7 @@ public class DistributeLoadTask extends CommonTask {
 						
 						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
 						ready = VMStatus.READY.equals(metaData.getVMStatus());
-					
+						// TODO status can be error ERROR
 					} while (!ready);
 				}
 				

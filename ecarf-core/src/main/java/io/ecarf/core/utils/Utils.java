@@ -57,9 +57,9 @@ public class Utils {
 	
 	private final static Logger log = Logger.getLogger(Utils.class.getName()); 
 
-	public static final String TEMP_FOLDER = System.getProperty("java.io.tmpdir");
-	
 	public static final String PATH_SEPARATOR = File.separator;
+	
+	public static final String TEMP_FOLDER = System.getProperty("java.io.tmpdir") + PATH_SEPARATOR;
 	
 	public static Gson GSON = new Gson();
 	
