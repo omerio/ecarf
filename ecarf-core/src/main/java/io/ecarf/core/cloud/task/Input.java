@@ -46,10 +46,10 @@ public class Input {
 	private String startupScript;
 	
 	//Config.getLongProperty(Constants.FILE_BIN_CAP_KEY, FileUtils.ONE_GB)
-	private Long fileSizePerNode;
+	private Long weightPerNode;
 	
 	//Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1)
-	private Double newBinTermPercent;
+	private Double newBinPercentage;
 	
 	// should be supplied if we want the evms to do term analysis
 	private String schemaTermsFile;
@@ -146,36 +146,6 @@ public class Input {
 	}
 
 	/**
-	 * @return the fileSizePerNode
-	 */
-	public Long getFileSizePerNode() {
-		return fileSizePerNode;
-	}
-
-	/**
-	 * @param fileSizePerNode the fileSizePerNode to set
-	 */
-	public Input setFileSizePerNode(Long fileSizePerNode) {
-		this.fileSizePerNode = fileSizePerNode;
-		return this;
-	}
-
-	/**
-	 * @return the newBinTermPercent
-	 */
-	public Double getNewBinTermPercent() {
-		return newBinTermPercent;
-	}
-
-	/**
-	 * @param newBinTermPercent the newBinTermPercent to set
-	 */
-	public Input setNewBinTermPercent(Double newBinTermPercent) {
-		this.newBinTermPercent = newBinTermPercent;
-		return this;
-	}
-
-	/**
 	 * @return the schemaTermsFile
 	 */
 	public String getSchemaTermsFile() {
@@ -187,6 +157,36 @@ public class Input {
 	 */
 	public Input setSchemaTermsFile(String schemaTermsFile) {
 		this.schemaTermsFile = schemaTermsFile;
+		return this;
+	}
+
+	/**
+	 * @return the weightPerNode
+	 */
+	public Long getWeightPerNode() {
+		return weightPerNode;
+	}
+
+	/**
+	 * @param weightPerNode the weightPerNode to set
+	 */
+	public Input setWeightPerNode(Long weightPerNode) {
+		this.weightPerNode = weightPerNode;
+		return this;
+	}
+
+	/**
+	 * @return the newBinPercentage
+	 */
+	public Double getNewBinPercentage() {
+		return newBinPercentage;
+	}
+
+	/**
+	 * @param newBinPercentage the newBinPercentage to set
+	 */
+	public Input setNewBinPercentage(Double newBinPercentage) {
+		this.newBinPercentage = newBinPercentage;
 		return this;
 	}
 

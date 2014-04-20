@@ -16,19 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task;
+package io.ecarf.core.cloud.task.impl;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.task.CommonTask;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ReasonTask extends CommonTask {
+public class DoReasonTask extends CommonTask {
 
 	
-	public ReasonTask(VMMetaData metadata, CloudService cloud) {
+	public DoReasonTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
 

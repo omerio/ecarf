@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-bigquery</artifactId>
-			<version>v2-rev137-1.17.0-rc</version>
+			<version>v2-rev141-1.18.0-rc</version>
 		</dependency>
 		<!-- 
 		<dependency>

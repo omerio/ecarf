@@ -115,6 +115,16 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
+	public void testBigQuery() throws IOException {
+		 String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
+			        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
+				 "select subject from swetodlp.swetodlp_triple where " +
+				 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
+		 
+		this.service.runQueryRpcAndPrint(query, System.out);
+	}
+	
+	@Test
 	@Ignore
 	public void testDownloadFileFromCloudStorage1() throws IOException {
 		this.service.setAccessToken(TestUtils.TOKEN);
@@ -131,7 +141,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void testCreateInstance() throws IOException {
 		
 		

@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task;
+package io.ecarf.core.cloud.task.impl;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.task.CommonTask;
+import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.cloud.types.VMStatus;
 import io.ecarf.core.partition.Item;
@@ -147,9 +149,12 @@ public class DistributeLoadTask extends CommonTask {
 
 							allTermStats.put(key, value);
 						}
+						
+						log.info("Evms analysed: " + allTermStats.size() + ", terms");
 
 					}
 
+					// TODO move into separate Task
 					if(!allTermStats.isEmpty()) {
 
 						List<Item> items = new ArrayList<>();
@@ -161,7 +166,7 @@ public class DistributeLoadTask extends CommonTask {
 						// each node can handle up to 10% more than the largest term
 						// read from the configurations
 						PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
-								this.input.getNewBinTermPercent(), null);
+								this.input.getNewBinPercentage(), this.input.getWeightPerNode());
 						
 						List<List<Item>> bins = function.partition();
 
@@ -169,7 +174,7 @@ public class DistributeLoadTask extends CommonTask {
 						results.setBins(bins);
 
 						log.info("Successfully created term stats: " + bins);
-
+						
 					}
 				}
 

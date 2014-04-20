@@ -23,12 +23,12 @@ import static io.ecarf.core.utils.Constants.GOOGLE;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.DistributeLoadTask;
 import io.ecarf.core.cloud.task.Input;
-import io.ecarf.core.cloud.task.PartitionLoadTask;
 import io.ecarf.core.cloud.task.Results;
-import io.ecarf.core.cloud.task.SchemaTermCountTask;
 import io.ecarf.core.cloud.task.Task;
+import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
+import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
+import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
@@ -67,7 +67,9 @@ public class EcarfCcvmTask {
 		task.run();
 		
 		// 2- partition the instance files into bins
-		Input input = (new Input()).setBucket(bucket).setFileSizePerNode(FileUtils.ONE_MB * 80);
+		Input input = (new Input()).setBucket(bucket).setWeightPerNode(FileUtils.ONE_MB * 80)
+				.setNewBinPercentage(0.0);
+		
 		task = new PartitionLoadTask(null, service);
 		task.setInput(input);
 		task.run();
@@ -86,7 +88,9 @@ public class EcarfCcvmTask {
 				.setNetworkId(Config.getProperty(Constants.NETWORK_ID_KEY))
 				.setVmType(Config.getProperty(Constants.VM_TYPE_KEY))
 				.setStartupScript(Config.getProperty(Constants.STARTUP_SCRIPT_KEY))
-				.setNewBinTermPercent(Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1))
+				.setNewBinPercentage(Config.getDoubleProperty(Constants.TERM_NEW_BIN_KEY, 0.1))
+				// 5 million triples per node for swetodblp
+				.setWeightPerNode(5_000_000L)
 				.setSchemaTermsFile(Constants.SCHEMA_TERMS_JSON);;
 		task = new DistributeLoadTask(null, service);
 		task.setInput(input);
@@ -95,6 +99,8 @@ public class EcarfCcvmTask {
 		results = task.getResults();
 		
 		List<List<Item>> bins = results.getBins();
+		
+		log.info("Total number of required evms is: " + bins.size());
 		
 		for(List<Item> bin: bins) {
 			log.info("Set: " + bin + ", Sum: " + Utils.sum(bin) + "\n");

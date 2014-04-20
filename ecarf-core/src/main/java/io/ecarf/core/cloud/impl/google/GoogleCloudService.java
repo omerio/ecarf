@@ -64,6 +64,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
@@ -93,6 +95,13 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.Data;
+import com.google.api.services.bigquery.Bigquery;
+import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.QueryRequest;
+import com.google.api.services.bigquery.model.QueryResponse;
+import com.google.api.services.bigquery.model.TableCell;
+import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.Compute.Instances.Insert;
 import com.google.api.services.compute.model.AccessConfig;
@@ -129,6 +138,8 @@ public class GoogleCloudService implements CloudService {
 	private Storage storage;
 	
 	private Compute compute;
+	
+	private Bigquery bigquery;
 	
 	// service account access token retrieved from the metadata server
 	private String accessToken;
@@ -296,6 +307,20 @@ public class GoogleCloudService implements CloudService {
 				.setApplicationName(Constants.APP_NAME).build();
 		}
 		return this.compute;
+	}
+	
+	/**
+	 * Create a bigquery API client instance
+	 * @return
+	 * @throws IOException 
+	 * @throws GeneralSecurityException 
+	 */
+	private Bigquery getBigquery() throws IOException {
+		if(this.bigquery == null) {
+			this.bigquery = new Bigquery.Builder(getHttpTransport(), JSON_FACTORY, null)
+				.setApplicationName(Constants.APP_NAME).build();
+		}
+		return this.bigquery;
 	}
 	
 	/**
@@ -550,7 +575,7 @@ public class GoogleCloudService implements CloudService {
 
 			@Override
 			public String process(String line) {
-				String[] terms = TripleUtils.parseTriple(line);
+				String[] terms = TripleUtils.parseNTriple(line);
 				String outLine = null;
 				if(terms != null) {
 					
@@ -858,7 +883,105 @@ public class GoogleCloudService implements CloudService {
 		
 		return metadata;
 	}
+	
+	
+	//------------------------------------------------- Bigquery -------------------------------
 
+	/**
+	 * Runs a synchronous BigQuery query and displays the result.
+	 * 
+	 * CONFIG: {
+		 "kind": "bigquery#queryResponse",
+		 "schema": {
+		  "fields": [
+		   {
+		    "name": "subject",
+		    "type": "STRING",
+		    "mode": "NULLABLE"
+		   }
+		  ]
+		 },
+		 "jobReference": {
+		  "projectId": "ecarf-1000",
+		  "jobId": "job_Kz8FdIf1RRYpfl7S5At069SmU0g"
+		 },
+		 "totalRows": "0",
+		 "pageToken": "BFY5ITDWIUAQAAASAYIP777774DRUBQIAAIKBDIG",
+		 "totalBytesProcessed": "0",
+		 "jobComplete": true,
+		 "cacheHit": true
+		}
+	 * 
+	 * CONFIG: {
+		 "kind": "bigquery#getQueryResultsResponse",
+		 "etag": "\"QPJfVWBscaHhAhSLq0k5xRS6X5c/785hb4MiI7-vQ4YmGDJbd6kVc9o\"",
+		 "schema": {
+		  "fields": [
+		   {
+		    "name": "subject",
+		    "type": "STRING",
+		    "mode": "NULLABLE"
+		   }
+		  ]
+		 },
+		 "jobReference": {
+		  "projectId": "ecarf-1000",
+		  "jobId": "job_4vf8_9asbBIgspFLsEtr71BBMVk"
+		 },
+		 "totalRows": "0",
+		 "pageToken": "CIDBB777777QOGQGBAABBIENAY======",
+		 "jobComplete": true,
+		 "cacheHit": true
+		}
+	 *
+	 * @param bigquery An authorized BigQuery client
+	 * @param projectId The current project id
+	 * @param query A String containing a BigQuery SQL statement
+	 * @param out A PrintStream for output, normally System.out
+	 */
+	public void runQueryRpcAndPrint(String query, PrintStream out) throws IOException {
+		QueryRequest queryRequest = new QueryRequest().setQuery(query);
+		
+		QueryResponse queryResponse = this.getBigquery().jobs()
+				.query(this.projectId, queryRequest)
+				.setOauthToken(this.getOAuthToken()).execute();
+		
+		if (queryResponse.getJobComplete()) {
+			printRows(queryResponse.getRows(), out);
+			if ((null == queryResponse.getPageToken()) || BigInteger.ZERO.equals(queryResponse.getTotalRows())) {
+				return;
+			}
+		}
+		// This loop polls until results are present, then loops over result pages.
+		String pageToken = null;
+		while (true) {
+			GetQueryResultsResponse queryResults = this.getBigquery().jobs()
+					.getQueryResults(projectId, queryResponse.getJobReference().getJobId())
+					.setPageToken(pageToken).setOauthToken(this.getOAuthToken()).execute();
+			
+			if (queryResults.getJobComplete()) {
+				
+				printRows(queryResults.getRows(), out);
+				pageToken = queryResults.getPageToken();
+				if ((null == pageToken) || BigInteger.ZERO.equals(queryResults.getTotalRows())) {
+					return;
+				}
+			}
+		}
+	}
+
+
+	private static void printRows(List<TableRow> rows, PrintStream out) {
+		if (rows != null) {
+			for (TableRow row : rows) {
+				for (TableCell cell : row.getF()) {
+					// Data.isNull() is the recommended way to check for the 'null object' in TableCell.
+					out.printf("%s, ", Data.isNull(cell.getV()) ? "null" : cell.getV().toString());
+				}
+				out.println();
+			}
+		}
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

@@ -3,6 +3,10 @@
  */
 package io.ecarf.core.triple;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,7 +27,7 @@ public class TripleUtils {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String[] parseTriple(String triple) {
+	public static String[] parseNTriple(String triple) {
 		String[] values = null;
 
 		// added by Omer, ignore comments
@@ -56,6 +60,51 @@ public class TripleUtils {
 		}
 
 		return values;
+	}
+	
+	/**
+	 * Analyse the provided schema file and return a set containing all the relevant triples keyed by their terms
+	 * @param schemaFile
+	 * @param relevantUris
+	 * @return
+	 * TODO enhance so that we can selectively add the subject or the object of the schema triple 
+	 * or both
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+	public static Map<String, Set<Triple>> getRelevantSchemaTriples(String schemaFile, Set<SchemaURIType> relevantUris) 
+			throws FileNotFoundException, IOException {
+		
+		Map<String, Set<Triple>> schemaTriples = new HashMap<>();
+		String line = null;
+		Triple triple;
+		try (BufferedReader r = new BufferedReader(new FileReader(schemaFile))) {
+
+			while ((line = r.readLine()) != null) {
+
+				String[] terms = TripleUtils.parseNTriple(line);
+				if(terms != null) {
+					String subject = terms[0];
+					String predicate = terms[1];
+					String object = terms[2];
+
+					if(SchemaURIType.isSchemaUri(predicate) && 
+							SchemaURIType.isRdfTbox(predicate) && 
+							relevantUris.contains(SchemaURIType.getByUri(predicate))) {
+						
+						triple = new Triple(subject, predicate, object);
+						
+						// subject is used for ABox (instance) reasoning
+						if(!schemaTriples.containsKey(subject)) {
+							schemaTriples.put(subject, new HashSet<Triple>());
+						}
+						schemaTriples.get(subject).add(triple);
+					}
+				}
+			}
+		}
+		
+		return schemaTriples;
 	}
 	
 	/**

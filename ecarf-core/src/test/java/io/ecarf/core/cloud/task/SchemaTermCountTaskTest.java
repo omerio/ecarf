@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
@@ -55,7 +56,7 @@ public class SchemaTermCountTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.SchemaTermCountTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.impl.SchemaTermCountTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test

@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task;
+package io.ecarf.core.cloud.task.impl;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.storage.StorageObject;
+import io.ecarf.core.cloud.task.CommonTask;
+import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.partition.PartitionFunction;
 import io.ecarf.core.partition.PartitionFunctionFactory;
@@ -69,8 +71,9 @@ public class PartitionLoadTask extends CommonTask {
 		
 		// each node should handle a gigbyte of data
 		// read it the configurations
-		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 0.0, 
-				this.input.getFileSizePerNode());
+		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
+				this.input.getNewBinPercentage(), 
+				this.input.getWeightPerNode());
 		List<List<Item>> bins = function.partition();
 		
 		this.results = new Results();

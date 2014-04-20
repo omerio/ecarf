@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.task.impl.DoLoadTask;
 import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
@@ -55,7 +56,7 @@ public class LoadTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.LoadTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.impl.DoLoadTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test
@@ -64,7 +65,7 @@ public class LoadTaskTest {
 		metadata.addValue(VMMetaData.ECARF_BUCKET, "ecarf");
 		metadata.addValue(VMMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
 		metadata.addValue(VMMetaData.ECARF_FILES, "redirects_transitive_en.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
-		LoadTask task = new LoadTask(metadata, service);
+		DoLoadTask task = new DoLoadTask(metadata, service);
 		task.run();
 	}
 

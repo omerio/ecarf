@@ -340,5 +340,43 @@ public class Utils {
 //		}
 //		return magic == GZIPInputStream.GZIP_MAGIC;
 //	}
+	
+	/**
+	   * Converts the query results retrieved from the datastore to json parsable by javascript
+	   * into a DataTable object for use with a motion chart.
+	   */
+	/*  private void writeResultsToMotionChartJson(JsonWriter jsonWriter, Iterable<Entity> results)
+	      throws IOException {
+	    jsonWriter.name("data").beginObject();
+
+	    // Write the header.
+	    jsonWriter.name("cols").beginArray();
+	    for (int i = 0; i < properties.length; i++) {
+	      jsonWriter.beginObject()
+	          .name("id").value(properties[i])
+	          .name("label").value(labels[i])
+	          .name("type").value(types[i])
+	          .endObject();
+	    }
+	    jsonWriter.endArray();
+
+	    // Write the data.
+	    jsonWriter.name("rows").beginArray();
+	    for (Entity entity : results) {
+	      jsonWriter.beginObject().name("c").beginArray();
+	      for (int i = 0; i < properties.length; i++) {
+	        String value = "";
+	        if (entity.getProperty(properties[i]) != null) {
+	          value = String.valueOf(entity.getProperty(properties[i]));
+	        }
+
+	        jsonWriter.beginObject().name("v").value(value).endObject();
+	      }
+	      jsonWriter.endArray().endObject();
+	    }
+	    jsonWriter.endArray();
+
+	    jsonWriter.endObject();
+	  }*/
 
 }

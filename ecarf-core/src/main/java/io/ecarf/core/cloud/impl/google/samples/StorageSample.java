@@ -12,7 +12,7 @@
  * the License.
  */
 
-package io.ecarf.core.cloud.impl.google;
+package io.ecarf.core.cloud.impl.google.samples;
 
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 

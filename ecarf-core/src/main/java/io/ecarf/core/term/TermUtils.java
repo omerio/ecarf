@@ -46,7 +46,7 @@ public class TermUtils {
 									SchemaURIType.RDFS_SUBPROPERTY);
 	
 	/**
-	 * Analyse the provided schema file and return a set containing all the terms
+	 * Analyse the provided schema file and return a set containing all the relevant terms
 	 * @param schemaFile
 	 * @param relevantUris
 	 * @return
@@ -64,7 +64,7 @@ public class TermUtils {
 
 			while ((line = r.readLine()) != null) {
 
-				String[] terms = TripleUtils.parseTriple(line);
+				String[] terms = TripleUtils.parseNTriple(line);
 				if(terms != null) {
 					String subject = terms[0];
 					String predicate = terms[1];
@@ -82,5 +82,5 @@ public class TermUtils {
 		}
 		return relevantTerms;
 	}
-
+	
 }

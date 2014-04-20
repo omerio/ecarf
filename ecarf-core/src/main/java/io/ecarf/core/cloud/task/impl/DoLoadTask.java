@@ -16,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task;
+package io.ecarf.core.cloud.task.impl;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
@@ -42,10 +43,10 @@ import org.apache.commons.lang3.StringUtils;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class LoadTask extends CommonTask {
+public class DoLoadTask extends CommonTask {
 
 	
-	public LoadTask(VMMetaData metadata, CloudService cloud) {
+	public DoLoadTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
 

@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 /**
  * @author omerio
  *
@@ -209,31 +212,17 @@ public class Triple {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
+		if (obj == null) { return false; }
+		if (obj == this) { return true; }
+		if (obj.getClass() != getClass()) {
 			return false;
-		if (!(obj instanceof Triple))
-			return false;
-		Triple other = (Triple) obj;
-		if (object == null) {
-			if (other.object != null)
-				return false;
-		} else if (!object.equals(other.object))
-			return false;
-		if (predicate == null) {
-			if (other.predicate != null)
-				return false;
-		} else if (!predicate.equals(other.predicate))
-			return false;
-		if (subject == null) {
-			if (other.subject != null)
-				return false;
-		} else if (!subject.equals(other.subject))
-			return false;
-		if(inferred != other.inferred)
-			return false;
-		return true;
+		}
+		Triple rhs = (Triple) obj;
+		return new EqualsBuilder()
+		.append(this.subject, rhs.subject)
+		.append(this.predicate, rhs.predicate)
+		.append(this.object, rhs.object)
+		.isEquals();
 	}
 
 
@@ -254,6 +243,27 @@ public class Triple {
 		triple.setInferred(this.inferred);
 		
 		return triple;
+	}
+	
+	/**
+	 * Convert to NTriple format
+	 * @return
+	 */
+	public String toNTriple() {
+		return new StringBuilder(this.subject).append(' ')
+				.append(this.predicate).append(' ')
+				.append(this.object).append(" .").toString();
+	}
+	
+	/**
+	 * Convert to CSV
+	 * TODO add inferred as well
+	 * @return
+	 */
+	public String toCsv() {
+		 return new StringBuilder(StringEscapeUtils.escapeCsv(this.subject)).append(',')
+					.append(StringEscapeUtils.escapeCsv(this.predicate)).append(',')
+					.append(StringEscapeUtils.escapeCsv(this.object)).toString();
 	}
 
 }

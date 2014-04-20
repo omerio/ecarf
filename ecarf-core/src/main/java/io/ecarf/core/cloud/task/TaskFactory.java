@@ -20,6 +20,9 @@ package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.task.impl.DoLoadTask;
+import io.ecarf.core.cloud.task.impl.DoReasonTask;
+import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.cloud.types.TaskType;
 
 /**
@@ -43,11 +46,11 @@ public class TaskFactory {
 			
 			switch(type) {
 			case LOAD:
-				task = new LoadTask(metadata, cloud);
+				task = new DoLoadTask(metadata, cloud);
 				break;
 
 			case REASON:
-				task = new ReasonTask(metadata, cloud);
+				task = new DoReasonTask(metadata, cloud);
 				break;
 
 			case COUNT:

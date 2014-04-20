@@ -16,10 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task;
+package io.ecarf.core.cloud.task.impl;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;

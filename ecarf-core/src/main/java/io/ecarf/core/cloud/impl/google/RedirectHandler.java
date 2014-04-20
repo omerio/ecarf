@@ -13,6 +13,10 @@ import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
 
 /**
  * 
+ * Storage API request from Compute Engine service account doesn't append OAuth token on redirected URL
+ * 
+ * @see https://code.google.com/p/google-api-java-client/issues/detail?id=866
+ * 
  * @author Omer Dawelbeit (omerio)
  *
  */
