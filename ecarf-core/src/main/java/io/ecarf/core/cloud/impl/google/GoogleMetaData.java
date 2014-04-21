@@ -18,6 +18,14 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
+import io.ecarf.core.triple.TermType;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.api.services.bigquery.model.TableSchema;
+
 /**
  * @author Omer Dawelbeit (omerio)
  *
@@ -62,6 +70,31 @@ public class GoogleMetaData {
 	public static final String EXT_NAT = "External NAT";
 	public static final String ONE_TO_ONE_NAT = "ONE_TO_ONE_NAT";
 	public static final String STARTUP_SCRIPT = "startup-script";
+	
+	// BigQuery create/write disposition
+	public static final String CREATE_NEVER = "CREATE_NEVER";
+	public static final String CREATE_IF_NEEDED = "CREATE_IF_NEEDED";
+	public static final String WRITE_APPEND = "WRITE_APPEND";
+	
+	public static final String TYPE_STRING = "STRING";
+	
+	
+	/**
+	 * BigQuery table schema
+	 */
+	public static final TableSchema SCHEMA = new TableSchema();
+	
+	static {
+		List<TableFieldSchema> fields = new ArrayList<>();
+		TableFieldSchema field;
+		for(TermType term: TermType.values()) {
+			field = new TableFieldSchema();
+			field.setName(term.term());
+			field.setType(GoogleMetaData.TYPE_STRING);
+			fields.add(field);
+		}
+		SCHEMA.setFields(fields);
+	}
 	
 	
 

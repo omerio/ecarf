@@ -18,6 +18,8 @@
  */
 package io.ecarf.core.cloud.task;
 
+import io.ecarf.core.partition.Item;
+
 import java.util.List;
 
 /**
@@ -32,7 +34,14 @@ public class Input {
 	 */
 	private List<String> items;
 	
+	/**
+	 * A list of items that have a key and weight, could be terms/occurrences or files/sizes
+	 */
+	private List<Item> weightedItems;
+	
 	private String bucket;
+	
+	private String table;
 	
 	// "centos-cloud/global/images/centos-6-v20140318"
 	private String imageId;
@@ -53,6 +62,13 @@ public class Input {
 	
 	// should be supplied if we want the evms to do term analysis
 	private String schemaTermsFile;
+	
+	private String schemaFile;
+	
+	/**
+	 * VM names
+	 */
+	private List<String> nodes;
 	
 
 	/**
@@ -187,6 +203,66 @@ public class Input {
 	 */
 	public Input setNewBinPercentage(Double newBinPercentage) {
 		this.newBinPercentage = newBinPercentage;
+		return this;
+	}
+
+	/**
+	 * @return the weightedItems
+	 */
+	public List<Item> getWeightedItems() {
+		return weightedItems;
+	}
+
+	/**
+	 * @param weightedItems the weightedItems to set
+	 */
+	public Input setWeightedItems(List<Item> weightedItems) {
+		this.weightedItems = weightedItems;
+		return this;
+	}
+
+	/**
+	 * @return the table
+	 */
+	public String getTable() {
+		return table;
+	}
+
+	/**
+	 * @param table the table to set
+	 */
+	public Input setTable(String table) {
+		this.table = table;
+		return this;
+	}
+
+	/**
+	 * @return the nodes
+	 */
+	public List<String> getNodes() {
+		return nodes;
+	}
+
+	/**
+	 * @param nodes the nodes to set
+	 */
+	public Input setNodes(List<String> nodes) {
+		this.nodes = nodes;
+		return this;
+	}
+
+	/**
+	 * @return the schemaFile
+	 */
+	public String getSchemaFile() {
+		return schemaFile;
+	}
+
+	/**
+	 * @param schemaFile the schemaFile to set
+	 */
+	public Input setSchemaFile(String schemaFile) {
+		this.schemaFile = schemaFile;
 		return this;
 	}
 

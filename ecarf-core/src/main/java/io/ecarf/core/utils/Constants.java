@@ -25,9 +25,9 @@ package io.ecarf.core.utils;
 public class Constants {
 	
 	/**
-	 * 10 seconds before API operations are checked for completion
+	 * 5 seconds before API operations are checked for completion
 	 */
-	public static final int API_RECHECK_DELAY = 10;
+	public static final int API_RECHECK_DELAY = 5;
 	
 	public static final String GOOGLE = "google";
 	
@@ -45,9 +45,15 @@ public class Constants {
 	
 	public static final String DOT_JSON = ".json";
 	
+	public static final String DOT_TERMS = ".terms";
+	
+	public static final String OUT_FILE_SUFFIX = "_out.";
+	
 	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
 	
 	public static final String COMPRESSED_N_TRIPLES = ".nt.gz";
+	
+	public static final String PROCESSED_FILES = OUT_FILE_SUFFIX + "gz";
 	
 	public static final String EVM_EXCEPTION = "EVM Exception: ";
 	

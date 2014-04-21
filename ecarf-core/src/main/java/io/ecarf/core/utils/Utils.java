@@ -30,11 +30,14 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +50,7 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -93,6 +97,24 @@ public class Utils {
 	@SuppressWarnings("unchecked")
 	public static Map<String, Object> jsonToMap(String json) {
 		return GSON.fromJson(json, HashMap.class);
+	}
+	
+	/**
+	 * comma separated string to set
+	 * @param csv
+	 * @return
+	 */
+	public static Set<String> csvToSet(String csv) {
+		Set<String> tokens = new HashSet<>();
+		if(StringUtils.isNotBlank(csv)) {	
+			String [] tokensArr = StringUtils.split(csv, ',');
+			// clean up the tokens
+			//tokens = Sets.newHashSet(tokensArr);
+			for(String token: tokensArr) {
+				tokens.add(token.trim());
+			}
+		} 
+		return tokens; 
 	}
 	
 	/**
@@ -191,6 +213,21 @@ public class Utils {
 		try(FileWriter writer = new FileWriter(filename)) {
 			GSON.toJson(object, writer);
 		}
+	}
+	
+	/**
+	 * Encode the provided text as filename
+	 * @param text
+	 * @return
+	 */
+	public static String encodeFilename(String text) {
+		String filename = text;
+		try {
+			filename = URLEncoder.encode(text, Constants.UTF8);
+		} catch (UnsupportedEncodingException e) {
+			log.log(Level.WARNING, "Failed to encode text as filename: " + text, e);
+		}
+		return filename;
 	}
 	
 	

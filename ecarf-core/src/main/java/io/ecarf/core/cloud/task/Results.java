@@ -39,6 +39,11 @@ public class Results {
 	private List<List<Item>> bins;
 	
 	/**
+	 * A list of items that have a key and weight, could be terms/occurrences or files/sizes
+	 */
+	private List<Item> items;
+	
+	/**
 	 * VM names
 	 */
 	private List<String> nodes;
@@ -101,6 +106,21 @@ public class Results {
 	 */
 	public Results setNodes(List<String> nodes) {
 		this.nodes = nodes;
+		return this;
+	}
+
+	/**
+	 * @return the items
+	 */
+	public List<Item> getItems() {
+		return items;
+	}
+
+	/**
+	 * @param items the items to set
+	 */
+	public Results setItems(List<Item> items) {
+		this.items = items;
 		return this;
 	}
 

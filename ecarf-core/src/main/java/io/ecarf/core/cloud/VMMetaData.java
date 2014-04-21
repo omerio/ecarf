@@ -20,15 +20,13 @@ package io.ecarf.core.cloud;
 
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.utils.Utils;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A collection of vm instance metadata used by ecarf. 
@@ -161,16 +159,19 @@ public class VMMetaData {
 	 */
 	public Set<String> getFiles() {
 		String filesStr = (String) this.attributes.get(ECARF_FILES);
-		Set<String> files = new HashSet<>();
-		if(StringUtils.isNotBlank(filesStr)) {	
-			String [] filesArr = filesStr.split(",");
-			// clean up the files
-			for(String file: filesArr) {
-				files.add(file.trim());
-			}
-		} 
-		return files; 
+		return Utils.csvToSet(filesStr);
 	}
+	
+	/**
+	 * Return a set of terms
+	 * @return
+	 */
+	public Set<String> getTerms() {
+		String termsStr = (String) this.attributes.get(ECARF_TERMS);
+		return Utils.csvToSet(termsStr);
+	}
+	
+	
 	
 	/**
 	 * Get the exception if any

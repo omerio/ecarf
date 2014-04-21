@@ -62,7 +62,7 @@ public class CompressProcessor {
 		String ext = FilenameUtils.getExtension(inputFile);
 		// construct an output file in the format inputfile_out.ext
 		this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
-		this.outputFile = outputFile + "_out." + ext;
+		this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
 	}
 
 	/**

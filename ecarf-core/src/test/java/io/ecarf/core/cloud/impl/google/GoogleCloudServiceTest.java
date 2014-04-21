@@ -25,14 +25,18 @@ import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.utils.Callback;
+import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
@@ -115,14 +119,68 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	public void testBigQuery() throws IOException {
+	@Ignore
+	public void testRunBigDataQuery() throws IOException {
 		 String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
 			        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
 				 "select subject from swetodlp.swetodlp_triple where " +
 				 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
 		 
-		this.service.runQueryRpcAndPrint(query, System.out);
+		this.service.runBigDataQuery(query, System.out);
 	}
+	
+	@Test
+	@Ignore
+	public void testStartBigDataQuery() throws IOException {
+		String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
+		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
+			 "select subject from swetodlp.swetodlp_triple where " +
+			 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
+		
+		String jobId = this.service.startBigDataQuery(query);
+		String completedJob = this.service.checkBigQueryJobResults(jobId);
+		this.service.displayQueryResults(completedJob);
+	}
+	
+	@Test
+	@Ignore
+	public void testSaveBigDataToFile() throws IOException {
+		String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
+		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
+			 "select subject from swetodlp.swetodlp_triple where " +
+			 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
+		
+		String jobId = this.service.startBigDataQuery(query);
+		String filename = Utils.TEMP_FOLDER + 
+				Utils.encodeFilename("<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>") + 
+				Constants.DOT_TERMS;
+		
+		BigInteger rows = this.service.saveBigQueryResultsToFile(jobId, filename);
+		System.err.println(rows);
+		
+		
+	}
+	
+	@Test
+	@Ignore
+	public void testLoadCloudStorageFilesIntoBigData() throws IOException {
+		String jobId = this.service.loadCloudStorageFilesIntoBigData(Arrays.asList("gs://ecarf/umbel_links.nt_out.gz", 
+				"gs://ecarf/yago_links.nt_out.gz"), "swetodlp.test", false);
+		assertNotNull(jobId);
+		System.out.println(jobId);
+	}
+	
+	@Test
+	public void testLoadLocalFilesIntoBigData() throws IOException {
+		List<String> jobIds = this.service.loadLocalFilesIntoBigData(
+				Arrays.asList("/Users/omerio/Downloads/umbel_links.nt_out.gz", 
+						"/Users/omerio/Downloads/linkedgeodata_links.nt_out.gz"), "swetodlp.test", false);
+		assertNotNull(jobIds);
+		System.out.println(jobIds);
+	}
+	
+	
+	
 	
 	@Test
 	@Ignore

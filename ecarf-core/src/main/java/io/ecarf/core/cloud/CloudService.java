@@ -23,6 +23,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -173,6 +174,43 @@ public interface CloudService {
 	 * @return
 	 */
 	public String getInstanceId();
+
+	/*
+	 * Load a list of cloud storage files into a big data table
+	 * @param files - The source URIs must be fully-qualified, in the format gs://<bucket>/<object>.
+	 * @param table
+	 * @param createTable
+	 * @return
+	 * @throws IOException
+	 */
+	public String loadCloudStorageFilesIntoBigData(List<String> files, String table, boolean createTable) throws IOException;
+
+	/**
+	 * Load a list of local files into a big data table
+	 * @param files
+	 * @param table
+	 * @param createTable
+	 * @return
+	 * @throws IOException
+	 */
+	public List<String> loadLocalFilesIntoBigData(List<String> files, String table, boolean createTable) throws IOException;
+
+	/**
+	 * Creates an asynchronous Query Job for a particular query on a dataset
+	 *
+	 * @param querySql  the actual query string
+	 * @return a reference to the inserted query job
+	 * @throws IOException
+	 */
+	public String startBigDataQuery(String querySql) throws IOException;
+
+	/**
+	 * Polls a big data job and once done save the results to a file
+	 * @param jobId
+	 * @param filename
+	 * @throws IOException
+	 */
+	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException;
 
 	
 

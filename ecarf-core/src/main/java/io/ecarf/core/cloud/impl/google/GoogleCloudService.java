@@ -18,31 +18,7 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -65,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -89,6 +66,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
@@ -98,9 +76,15 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.Job;
+import com.google.api.services.bigquery.model.JobConfiguration;
+import com.google.api.services.bigquery.model.JobConfigurationLoad;
+import com.google.api.services.bigquery.model.JobConfigurationQuery;
+import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.TableCell;
+import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.Compute.Instances.Insert;
@@ -119,6 +103,8 @@ import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
+import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 /**
@@ -126,37 +112,37 @@ import com.google.common.collect.Lists;
  *
  */
 public class GoogleCloudService implements CloudService {
-	
+
 	private final static Logger log = Logger.getLogger(GoogleCloudService.class.getName()); 
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-		
+
 	/** Global instance of the HTTP transport. */
 	private HttpTransport httpTransport;
-	
+
 	private Storage storage;
-	
+
 	private Compute compute;
-	
+
 	private Bigquery bigquery;
-	
+
 	// service account access token retrieved from the metadata server
 	private String accessToken;
-	
+
 	// the expiry time of the token
 	private Date tokenExpire;
-	
+
 	private String projectId;
-	
+
 	private String zone;
-	
+
 	private String instanceId;
-	
+
 	private String serviceAccount;
-	
+
 	private List<String> scopes;
-	
+
 	/**
 	 * Perform initialization before
 	 * this cloud service is used
@@ -169,37 +155,37 @@ public class GoogleCloudService implements CloudService {
 		this.projectId = getMetaData(PROJECT_ID_PATH);
 		Map<String, Object> metaData = Utils.jsonToMap(getMetaData(INSTANCE_ALL_PATH));
 		attributes = (Map<String, Object>) metaData.get(ATTRIBUTES);
-		
+
 		// strangely zone looks like this: "projects/315344313954/zones/us-central1-a"
 		this.zone = (String) metaData.get(ZONE);
 		this.zone = StringUtils.substringAfterLast(this.zone, "/");
-		
+
 		// the name isn't returned!, but the hostname looks like this:
 		// "ecarf-evm-1.c.ecarf-1000.internal"
 		this.instanceId = (String) metaData.get(HOSTNAME);
 		this.instanceId = StringUtils.substringBefore(this.instanceId, ".");
-		
+
 		// get the default service account
 		Map<String, Object> serviceAccountConfig = ((Map) ((Map) metaData.get(SERVICE_ACCOUNTS)).get(DEFAULT));
 		this.serviceAccount = (String) serviceAccountConfig.get(EMAIL);
 		this.scopes = (List) serviceAccountConfig.get(SCOPES);
 		// add the datastore scope as well
 		this.scopes.add(DATASTORE_SCOPE);
-		
+
 		this.authorise();
 		this.getHttpTransport();
 		this.getCompute();
 		this.getStorage();
-		
+
 		Instance instance = this.getInstance(instanceId, zone);
 		String fingerprint = instance.getMetadata().getFingerprint();
-		
+
 		log.info("Successfully initialized Google Cloud Service: " + this);
 		return new VMMetaData(attributes, fingerprint);
-		
+
 	}
-	
-	
+
+
 	/**
 	 * Call the metadata server, this returns details for the current instance not for
 	 * different instances. In order to retrieve the meta data of different instances
@@ -212,17 +198,17 @@ public class GoogleCloudService implements CloudService {
 		log.fine("Retrieving metadata from server, path: " + path);
 		URL metadata = new URL(METADATA_SERVER_URL + path);
 		HttpURLConnection con = (HttpURLConnection) metadata.openConnection();
- 
+
 		// optional default is GET
 		//con.setRequestMethod("GET");
- 
+
 		//add request header
 		con.setRequestProperty("X-Google-Metadata-Request", "true");
- 
+
 		int responseCode = con.getResponseCode();
-		
+
 		StringBuilder response = new StringBuilder();
-		
+
 		if(responseCode == 200) {
 			try(BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
 				String inputLine;
@@ -236,7 +222,7 @@ public class GoogleCloudService implements CloudService {
 			throw new IOException(msg);
 		}
 		log.fine("Successfully retrieved metadata from server");
-		
+
 		return response.toString();
 	}
 
@@ -251,18 +237,18 @@ public class GoogleCloudService implements CloudService {
 	 * @see https://developers.google.com/compute/docs/authentication
 	 */
 	private void authorise() throws IOException {
-		
+
 		log.fine("Refreshing OAuth token from metadata server");
 		Map<String, Object> token = Utils.jsonToMap(getMetaData(TOKEN_PATH));
 		this.accessToken = (String) token.get(ACCESS_TOKEN);
-		
+
 		Double expiresIn = (Double) token.get(EXPIRES_IN);
 		this.tokenExpire = DateUtils.addSeconds(new Date(), expiresIn.intValue());
-		
+
 		log.fine("Successfully refreshed OAuth token from metadata server");
-	
+
 	}
-	
+
 	/**
 	 * Create a new instance of the HTTP transport
 	 * @return
@@ -278,23 +264,23 @@ public class GoogleCloudService implements CloudService {
 				throw new IOException(e);
 			}
 		}
-		
+
 		return httpTransport;
 	}
-	
+
 	/**
 	 * Get the token and also check if it's expired then request a new one
 	 * @return
 	 * @throws IOException
 	 */
 	private String getOAuthToken() throws IOException {
-	
+
 		if((this.tokenExpire == null) || (new Date()).after(this.tokenExpire)) {
 			this.authorise();
 		}
 		return this.accessToken;
 	}
-	
+
 	/**
 	 * Create a compute API client instance
 	 * @return
@@ -304,11 +290,11 @@ public class GoogleCloudService implements CloudService {
 	private Compute getCompute() throws IOException {
 		if(this.compute == null) {
 			this.compute = new Compute.Builder(getHttpTransport(), JSON_FACTORY, null)
-				.setApplicationName(Constants.APP_NAME).build();
+			.setApplicationName(Constants.APP_NAME).build();
 		}
 		return this.compute;
 	}
-	
+
 	/**
 	 * Create a bigquery API client instance
 	 * @return
@@ -318,11 +304,11 @@ public class GoogleCloudService implements CloudService {
 	private Bigquery getBigquery() throws IOException {
 		if(this.bigquery == null) {
 			this.bigquery = new Bigquery.Builder(getHttpTransport(), JSON_FACTORY, null)
-				.setApplicationName(Constants.APP_NAME).build();
+			.setApplicationName(Constants.APP_NAME).build();
 		}
 		return this.bigquery;
 	}
-	
+
 	/**
 	 * Create a storage API client instance
 	 * @return
@@ -340,7 +326,7 @@ public class GoogleCloudService implements CloudService {
 		}
 		return this.storage;
 	}
-	
+
 	//------------------------------------------------- Storage -------------------------------
 	/**
 	 * Create a bucket on the mass cloud storage
@@ -352,9 +338,9 @@ public class GoogleCloudService implements CloudService {
 
 		Storage.Buckets.Insert insertBucket = this.getStorage().buckets()
 				.insert(this.projectId, new Bucket().setName(bucket).setLocation(location)
-				// .setDefaultObjectAcl(ImmutableList.of(
-				// new ObjectAccessControl().setEntity("allAuthenticatedUsers").setRole("READER")))
-				).setOauthToken(this.getOAuthToken());
+						// .setDefaultObjectAcl(ImmutableList.of(
+						// new ObjectAccessControl().setEntity("allAuthenticatedUsers").setRole("READER")))
+						).setOauthToken(this.getOAuthToken());
 		try {
 			@SuppressWarnings("unused")
 			Bucket createdBucket = insertBucket.execute();
@@ -368,7 +354,7 @@ public class GoogleCloudService implements CloudService {
 			}
 		}
 	}
-	
+
 	/**
 	 * Upload the provided file into cloud storage
 	 * THis is what Google returns:
@@ -436,7 +422,7 @@ public class GoogleCloudService implements CloudService {
 
 		insertObject.execute();
 	}
-	
+
 	/**
 	 * Upload a file to cloud storage and block until it's uploaded
 	 * @param filename
@@ -445,9 +431,9 @@ public class GoogleCloudService implements CloudService {
 	 */
 	@Override
 	public void uploadFileToCloudStorage(String filename, String bucket) throws IOException {
-		
+
 		final FutureTask task = new FutureTask();
-		
+
 		Callback callback = new Callback() {
 			@Override
 			public void execute() {
@@ -455,16 +441,16 @@ public class GoogleCloudService implements CloudService {
 				task.setDone(true);
 			}
 		};
-		
+
 		this.uploadFileToCloudStorage(filename, bucket, callback);
-		
+
 		// wait for the upload to finish
 		while(!task.isDone()) {
 			Utils.block(5);
 		}
 
 	}
-	
+
 	/**
 	 * Download an object from cloud storage to a file
 	 * @param object
@@ -476,21 +462,21 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public void downloadObjectFromCloudStorage(String object, String outFile, 
 			String bucket, Callback callback) throws IOException {
-		
+
 		log.info("Downloading cloud storage file " + object + ", to: " + outFile);
-		
+
 		FileOutputStream out = new FileOutputStream(outFile);
-	
+
 		Storage.Objects.Get getObject =
 				getStorage().objects().get(bucket, object).setOauthToken(this.getOAuthToken());
-		
+
 		getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true)
-			.setProgressListener(new DownloadProgressListener(callback));
-		
+		.setProgressListener(new DownloadProgressListener(callback));
+
 		getObject.executeMediaAndDownloadTo(out);
-		
+
 	}
-	
+
 	/**
 	 * Download an object from cloud storage to a file, this method will block until the file is downloaded
 	 * @param object
@@ -502,10 +488,10 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public void downloadObjectFromCloudStorage(String object, final String outFile, 
 			String bucket) throws IOException {
-		
+
 		//final Thread currentThread = Thread.currentThread();
 		final FutureTask task = new FutureTask();
-		
+
 		Callback callback = new Callback() {
 			@Override
 			public void execute() {
@@ -516,15 +502,15 @@ public class GoogleCloudService implements CloudService {
 		};
 
 		this.downloadObjectFromCloudStorage(object, outFile, bucket, callback);
-		
+
 		// wait for the download to take place
 		//LockSupport.park();
 		while(!task.isDone()) {
 			Utils.block(5);
 		}
-		
+
 	}
-	
+
 	@Override
 	public List<io.ecarf.core.cloud.storage.StorageObject> listCloudStorageObjects(String bucket) throws IOException {
 		List<io.ecarf.core.cloud.storage.StorageObject> objects = new ArrayList<>();
@@ -532,7 +518,7 @@ public class GoogleCloudService implements CloudService {
 				getStorage().objects().list(bucket).setOauthToken(this.getOAuthToken());
 		// we are not paging, just get everything
 		Objects cloudObjects = listObjects.execute();
-		
+
 		for (StorageObject cloudObject : cloudObjects.getItems()) {
 			// Do things!
 			io.ecarf.core.cloud.storage.StorageObject object = 
@@ -545,7 +531,7 @@ public class GoogleCloudService implements CloudService {
 		}
 		return objects;
 	}
-	
+
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
 	 * 
@@ -557,7 +543,7 @@ public class GoogleCloudService implements CloudService {
 	public String prepareForCloudDatabaseImport(String filename) throws IOException {
 		return this.prepareForCloudDatabaseImport(filename, null);
 	}
-	
+
 	/**
 	 * Convert the provided file to a format that can be imported to the Cloud Database
 	 * 
@@ -570,7 +556,7 @@ public class GoogleCloudService implements CloudService {
 		/*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
 			.append(File.separator).append("out_").append(filename).toString();*/
 		CompressProcessor processor = new CompressProcessor(filename);
-		
+
 		String outFilename = processor.process(new CompressCallback() {
 
 			@Override
@@ -578,11 +564,11 @@ public class GoogleCloudService implements CloudService {
 				String[] terms = TripleUtils.parseNTriple(line);
 				String outLine = null;
 				if(terms != null) {
-					
+
 					if(counter != null) {
 						counter.count(terms);
 					}
-					
+
 					for(int i = 0; i < terms.length; i++) {
 						// bigquery requires data to be properly escaped
 						terms[i] = StringEscapeUtils.escapeCsv(terms[i]);
@@ -591,14 +577,14 @@ public class GoogleCloudService implements CloudService {
 				}
 				return outLine;
 			}
-			
+
 		});
-		
+
 		return outFilename;
 	}
-	
+
 	//------------------------------------------------- Compute -------------------------------
-	
+
 	/**
 	 * 
 	 * @param instanceId
@@ -612,8 +598,8 @@ public class GoogleCloudService implements CloudService {
 				.setOauthToken(this.getOAuthToken())
 				.execute();
 	}
-	
-	
+
+
 	/**
 	 * Get the meta data of the current instance, this will simply call the metadata server.
 	 * Wait for change will block until there is a change
@@ -623,14 +609,14 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public VMMetaData getEcarfMetaData(boolean waitForChange) throws IOException {
 		String metaData = this.getMetaData(ATTRIBUTES_PATH + (waitForChange ? WAIT_FOR_CHANGE : ""));
-		
+
 		Map<String, Object> attributes = Utils.jsonToMap(metaData);
 		Instance instance = this.getInstance(instanceId, zone);
 		String fingerprint = instance.getMetadata().getFingerprint();
 		return new VMMetaData(attributes, fingerprint);
-		
+
 	}
-	
+
 	/**
 	 * Get the meta data for the provided instance id
 	 * @param instanceId
@@ -650,7 +636,7 @@ public class GoogleCloudService implements CloudService {
 		String fingerprint = instance.getMetadata().getFingerprint();
 		return new VMMetaData(attributes, fingerprint);
 	}
-	
+
 	/**
 	 *
 	 * Update the meta data of the current instance
@@ -662,7 +648,7 @@ public class GoogleCloudService implements CloudService {
 	public void updateInstanceMetadata(VMMetaData metaData) throws IOException {
 		this.updateInstanceMetadata(metaData, this.zone, this.instanceId, true);
 	}
-	
+
 	/**
 	 * 
 	 * Update the meta data of the the provided instance
@@ -673,24 +659,24 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public void updateInstanceMetadata(VMMetaData metaData, 
 			String zoneId, String instanceId, boolean block) throws IOException {
-		
+
 		Metadata metadata = this.getMetaData(metaData);
-		
+
 		Operation operation = this.getCompute().instances().setMetadata(projectId, zoneId, instanceId, metadata)
-			.setOauthToken(this.getOAuthToken()).execute();
-		
+				.setOauthToken(this.getOAuthToken()).execute();
+
 		log.info("Successuflly initiated operation: " + operation);
-		
+
 		// shall we wait until the operation is complete?
 		if(block) {
 			this.blockOnOperation(operation, zoneId);
-			
+
 			// update the fingerprint of the current metadata
 			Instance instance = this.getInstance(instanceId, zoneId);
 			metaData.setFingerprint(instance.getMetadata().getFingerprint());
 		}
 	}
-	
+
 	/**
 	 * Wait until the provided operation is done, if the operation returns an error then an IOException 
 	 * will be thrown
@@ -714,7 +700,7 @@ public class GoogleCloudService implements CloudService {
 
 		} while(!DONE.endsWith(operation.getStatus()));
 	}
-	
+
 	/**
 	 * Create VM instances, optionally block until all are created. If any fails then the returned flag is false
 	 * 
@@ -803,15 +789,15 @@ public class GoogleCloudService implements CloudService {
 			Operation operation = insert.execute();
 			log.info("Successuflly initiated operation: " + operation);
 		}
-		
+
 		boolean success = true;
 
 		// we have to block until all instances are provisioned
 		if(block) {
-			
+
 			for(VMConfig config: configs) {
 				String status = InstanceStatus.PROVISIONING.toString();
-				
+
 				do {
 					// sleep for 10 seconds before checking the vm status
 					Utils.block(Utils.getApiRecheckDelay());
@@ -833,7 +819,7 @@ public class GoogleCloudService implements CloudService {
 
 		return success;
 	}
-	
+
 	/**
 	 * Delete the VMs provided in this config
 	 * @param configs
@@ -846,10 +832,10 @@ public class GoogleCloudService implements CloudService {
 			String zoneId = config.getZoneId();
 			zoneId = zoneId != null ? zoneId : this.zone;
 			this.getCompute().instances().delete(this.projectId, zoneId, config.getInstanceId())
-				.setOauthToken(this.getOAuthToken()).execute();
+			.setOauthToken(this.getOAuthToken()).execute();
 		}
 	}
-	
+
 	/**
 	 * Delete the currently running vm, i.e. self terminate
 	 * @throws IOException 
@@ -862,7 +848,7 @@ public class GoogleCloudService implements CloudService {
 		.setOauthToken(this.getOAuthToken()).execute();
 
 	}
-	
+
 	/**
 	 * Create an API Metadata
 	 * @param vmMetaData
@@ -870,7 +856,7 @@ public class GoogleCloudService implements CloudService {
 	 */
 	private Metadata getMetaData(VMMetaData vmMetaData) {
 		Metadata metadata = new Metadata();
-		
+
 		Items item;
 		List<Items> items = new ArrayList<>();
 		for(Entry<String, Object> entry: vmMetaData.getAttributes().entrySet()) {
@@ -880,11 +866,11 @@ public class GoogleCloudService implements CloudService {
 		}
 		metadata.setItems(items);
 		metadata.setFingerprint(vmMetaData.getFingerprint());
-		
+
 		return metadata;
 	}
-	
-	
+
+
 	//------------------------------------------------- Bigquery -------------------------------
 
 	/**
@@ -934,18 +920,16 @@ public class GoogleCloudService implements CloudService {
 		 "cacheHit": true
 		}
 	 *
-	 * @param bigquery An authorized BigQuery client
-	 * @param projectId The current project id
 	 * @param query A String containing a BigQuery SQL statement
 	 * @param out A PrintStream for output, normally System.out
 	 */
-	public void runQueryRpcAndPrint(String query, PrintStream out) throws IOException {
+	public void runBigDataQuery(String query, PrintStream out) throws IOException {
 		QueryRequest queryRequest = new QueryRequest().setQuery(query);
-		
+
 		QueryResponse queryResponse = this.getBigquery().jobs()
 				.query(this.projectId, queryRequest)
 				.setOauthToken(this.getOAuthToken()).execute();
-		
+
 		if (queryResponse.getJobComplete()) {
 			printRows(queryResponse.getRows(), out);
 			if ((null == queryResponse.getPageToken()) || BigInteger.ZERO.equals(queryResponse.getTotalRows())) {
@@ -955,12 +939,10 @@ public class GoogleCloudService implements CloudService {
 		// This loop polls until results are present, then loops over result pages.
 		String pageToken = null;
 		while (true) {
-			GetQueryResultsResponse queryResults = this.getBigquery().jobs()
-					.getQueryResults(projectId, queryResponse.getJobReference().getJobId())
-					.setPageToken(pageToken).setOauthToken(this.getOAuthToken()).execute();
-			
+			GetQueryResultsResponse queryResults = this.getQueryResults(queryResponse.getJobReference().getJobId(), pageToken);
+
 			if (queryResults.getJobComplete()) {
-				
+
 				printRows(queryResults.getRows(), out);
 				pageToken = queryResults.getPageToken();
 				if ((null == pageToken) || BigInteger.ZERO.equals(queryResults.getTotalRows())) {
@@ -981,6 +963,424 @@ public class GoogleCloudService implements CloudService {
 				out.println();
 			}
 		}
+	}
+
+	/**
+	 * CONFIG: {
+		 "kind": "bigquery#job",
+		 "etag": "\"QPJfVWBscaHhAhSLq0k5xRS6X5c/xAdd09GSpMDr9PxAk-WGEBWxlKA\"",
+		 "id": "ecarf-1000:job_uUL5E0xmOjKxf3hREEZvb5B_M78",
+		 "selfLink": "https://www.googleapis.com/bigquery/v2/projects/ecarf-1000/jobs/job_uUL5E0xmOjKxf3hREEZvb5B_M78",
+		 "jobReference": {
+		  "projectId": "ecarf-1000",
+		  "jobId": "job_uUL5E0xmOjKxf3hREEZvb5B_M78"
+		 },
+		 "configuration": {
+		  "load": {
+		   "sourceUris": [
+		    "gs://ecarf/umbel_links.nt_out.gz",
+		    "gs://ecarf/yago_links.nt_out.gz"
+		   ],
+		   "schema": {
+		    "fields": [
+		     {
+		      "name": "subject",
+		      "type": "STRING"
+		     },
+		     {
+		      "name": "object",
+		      "type": "STRING"
+		     },
+		     {
+		      "name": "predicate",
+		      "type": "STRING"
+		     }
+		    ]
+		   },
+		   "destinationTable": {
+		    "projectId": "ecarf-1000",
+		    "datasetId": "swetodlp",
+		    "tableId": "test"
+		   }
+		  }
+		 },
+		 "status": {
+		  "state": "DONE"
+		 },
+		 "statistics": {
+		  "creationTime": "1398091486326",
+		  "startTime": "1398091498083",
+		  "endTime": "1398091576483",
+		  "load": {
+		   "inputFiles": "2",
+		   "inputFileBytes": "41510712",
+		   "outputRows": "3782729",
+		   "outputBytes": "554874551"
+		  }
+		 }
+		}
+	 * @param files - The source URIs must be fully-qualified, in the format gs://<bucket>/<object>.
+	 * @param table
+	 * @return
+	 * @throws IOException
+	 */
+	@Override
+	public String loadCloudStorageFilesIntoBigData(List<String> files, String table, boolean createTable) throws IOException {
+		log.info("Loading data from files: " + files + ", into big data table: " + table);
+
+		Job job = new Job();
+		JobConfiguration config = new JobConfiguration();
+		JobConfigurationLoad load = new JobConfigurationLoad();	
+		config.setLoad(load);
+		job.setConfiguration(config);
+
+		load.setSourceUris(files);
+		load.setCreateDisposition(createTable ? CREATE_IF_NEEDED : CREATE_NEVER);
+        load.setWriteDisposition(WRITE_APPEND);
+		load.setSchema(GoogleMetaData.SCHEMA);
+
+		String [] names = StringUtils.split(table, '.');
+		TableReference tableRef = (new TableReference())
+				.setProjectId(this.projectId)
+				.setDatasetId(names[0])
+				.setTableId(names[1]);
+		load.setDestinationTable(tableRef);
+
+		Bigquery.Jobs.Insert insert = this.getBigquery().jobs().insert(projectId, job);
+
+		insert.setProjectId(projectId);
+		insert.setOauthToken(this.getOAuthToken());
+
+		JobReference jobRef = insert.execute().getJobReference();
+
+		log.info("Job ID of Load Job is: " + jobRef.getJobId());
+
+
+		return this.checkBigQueryJobResults(jobRef.getJobId());
+
+	}
+	
+	
+	/**
+	 * CONFIG: {
+	 "kind": "bigquery#job",
+	 "etag": "\"QPJfVWBscaHhAhSLq0k5xRS6X5c/RenEm3VqmGyNz-qo48hIw9I6GYQ\"",
+	 "id": "ecarf-1000:job_gJed2_eIOXJaMi8RXKjps0hgFhY",
+	 "selfLink": "https://www.googleapis.com/bigquery/v2/projects/ecarf-1000/jobs/job_gJed2_eIOXJaMi8RXKjps0hgFhY",
+	 "jobReference": {
+	  "projectId": "ecarf-1000",
+	  "jobId": "job_gJed2_eIOXJaMi8RXKjps0hgFhY"
+	 },
+	 "configuration": {
+	  "load": {
+	   "schema": {
+	    "fields": [
+	     {
+	      "name": "subject",
+	      "type": "STRING"
+	     },
+	     {
+	      "name": "object",
+	      "type": "STRING"
+	     },
+	     {
+	      "name": "predicate",
+	      "type": "STRING"
+	     }
+	    ]
+	   },
+	   "destinationTable": {
+	    "projectId": "ecarf-1000",
+	    "datasetId": "swetodlp",
+	    "tableId": "test"
+	   },
+	   "createDisposition": "CREATE_NEVER",
+	   "encoding": "UTF-8"
+	  }
+	 },
+	 "status": {
+	  "state": "RUNNING"
+	 },
+	 "statistics": {
+	  "creationTime": "1398092776236",
+	  "startTime": "1398092822962",
+	  "load": {
+	   "inputFiles": "1",
+	   "inputFileBytes": "8474390"
+	  }
+	 }
+	}
+	 * @param files
+	 * @param table
+	 * @param createTable
+	 * @return
+	 * @throws IOException
+	 */
+	@Override
+	public List<String> loadLocalFilesIntoBigData(List<String> files, String table, boolean createTable) throws IOException {
+		/*TableSchema schema = new TableSchema();
+        schema.setFields(new ArrayList<TableFieldSchema>());
+        JacksonFactory JACKSON = new JacksonFactory();
+        JACKSON.createJsonParser(new FileInputStream("schema.json"))
+        .parseArrayAndClose(schema.getFields(), TableFieldSchema.class, null);
+        schema.setFactory(JACKSON);*/
+
+        String [] names = StringUtils.split(table, '.');
+		TableReference tableRef = (new TableReference())
+				.setProjectId(this.projectId)
+				.setDatasetId(names[0])
+				.setTableId(names[1]);
+
+        Job job = new Job();
+        JobConfiguration config = new JobConfiguration();
+        JobConfigurationLoad load = new JobConfigurationLoad();
+
+        load.setSchema(GoogleMetaData.SCHEMA);
+        load.setDestinationTable(tableRef);
+
+        load.setEncoding(Constants.UTF8);
+        load.setCreateDisposition(createTable ? CREATE_IF_NEEDED : CREATE_NEVER);
+        load.setWriteDisposition(WRITE_APPEND);
+
+        config.setLoad(load);
+        job.setConfiguration(config);
+        
+        List<String> jobIds = new ArrayList<>();
+        
+        for(String file: files) {
+        	FileContent content = new FileContent(Constants.BINARY_CONTENT_TYPE, new File(file));
+
+        	Bigquery.Jobs.Insert insert = this.getBigquery().jobs().insert(projectId, job, content);
+
+        	insert.setProjectId(projectId);
+        	insert.setOauthToken(this.getOAuthToken());
+
+        	JobReference jobRef = insert.execute().getJobReference();
+        	jobIds.add(jobRef.getJobId());
+        
+        }
+        List<String> completedIds = new ArrayList<>();
+        
+        for(String jobId: jobIds) {
+        	completedIds.add(this.checkBigQueryJobResults(jobId));
+        }
+		return completedIds;
+		
+	}
+
+
+	/**
+	 * Creates an asynchronous Query Job for a particular query on a dataset
+	 *
+	 * @param bigquery  an authorized BigQuery client
+	 * @param projectId a String containing the project ID
+	 * @param querySql  the actual query string
+	 * @return a reference to the inserted query job
+	 * @throws IOException
+	 */
+	@Override
+	public String startBigDataQuery(String querySql) throws IOException {
+
+		log.info("Inserting Query Job: " + querySql);
+
+		Job job = new Job();
+		JobConfiguration config = new JobConfiguration();
+		JobConfigurationQuery queryConfig = new JobConfigurationQuery();
+		config.setQuery(queryConfig);
+
+		job.setConfiguration(config);
+		queryConfig.setQuery(querySql);
+
+		com.google.api.services.bigquery.Bigquery.Jobs.Insert insert = 
+				this.getBigquery().jobs().insert(projectId, job);
+
+		insert.setProjectId(projectId);
+		insert.setOauthToken(this.getOAuthToken());
+
+		JobReference jobRef = insert.execute().getJobReference();
+
+		log.info("Job ID of Query Job is: " + jobRef.getJobId());
+
+		return jobRef.getJobId();
+	}
+
+	/**
+	 * Polls the status of a BigQuery job, returns Job reference if "Done"
+	 * This method will block until the job status is Done
+	 * @param jobId     a reference to an inserted query Job
+	 * @return a reference to the completed Job
+	 * @throws IOException
+	 */
+	protected String checkBigQueryJobResults(String jobId) throws IOException {
+		// Variables to keep track of total query time
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
+
+		String status = null;
+		Job pollJob = null;
+
+		do {
+			pollJob = this.getBigquery().jobs().get(projectId, jobId)
+					.setOauthToken(this.getOAuthToken()).execute();
+
+			status = pollJob.getStatus().getState();
+
+			log.info("Job Status: " + status + ", elapsed time (secs): " + stopwatch);
+
+			// Pause execution for one second before polling job status again, to
+			// reduce unnecessary calls to the BigQUery API and lower overall
+			// application bandwidth.
+			if (!GoogleMetaData.DONE.equals(status)) {
+				Utils.block(Utils.getApiRecheckDelay());
+			}
+			// TODO Error handling
+
+		} while (!GoogleMetaData.DONE.equals(status));
+
+		stopwatch.stop();
+
+		return pollJob.getJobReference().getJobId();
+	}
+
+	/**
+	 * Get a page of Bigquery rows
+	 * CONFIG: {
+		 "kind": "bigquery#job",
+		 "etag": "\"QPJfVWBscaHhAhSLq0k5xRS6X5c/eSppPGGASS7YbZBbC4v1q6lTcGM\"",
+		 "id": "ecarf-1000:job_CaN3ROCFJdK30hBl7GBMmnvspgc",
+		 "selfLink": "https://www.googleapis.com/bigquery/v2/projects/ecarf-1000/jobs/job_CaN3ROCFJdK30hBl7GBMmnvspgc",
+		 "jobReference": {
+		  "projectId": "ecarf-1000",
+		  "jobId": "job_CaN3ROCFJdK30hBl7GBMmnvspgc"
+		 },
+		 "configuration": {
+		  "query": {
+		   "query": "select subject from swetodblp.swetodblp_triple where object = \"\u003chttp://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings1\u003e\";",
+		   "destinationTable": {
+		    "projectId": "ecarf-1000",
+		    "datasetId": "_f14a24df5a43859914cb508177aa01d64466d055",
+		    "tableId": "anonc6f8ec7bfe8bbd6bd76bbac6ad8db54482cd8209"
+		   },
+		   "createDisposition": "CREATE_IF_NEEDED",
+		   "writeDisposition": "WRITE_TRUNCATE"
+		  }
+		 },
+		 "status": {
+		  "state": "DONE"
+		 },
+		 "statistics": {
+		  "creationTime": "1398030237040",
+		  "startTime": "1398030237657",
+		  "endTime": "1398030237801",
+		  "totalBytesProcessed": "0",
+		  "query": {
+		   "totalBytesProcessed": "0",
+		   "cacheHit": true
+		  }
+		 }
+		}
+	 * @return
+	 * @throws IOException 
+	 */
+	private GetQueryResultsResponse getQueryResults(String jobId, String pageToken) throws IOException {
+		GetQueryResultsResponse queryResults = this.getBigquery().jobs()
+				.getQueryResults(projectId, jobId)
+				.setPageToken(pageToken)
+				.setOauthToken(this.getOAuthToken())
+				.execute();
+
+		return queryResults;
+	}
+
+	/**
+	 * Makes an API call to the BigQuery API
+	 * @param completedJob to the completed Job
+	 * @throws IOException
+	 */
+	protected void displayQueryResults(String jobId) throws IOException {
+
+		String pageToken = null;
+		BigInteger totalRows = null;
+
+		do {
+
+			GetQueryResultsResponse queryResult = this.getQueryResults(jobId, pageToken);
+
+			pageToken = queryResult.getPageToken();
+			totalRows = queryResult.getTotalRows();
+
+			List<TableRow> rows = queryResult.getRows();
+
+			if(rows != null) {
+				System.out.print("\nQuery Results:\n------------\n");
+				for (TableRow row : rows) {
+					for (TableCell field : row.getF()) {
+						System.out.printf("%-50s", field.getV());
+					}
+					System.out.println();
+				}
+			}
+
+		} while((pageToken != null) && !BigInteger.ZERO.equals(totalRows));
+	}
+
+
+	/**
+	 * Polls a big data job and once done save the results to a file
+	 * @param jobId
+	 * @param filename
+	 * @throws IOException
+	 */
+	@Override
+	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException {
+
+		String completedJob = checkBigQueryJobResults(jobId);
+		Joiner joiner = Joiner.on(',');
+		String pageToken = null;
+		BigInteger totalRows = null;
+		Integer numFields = null;
+
+		try(PrintWriter writer = new PrintWriter(new FileOutputStream(filename))) {
+
+			do {
+
+				GetQueryResultsResponse queryResult = this.getQueryResults(completedJob, pageToken);
+
+				pageToken = queryResult.getPageToken();
+				log.info("Page token: " + pageToken);
+
+				if(totalRows == null) {
+					totalRows = queryResult.getTotalRows();
+					numFields = queryResult.getSchema().getFields().size();
+					log.info("Total rows for query: " + totalRows);
+				}
+
+				List<TableRow> rows = queryResult.getRows();
+
+				if(rows != null) {
+					log.info("Saving " + rows.size() + ", records to file: " + filename);
+
+					// one field only
+					if(numFields == 1) {
+						for (TableRow row : rows) {
+							writer.println(row.getF().get(0).getV());		
+						}
+
+					} else {
+						// multiple fields
+						for (TableRow row : rows) {
+							List<Object> fields = new ArrayList<>();
+							for (TableCell field : row.getF()) {
+								fields.add(field.getV());
+							}
+							writer.println(joiner.join(fields));		
+						}
+					}
+				}
+
+			} while((pageToken != null) && !BigInteger.ZERO.equals(totalRows));
+		}
+		return totalRows;
 	}
 
 	/* (non-Javadoc)
@@ -1062,5 +1462,5 @@ public class GoogleCloudService implements CloudService {
 		return instanceId;
 	}
 
-	
+
 }

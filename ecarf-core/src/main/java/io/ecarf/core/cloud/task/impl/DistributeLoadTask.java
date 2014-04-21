@@ -26,8 +26,6 @@ import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.cloud.types.VMStatus;
 import io.ecarf.core.partition.Item;
-import io.ecarf.core.partition.PartitionFunction;
-import io.ecarf.core.partition.PartitionFunctionFactory;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
@@ -38,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -154,7 +151,6 @@ public class DistributeLoadTask extends CommonTask {
 
 					}
 
-					// TODO move into separate Task
 					if(!allTermStats.isEmpty()) {
 
 						List<Item> items = new ArrayList<>();
@@ -163,17 +159,9 @@ public class DistributeLoadTask extends CommonTask {
 							items.add(anItem);
 						}
 
-						// each node can handle up to 10% more than the largest term
-						// read from the configurations
-						PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
-								this.input.getNewBinPercentage(), this.input.getWeightPerNode());
-						
-						List<List<Item>> bins = function.partition();
+						this.results.setItems(items);
 
-						this.results = new Results();
-						results.setBins(bins);
-
-						log.info("Successfully created term stats: " + bins);
+						log.info("Successfully created term stats: " + items);
 						
 					}
 				}
