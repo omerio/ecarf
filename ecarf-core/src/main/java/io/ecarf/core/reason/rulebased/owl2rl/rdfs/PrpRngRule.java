@@ -24,10 +24,10 @@ import io.ecarf.core.triple.TermType;
 import io.ecarf.core.triple.Triple;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 /**
  * A rule that supports SQL like queries for instance 
@@ -48,8 +48,8 @@ public class PrpRngRule extends GenericRule {
 	 * @return
 	 */
 	@Override
-	public Set<String> select() {
-		return Sets.newHashSet(TermType.OBJECT.term());
+	public List<String> select() {
+		return Lists.newArrayList(TermType.object);
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class PrpRngRule extends GenericRule {
 	@Override
 	public Map<String, String> where(Triple schemaTriple) {
 		Map<String, String> where = new HashMap<>();
-		where.put(TermType.PREDICATE.term(), "\"" + schemaTriple.getSubject() + "\"");
+		where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
 		return where;
 	}
 	

@@ -4,11 +4,14 @@
 package io.ecarf.core.triple;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+
+import com.google.common.base.Preconditions;
 
 /**
  * @author omerio
@@ -27,6 +30,15 @@ public class Triple {
 	private boolean inferred;
 	
 	
+	/**
+	 * 
+	 */
+	public Triple() {
+		super();
+	}
+
+
+
 	/**
 	 * 
 	 * @param subject
@@ -55,6 +67,38 @@ public class Triple {
 		this.predicate = predicate;
 		this.object = object;
 		this.inferred = inferred;
+	}
+	
+	/**
+	 * Set a field with the provided value
+	 * @param field
+	 * @param value
+	 */
+	public void set(String field, String value) {
+		switch(field) {
+		case TermType.subject:
+			this.setSubject(value);
+			break;
+		case TermType.predicate:
+			this.setPredicate(value);
+			break;
+		case TermType.object:
+			this.setObject(value);
+			break;
+			
+		}
+	}
+	
+	/**
+	 * Populate from a list of values
+	 * @param fields
+	 * @param values
+	 */
+	public void set(List<String> fields, String... values) {
+		Preconditions.checkArgument(fields.size() == values.length, "Select terms must be equal to values selected");
+		for(int i = 0; i < values.length; i++) {
+			this.set(fields.get(i), values[i]);
+		}
 	}
 
 

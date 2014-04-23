@@ -160,7 +160,7 @@ public class DistributeReasonTask extends CommonTask {
 			.addValue(VMMetaData.ECARF_BUCKET, this.input.getBucket())
 			.addValue(VMMetaData.ECARF_TABLE, this.input.getTable());
 		// do we have a schema terms file
-		if(StringUtils.isNotBlank(this.input.getSchemaTermsFile())) {
+		if(StringUtils.isNotBlank(this.input.getSchemaFile())) {
 			metaData.addValue(VMMetaData.ECARF_SCHEMA, this.input.getSchemaFile());
 		}
 		return metaData;

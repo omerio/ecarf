@@ -23,10 +23,10 @@ import io.ecarf.core.triple.TermType;
 import io.ecarf.core.triple.Triple;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 /**
  * A rule that supports SQL like queries for instance 
@@ -47,8 +47,8 @@ public class PrpSpo1Rule extends GenericRule {
 	 * @return
 	 */
 	@Override
-	public Set<String> select() {
-		return Sets.newHashSet(TermType.SUBJECT.term(), TermType.OBJECT.term());
+	public List<String> select() {
+		return Lists.newArrayList(TermType.subject, TermType.object);
 	}
 	
 	/**
@@ -59,7 +59,7 @@ public class PrpSpo1Rule extends GenericRule {
 	@Override
 	public Map<String, String> where(Triple schemaTriple) {
 		Map<String, String> where = new HashMap<>();
-		where.put(TermType.PREDICATE.term(), "\"" + schemaTriple.getSubject() + "\"");
+		where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
 		return where;
 	}
 	

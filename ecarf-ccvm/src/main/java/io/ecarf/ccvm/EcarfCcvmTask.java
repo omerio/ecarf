@@ -27,6 +27,7 @@ import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
+import io.ecarf.core.cloud.task.impl.DistributeReasonTask;
 import io.ecarf.core.cloud.task.impl.DoLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
@@ -60,6 +61,7 @@ public class EcarfCcvmTask {
 		
 		String bucket = "swetodblp";
 		String schema = "opus_august2007_closure.nt";
+		String table = "ontologies.swetodblp";
 		
 		// 1- load the schema and do a count of the relevant terms
 		VMMetaData metadata = new VMMetaData();
@@ -128,19 +130,31 @@ public class EcarfCcvmTask {
 		List<String> terms = results.getBinItems();
 		
 		// 5- Load the generated files into Big Data table
-		input = (new Input()).setBucket(bucket).setTable("ontologies.swetodblp");	
+		input = (new Input()).setBucket(bucket).setTable(table);	
 		task = new DoLoadTask(null, service);
 		task.setInput(input);
 		task.run();
 		
 		// 6- distribute the reasoning between the nodes
 		input = (new Input()).setItems(terms)
+				.setBucket(bucket).setTable(table)
+				.setSchemaFile(schema)
 				.setNodes(nodes)
 				.setImageId(Config.getProperty(Constants.IMAGE_ID_KEY))
 				.setNetworkId(Config.getProperty(Constants.NETWORK_ID_KEY))
 				.setVmType(Config.getProperty(Constants.VM_TYPE_KEY))
 				.setStartupScript(Config.getProperty(Constants.STARTUP_SCRIPT_KEY))
-				.setSchemaTermsFile(Constants.SCHEMA_TERMS_JSON);
+				;
+		
+		task = new DistributeReasonTask(null, service);
+		task.setInput(input);
+		task.run();
+		
+		// All nodes, which we can shut down
+		List<String> allNodes = task.getResults().getNodes();
+		log.info("All active nodes: " + allNodes);
+		
+		// TODO shutdown active nodes
 		
 	}
 	

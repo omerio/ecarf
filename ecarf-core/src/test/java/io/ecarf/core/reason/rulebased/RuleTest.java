@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class RuleTest {
 		for(Entry<String, Set<Triple>> entry: schemaTriples.entrySet()) {
 			System.out.println("Term: " + entry.getKey());
 			System.out.println("Triples: " + Joiner.on('\n').join(entry.getValue()));
-			Set<String> select = GenericRule.getSelect(entry.getValue());
+			List<String> select = GenericRule.getSelect(entry.getValue());
 			System.out.println("\nQuery: " + GenericRule.getQuery(entry.getValue(), "my-table"));
 			System.out.println("Select: " + select);
 			System.out.println("------------------------------------------------------------------------------------------------------------");

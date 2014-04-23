@@ -18,20 +18,6 @@
  */
 package io.ecarf.core.cloud.task.impl;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
-
-import com.google.api.client.repackaged.com.google.common.base.Joiner;
-
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.task.CommonTask;
@@ -40,8 +26,30 @@ import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
+import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
+
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.zip.GZIPOutputStream;
+
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+
+import com.google.api.client.repackaged.com.google.common.base.Joiner;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -49,7 +57,7 @@ import io.ecarf.core.utils.Utils;
  */
 public class DoReasonTask extends CommonTask {
 
-	
+
 	public DoReasonTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
@@ -59,16 +67,16 @@ public class DoReasonTask extends CommonTask {
 	 */
 	@Override
 	public void run() throws IOException {
-		
+
 		String table = metadata.getValue(VMMetaData.ECARF_TABLE);
 		Set<String> terms = metadata.getTerms();
 		String schemaFile = metadata.getValue(VMMetaData.ECARF_SCHEMA);
 		String bucket = metadata.getBucket();
-		
+
 		String localSchemaFile = Utils.TEMP_FOLDER + schemaFile;
 		// download the file from the cloud storage
 		this.cloud.downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);
-		
+
 		// uncompress if compressed
 		if(GzipUtils.isCompressedFilename(schemaFile)) {
 			localSchemaFile = GzipUtils.getUncompressedFilename(localSchemaFile);
@@ -76,80 +84,216 @@ public class DoReasonTask extends CommonTask {
 
 		Map<String, Set<Triple>> allSchemaTriples = 
 				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
-		
+
 		// get all the triples we care about
-		Map<String, Set<Triple>> schemaTriples = new HashMap<>();
-		
+		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
+
 		for(String term: terms) {
 			if(allSchemaTriples.containsKey(term)) {
-				schemaTriples.put(term, allSchemaTriples.get(term));
+				schemaTerms.put(new Term(term), allSchemaTriples.get(term));
 			}
 		}
 		
-		for(Entry<String, Set<Triple>> entry: schemaTriples.entrySet()) {
-			log.info("Term: " + entry.getKey());
-			log.info("Triples: " + Joiner.on('\n').join(entry.getValue()));
-			Set<String> select = GenericRule.getSelect(entry.getValue());
-			log.info("\nQuery: " + GenericRule.getQuery(entry.getValue(), "my-table"));
-			log.info("Select: " + select);
-			log.info("------------------------------------------------------------------------------------------------------------");
-		}
+		String decoratedTable = table;
+		int emptyRetries = 0;
+		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
 		
-		
-		String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
-		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
-			 "select subject from swetodlp.swetodlp_triple where " +
-			 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
-		
-		String jobId = this.cloud.startBigDataQuery(query);
-		String filename = Utils.TEMP_FOLDER + 
-				Utils.encodeFilename("<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>") + 
-				Constants.DOT_TERMS;
-		
-		BigInteger rows = this.cloud.saveBigQueryResultsToFile(jobId, filename);
-		System.err.println(rows);
-		
-		String term = "<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>";
-		schemaTriples = new HashMap<>();
-		Set<Triple> triples = new HashSet<Triple>();
-		/*
-		 * 
-		Triple [<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter>], inferred=false
-		Triple [<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.w3.org/2002/07/owl#topDataProperty>], inferred=false
-		Triple [<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string>], inferred=false
-		 */
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#domain>", "<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter>"));
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>", "<http://www.w3.org/2002/07/owl#topDataProperty>"));
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#range>", "<http://www.w3.org/2001/XMLSchema#string>"));
-		schemaTriples.put(term, triples);
-		
-		Set<Triple> instanceTriples = new HashSet<>();
-		instanceTriples.add(new Triple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/KlineSL95>", term, "\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
-		instanceTriples.add(new Triple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/SooJS95>", term, "\"27\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
-		
-		Set<Triple> inferredTriples = new HashSet<>();
-		
-		for(Entry<String, Set<Triple>> entry: schemaTriples.entrySet()) {
-			
-			term = entry.getKey();
-			System.out.println("Reasoning for term: " + term);
-			triples = entry.getValue();
-			
-			// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-			for(Triple instanceTriple: instanceTriples) {	
-				for(Triple schemaTriple: triples) {
-					Rule rule = GenericRule.getRule(schemaTriple);
-					inferredTriples.add(rule.head(schemaTriple, instanceTriple));
+		// timestamp loop
+		do {
+
+			List<String> inferredFiles = new ArrayList<>();
+
+			// First of all run all the queries asynchronously and remember the jobId and filename for each term
+			for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
+
+				Term term = entry.getKey();
+
+				// TODO add table decoration to table name
+				String query = GenericRule.getQuery(entry.getValue(), decoratedTable);	
+
+				log.info("\nQuery: " + query);
+
+				String jobId = this.cloud.startBigDataQuery(query);
+				String encodedTerm = Utils.encodeFilename(term.getTerm());
+				String filename = Utils.TEMP_FOLDER + encodedTerm + Constants.DOT_TERMS;
+
+				// remember the filename and the jobId for this query
+				term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);;
+
+			}
+
+			long start = System.currentTimeMillis();
+
+			// now loop through the queries
+			for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
+
+				Term term = entry.getKey();
+				log.info("Reasoning for Term: " + term);
+
+				Set<Triple> schemaTriples = entry.getValue();
+				log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
+
+				List<String> select = GenericRule.getSelect(schemaTriples);
+
+				// block and wait for each job to complete then save results to a file
+				BigInteger rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+
+				log.info("Query found " + rows + ", rows");
+
+				// only process if triples are found matching this term
+				if(!BigInteger.ZERO.equals(rows)) {
+
+					Set<Triple> inferredTriples = new HashSet<>();
+
+					String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
+
+					// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
+					String line = null;
+					try (BufferedReader r = new BufferedReader(new FileReader(term.getFilename()));
+							PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)));) {
+
+						while ((line = r.readLine()) != null) {
+
+							Triple instanceTriple = new Triple();
+
+							if(select.size() == 1) {
+								instanceTriple.set(select.get(0), line);
+							} else {
+
+								instanceTriple.set(select, StringUtils.split(line, ','));
+							}
+
+							for(Triple schemaTriple: schemaTriples) {
+								Rule rule = GenericRule.getRule(schemaTriple);
+								Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+								writer.println(inferredTriple.toCsv());
+							}
+						}
+					}
+
+					inferredFiles.add(inferredTriplesFile);
+					log.info("\nInferred " + inferredTriples.size() + " Triples for term: " + term);
+
 				}
 			}
-		}
-		System.out.println("\nInferred Triples");
-		System.out.println(Joiner.on('\n').join(inferredTriples));
-		
-		List<String> jobIds = this.cloud.loadLocalFilesIntoBigData(
-				Arrays.asList("/Users/omerio/Downloads/umbel_links.nt_out.gz", 
-						"/Users/omerio/Downloads/linkedgeodata_links.nt_out.gz"), "swetodlp.test", false);
 
+			if(!inferredFiles.isEmpty()) {
+				log.info("Inserting " + inferredFiles.size() + ", files into Big Data table");
+				List<String> jobIds = this.cloud.loadLocalFilesIntoBigData(inferredFiles, table, false);
+				log.info("All inferred triples are inserted into Big Data table, completed jobIds: " + jobIds);
+				
+				// reset empty retries
+				emptyRetries = 0;
+
+			} else {
+				log.info("No new inferred triples");
+				// increment empty retries
+				emptyRetries++;
+			}
+
+			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 10));
+			
+			// FIXME move into the particular cloud implementation service
+			long elapsed = System.currentTimeMillis() - start;
+			decoratedTable =  "[" + table + "@-" + elapsed + "-]";
+			
+			log.info("Using table decorator: " + decoratedTable + ". Empty retries count: " + emptyRetries);
+
+		} while(!(emptyRetries == maxRetries)); // end timestamp loop
 	}
-	
+
+	/**
+	 * Term details used during the querying and reasoning process
+	 * @author Omer Dawelbeit (omerio)
+	 *
+	 */
+	public class Term {
+		
+		private String term;
+		
+		private String filename;
+		
+		private String jobId;
+		
+		private String encodedTerm;
+
+		/**
+		 * @param term
+		 */
+		public Term(String term) {
+			super();
+			this.term = term;
+		}
+
+		/**
+		 * @return the term
+		 */
+		public String getTerm() {
+			return term;
+		}
+
+		/**
+		 * @param term the term to set
+		 */
+		public Term setTerm(String term) {
+			this.term = term;
+			return this;
+		}
+
+		/**
+		 * @return the filename
+		 */
+		public String getFilename() {
+			return filename;
+		}
+
+		/**
+		 * @param filename the filename to set
+		 */
+		public Term setFilename(String filename) {
+			this.filename = filename;
+			return this;
+		}
+
+		/**
+		 * @return the jobId
+		 */
+		public String getJobId() {
+			return jobId;
+		}
+
+		/**
+		 * @param jobId the jobId to set
+		 */
+		public Term setJobId(String jobId) {
+			this.jobId = jobId;
+			return this;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return ReflectionToStringBuilder.toString(this);
+		}
+
+		/**
+		 * @return the encodedTerm
+		 */
+		public String getEncodedTerm() {
+			return encodedTerm;
+		}
+
+		/**
+		 * @param encodedTerm the encodedTerm to set
+		 */
+		public void setEncodedTerm(String encodedTerm) {
+			this.encodedTerm = encodedTerm;
+		}
+		
+		
+		
+	}
+
 }

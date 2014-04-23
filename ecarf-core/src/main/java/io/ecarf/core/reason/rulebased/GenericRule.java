@@ -23,10 +23,13 @@ import io.ecarf.core.reason.rulebased.owl2rl.rdfs.PrpDomRule;
 import io.ecarf.core.reason.rulebased.owl2rl.rdfs.PrpRngRule;
 import io.ecarf.core.reason.rulebased.owl2rl.rdfs.PrpSpo1Rule;
 import io.ecarf.core.triple.SchemaURIType;
+import io.ecarf.core.triple.TermType;
 import io.ecarf.core.triple.Triple;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -65,7 +68,7 @@ public abstract class GenericRule implements Rule {
 	 * io.ecarf.core.triple.Triple, java.lang.String, java.util.Set)
 	 */
 	@Override
-	public String query(Triple schemaTriple, String table, Set<String> select) {
+	public String query(Triple schemaTriple, String table, List<String> select) {
 		/*
 		 * select subject from swetodblp.swetodblp_triple where 
 				 object = "<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>"; */
@@ -100,12 +103,25 @@ public abstract class GenericRule implements Rule {
 	 * @param triples
 	 * @return
 	 */
-	public static Set<String> getSelect(Set<Triple> triples) {
+	public static List<String> getSelect(Set<Triple> triples) {
+		// make sure we eliminate duplicates, use a set
 		Set<String> select = new HashSet<>();
 		for(Triple triple: triples) {
 			select.addAll(GenericRule.getRule(triple).select());
 		}
-		return select;
+		
+		// make sure we add the terms in the order subject predicate object
+		List<String> selects = new ArrayList<>();
+		if(select.contains(TermType.subject)) {
+			selects.add(TermType.subject);
+		}
+		if(select.contains(TermType.predicate)) {
+			selects.add(TermType.predicate);
+		}
+		if(select.contains(TermType.object)) {
+			selects.add(TermType.object);
+		}
+		return selects;
 	}
 	
 	/**
@@ -115,7 +131,7 @@ public abstract class GenericRule implements Rule {
 	 * @return
 	 */
 	public static String getQuery(Set<Triple> triples, String table) {
-		Set<String> select = getSelect(triples);
+		List<String> select = getSelect(triples);
 		Triple schemaTriple = triples.iterator().next();
 		
 		Rule rule = getRule(schemaTriple);

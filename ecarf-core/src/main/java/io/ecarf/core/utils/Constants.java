@@ -47,6 +47,8 @@ public class Constants {
 	
 	public static final String DOT_TERMS = ".terms";
 	
+	public static final String DOT_INF = ".inf";
+	
 	public static final String OUT_FILE_SUFFIX = "_out.";
 	
 	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
@@ -69,4 +71,6 @@ public class Constants {
 	public static final String ZONE_KEY = "ecarf.io.vm.zone";
 	public static final String STARTUP_SCRIPT_KEY = "ecarf.io.vm.startup.script";
 	public static final String ACCESS_SCOPES_KEY = "ecarf.io.vm.access.scopes";
+	public static final String REASON_SLEEP_KEY = "ecarf.io.reasoning.sleep.time";
+	public static final String REASON_RETRY_KEY = "ecarf.io.reasoning.retry.times";
 }

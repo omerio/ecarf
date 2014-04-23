@@ -20,8 +20,8 @@ package io.ecarf.core.reason.rulebased;
 
 import io.ecarf.core.triple.Triple;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * For now the assumption is the rule will contain one schema triple
@@ -57,13 +57,13 @@ public interface Rule {
 	 * @param select - custom select columns to use
 	 * @return
 	 */
-	public String query(Triple schemaTriple, String table, Set<String> select);
+	public String query(Triple schemaTriple, String table, List<String> select);
 
 	/**
 	 * return the select column
 	 * @return
 	 */
-	public Set<String> select();
+	public List<String> select();
 
 	/**
 	 * return the items to use in the select clause
