@@ -71,6 +71,8 @@ public class GoogleMetaData {
 	public static final String ONE_TO_ONE_NAT = "ONE_TO_ONE_NAT";
 	public static final String STARTUP_SCRIPT = "startup-script";
 	
+	public static final String CLOUD_STORAGE_PREFIX = "gs://";
+	
 	// BigQuery create/write disposition
 	public static final String CREATE_NEVER = "CREATE_NEVER";
 	public static final String CREATE_IF_NEEDED = "CREATE_IF_NEEDED";

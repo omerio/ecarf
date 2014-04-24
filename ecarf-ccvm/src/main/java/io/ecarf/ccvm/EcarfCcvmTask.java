@@ -26,12 +26,9 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
-import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.DistributeReasonTask;
 import io.ecarf.core.cloud.task.impl.DoLoadTask;
-import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
-import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
@@ -39,10 +36,15 @@ import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
+import com.google.common.collect.Sets;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -62,23 +64,27 @@ public class EcarfCcvmTask {
 		String bucket = "swetodblp";
 		String schema = "opus_august2007_closure.nt";
 		String table = "ontologies.swetodblp";
+		Task task;
+		Results results;
+		Input input;
+		List<String> nodes = null;
 		
 		// 1- load the schema and do a count of the relevant terms
-		VMMetaData metadata = new VMMetaData();
+		/*VMMetaData metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, bucket);
 		metadata.addValue(VMMetaData.ECARF_SCHEMA, schema);
-		Task task = new SchemaTermCountTask(metadata, service);
+		task = new SchemaTermCountTask(metadata, service);
 		task.run();
 		
 		// 2- partition the instance files into bins
-		Input input = (new Input()).setBucket(bucket).setWeightPerNode(FileUtils.ONE_MB * 80)
+		input = (new Input()).setBucket(bucket).setWeightPerNode(FileUtils.ONE_MB * 80)
 				.setNewBinPercentage(0.0);
 		
 		task = new PartitionLoadTask(null, service);
 		task.setInput(input);
 		task.run();
 		
-		Results results = task.getResults();
+		results = task.getResults();
 		
 		List<String> nodeFiles = results.getBinItems();
 		
@@ -99,9 +105,11 @@ public class EcarfCcvmTask {
 		
 		results = task.getResults();
 		
-		List<String> nodes = results.getNodes();
+		nodes = results.getNodes();
 		
-		List<Item> items = results.getItems();
+		log.info("Active nodes: " + nodes);*/
+		
+		List<Item> items = this.getMockResults(bucket).getItems();//results.getItems();
 		
 		log.info("Term stats for reasoning task split: " + items);
 		
@@ -115,7 +123,7 @@ public class EcarfCcvmTask {
 				.setWeightPerNode(5_000_000L);
 		task = new PartitionReasonTask(null, service);
 		task.setInput(input);
-		task.run();
+		task.run(); 
 		
 		results = task.getResults();
 		
@@ -156,6 +164,58 @@ public class EcarfCcvmTask {
 		
 		// TODO shutdown active nodes
 		
+	}
+	
+	/**
+	 * TODO remove
+	 * @param bucket
+	 * @return
+	 * @throws IOException 
+	 */
+	private Results getMockResults(String bucket) throws IOException {
+		Results results = new Results();
+		Map<String, Long> allTermStats = new HashMap<String, Long>();
+		
+		Set<String> files = Sets.newHashSet("ecarf-evm-1397837612135.json", "ecarf-evm-1397837612136.json");
+		
+		for(String file: files) {	
+			
+			String localStatsFile = Utils.TEMP_FOLDER + file;
+			this.service.downloadObjectFromCloudStorage(file, localStatsFile, bucket);
+
+			// convert from JSON
+			Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
+
+			for(Entry<String, Long> term: termStats.entrySet()) {
+				String key = term.getKey();
+				Long value = term.getValue();
+
+				if(allTermStats.containsKey(key)) {
+					value = allTermStats.get(key) + value;
+				} 
+
+				allTermStats.put(key, value);
+			}
+			
+			log.info("Evms analysed: " + allTermStats.size() + ", terms");
+
+		}
+
+		if(!allTermStats.isEmpty()) {
+
+			List<Item> items = new ArrayList<>();
+			for(Entry<String, Long> item: allTermStats.entrySet()) {
+				Item anItem = (new Item()).setKey(item.getKey()).setWeight(item.getValue());
+				items.add(anItem);
+			}
+
+			results.setItems(items);
+
+			log.info("Successfully created term stats: " + items);
+			
+		}
+		
+		return results;
 	}
 	
 	

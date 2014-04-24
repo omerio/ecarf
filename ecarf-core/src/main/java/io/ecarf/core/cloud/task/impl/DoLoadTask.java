@@ -60,7 +60,7 @@ public class DoLoadTask extends CommonTask {
 		for(StorageObject object: objects) {
 			String filename = object.getName();
 			if(filename.endsWith(Constants.PROCESSED_FILES)) {
-				files.add(filename);
+				files.add(object.getUri());
 			} else {
 				log.warning("Skipping file: " + filename);
 			}

@@ -527,6 +527,7 @@ public class GoogleCloudService implements CloudService {
 			object.setDirectLink(cloudObject.getSelfLink());
 			object.setName(cloudObject.getName());
 			object.setSize(cloudObject.getSize());
+			object.setUri(CLOUD_STORAGE_PREFIX + bucket + "/" + cloudObject.getName());
 			objects.add(object);
 		}
 		return objects;

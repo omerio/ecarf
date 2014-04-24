@@ -37,6 +37,8 @@ public class StorageObject {
 	private String contentType;
 	
 	private String directLink;
+	
+	private String uri;
 
 	/**
 	 * check if this object is compressed
@@ -102,6 +104,24 @@ public class StorageObject {
 	 */
 	public void setDirectLink(String directLink) {
 		this.directLink = directLink;
+	}
+
+
+
+	/**
+	 * @return the uri
+	 */
+	public String getUri() {
+		return uri;
+	}
+
+
+
+	/**
+	 * @param uri the uri to set
+	 */
+	public void setUri(String uri) {
+		this.uri = uri;
 	}
 
 }

@@ -61,7 +61,9 @@ public class DistributeReasonTask extends CommonTask {
 		log.info("Processing distribute reason");
 
 		List<String> nodeTerms = this.input.getItems();
-		List<String> activeNodes = Lists.newArrayList(this.input.getNodes());
+		List<String> activeNodes = (this.input.getNodes() != null) ? 
+				Lists.newArrayList(this.input.getNodes()) : new ArrayList<String>();
+				
 		List<String> reasonNodes = new ArrayList<>();
 
 		if((nodeTerms != null) && !nodeTerms.isEmpty()) {
