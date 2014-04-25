@@ -161,8 +161,13 @@ public class DoReasonTask extends CommonTask {
 							if(select.size() == 1) {
 								instanceTriple.set(select.get(0), line);
 							} else {
-
-								instanceTriple.set(select, Utils.PARSER.parseLine(line));//StringUtils.split(line, ','));
+								try {
+									instanceTriple.set(select, Utils.PARSER.parseLine(line));//StringUtils.split(line, ','));
+								} catch(Exception e) {
+									log.severe("Value of line is: " + line);
+									log.severe("Value of select is: " + select);
+									throw e;
+								}
 							}
 
 							for(Triple schemaTriple: schemaTriples) {
