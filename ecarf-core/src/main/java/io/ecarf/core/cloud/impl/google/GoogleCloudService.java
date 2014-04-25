@@ -1284,11 +1284,31 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException 
 	 */
 	private GetQueryResultsResponse getQueryResults(String jobId, String pageToken) throws IOException {
-		GetQueryResultsResponse queryResults = this.getBigquery().jobs()
-				.getQueryResults(projectId, jobId)
-				.setPageToken(pageToken)
-				.setOauthToken(this.getOAuthToken())
-				.execute();
+		int retries = 3;
+		boolean retrying = false;
+		GetQueryResultsResponse queryResults = null;
+		do {
+			try {
+				queryResults = this.getBigquery().jobs()
+						.getQueryResults(projectId, jobId)
+						.setPageToken(pageToken)
+						.setOauthToken(this.getOAuthToken())
+						.execute();
+				 
+				retrying = false;
+						 
+			} catch(IOException e) {
+				log.log(Level.SEVERE, "failed to query job", e);
+				retries--;
+				if(retries == 0) {
+					throw e;
+				}
+				log.info("Retrying again in 2 seconds");
+				Utils.block(2);
+				retrying = true;
+			}
+
+		} while(retrying);
 
 		return queryResults;
 	}

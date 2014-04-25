@@ -10,7 +10,9 @@ package io.ecarf.core.triple;
  *
  */
 public enum TermType {
-	SUBJECT, OBJECT, PREDICATE;
+	
+	// don't change this order it's used for Big Data database
+	SUBJECT, PREDICATE, OBJECT ;
 	
 	public static final String subject = "subject";
 	public static final String predicate = "predicate";

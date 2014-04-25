@@ -38,7 +38,6 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,7 +45,6 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
@@ -56,8 +54,12 @@ import com.google.api.client.repackaged.com.google.common.base.Joiner;
  *
  */
 public class DoReasonTask extends CommonTask {
-
-
+	
+	/**
+	 * 
+	 * @param metadata
+	 * @param cloud
+	 */
 	public DoReasonTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
@@ -108,7 +110,7 @@ public class DoReasonTask extends CommonTask {
 
 				Term term = entry.getKey();
 
-				// TODO add table decoration to table name
+				// add table decoration to table name
 				String query = GenericRule.getQuery(entry.getValue(), decoratedTable);	
 
 				log.info("\nQuery: " + query);
@@ -118,7 +120,7 @@ public class DoReasonTask extends CommonTask {
 				String filename = Utils.TEMP_FOLDER + encodedTerm + Constants.DOT_TERMS;
 
 				// remember the filename and the jobId for this query
-				term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);;
+				term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);
 
 			}
 
@@ -143,7 +145,7 @@ public class DoReasonTask extends CommonTask {
 				// only process if triples are found matching this term
 				if(!BigInteger.ZERO.equals(rows)) {
 
-					Set<Triple> inferredTriples = new HashSet<>();
+					int inferredTriples = 0;
 
 					String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
 
@@ -160,19 +162,20 @@ public class DoReasonTask extends CommonTask {
 								instanceTriple.set(select.get(0), line);
 							} else {
 
-								instanceTriple.set(select, StringUtils.split(line, ','));
+								instanceTriple.set(select, Utils.PARSER.parseLine(line));//StringUtils.split(line, ','));
 							}
 
 							for(Triple schemaTriple: schemaTriples) {
 								Rule rule = GenericRule.getRule(schemaTriple);
 								Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
 								writer.println(inferredTriple.toCsv());
+								inferredTriples++;
 							}
 						}
 					}
 
 					inferredFiles.add(inferredTriplesFile);
-					log.info("\nInferred " + inferredTriples.size() + " Triples for term: " + term);
+					log.info("\nSelect Triples: " + rows + ", Inferred " + inferredTriples + " Triples for term: " + term);
 
 				}
 			}
@@ -191,7 +194,7 @@ public class DoReasonTask extends CommonTask {
 				emptyRetries++;
 			}
 
-			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 10));
+			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
 			
 			// FIXME move into the particular cloud implementation service
 			long elapsed = System.currentTimeMillis() - start;

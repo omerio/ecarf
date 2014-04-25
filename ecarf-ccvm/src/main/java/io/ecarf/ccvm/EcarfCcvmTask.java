@@ -26,9 +26,12 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
+import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.DistributeReasonTask;
 import io.ecarf.core.cloud.task.impl.DoLoadTask;
+import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
+import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
@@ -36,15 +39,10 @@ import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Sets;
+import org.apache.commons.io.FileUtils;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -70,7 +68,7 @@ public class EcarfCcvmTask {
 		List<String> nodes = null;
 		
 		// 1- load the schema and do a count of the relevant terms
-		/*VMMetaData metadata = new VMMetaData();
+		metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, bucket);
 		metadata.addValue(VMMetaData.ECARF_SCHEMA, schema);
 		task = new SchemaTermCountTask(metadata, service);
@@ -107,9 +105,9 @@ public class EcarfCcvmTask {
 		
 		nodes = results.getNodes();
 		
-		log.info("Active nodes: " + nodes);*/
+		log.info("Active nodes: " + nodes);
 		
-		List<Item> items = this.getMockResults(bucket).getItems();//results.getItems();
+		List<Item> items = results.getItems();//this.getMockResults(bucket).getItems();//
 		
 		log.info("Term stats for reasoning task split: " + items);
 		
@@ -172,7 +170,7 @@ public class EcarfCcvmTask {
 	 * @return
 	 * @throws IOException 
 	 */
-	private Results getMockResults(String bucket) throws IOException {
+/*	private Results getMockResults(String bucket) throws IOException {
 		Results results = new Results();
 		Map<String, Long> allTermStats = new HashMap<String, Long>();
 		
@@ -216,7 +214,7 @@ public class EcarfCcvmTask {
 		}
 		
 		return results;
-	}
+	}*/
 	
 	
 	/**

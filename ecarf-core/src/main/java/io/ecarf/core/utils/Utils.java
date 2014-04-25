@@ -50,6 +50,8 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import au.com.bytecode.opencsv.CSVParser;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -71,6 +73,8 @@ public class Utils {
 	public static Gson GSON = new Gson();
 	
 	private static final int BUFFER = (int) FileUtils.ONE_KB * 8;
+	
+	public static final CSVParser PARSER = new CSVParser();
 	
 
 	/**
