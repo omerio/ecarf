@@ -195,7 +195,7 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	private String getMetaData(String path) throws IOException {
-		log.fine("Retrieving metadata from server, path: " + path);
+		log.info("Retrieving metadata from server, path: " + path);
 		URL metadata = new URL(METADATA_SERVER_URL + path);
 		HttpURLConnection con = (HttpURLConnection) metadata.openConnection();
 
@@ -203,8 +203,8 @@ public class GoogleCloudService implements CloudService {
 		//con.setRequestMethod("GET");
 
 		//add request header
-		con.setRequestProperty("X-Google-Metadata-Request", "true");
-
+		con.setRequestProperty("Metadata-Flavor", "Google");
+		
 		int responseCode = con.getResponseCode();
 
 		StringBuilder response = new StringBuilder();
@@ -221,7 +221,7 @@ public class GoogleCloudService implements CloudService {
 			log.severe(msg);
 			throw new IOException(msg);
 		}
-		log.fine("Successfully retrieved metadata from server");
+		log.info("Successfully retrieved metadata from server");
 
 		return response.toString();
 	}

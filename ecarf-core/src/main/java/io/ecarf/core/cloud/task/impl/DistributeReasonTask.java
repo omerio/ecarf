@@ -64,6 +64,8 @@ public class DistributeReasonTask extends CommonTask {
 		List<String> activeNodes = (this.input.getNodes() != null) ? 
 				Lists.newArrayList(this.input.getNodes()) : new ArrayList<String>();
 				
+		String zoneId = this.input.getZoneId();
+				
 		List<String> reasonNodes = new ArrayList<>();
 
 		if((nodeTerms != null) && !nodeTerms.isEmpty()) {
@@ -80,11 +82,11 @@ public class DistributeReasonTask extends CommonTask {
 					
 					String instanceId = activeNodes.iterator().next();
 					activeNodes.remove(activeNodes.indexOf(instanceId));
-					VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
+					VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, zoneId);
 					String fingerprint = metaData.getFingerprint();
 					metaData = this.getReasonMetadata(terms);
 					metaData.setFingerprint(fingerprint);
-					this.cloud.updateInstanceMetadata(metaData, null, instanceId, true);
+					this.cloud.updateInstanceMetadata(metaData, zoneId, instanceId, true);
 					reasonNodes.add(instanceId);
 					
 				 
@@ -99,6 +101,7 @@ public class DistributeReasonTask extends CommonTask {
 						.setMetaData(metaData)
 						.setNetworkId(input.getNetworkId())
 						.setVmType(input.getVmType())
+						.setZoneId(zoneId)
 						.setStartupScript(input.getStartupScript());
 
 					reasonNodes.add(instanceId);
@@ -119,13 +122,13 @@ public class DistributeReasonTask extends CommonTask {
 			}
 
 			// wait for the VMs to finish their loading
-			for(String instanceId: this.results.getNodes()) {	
+			for(String instanceId: reasonNodes) {	
 				boolean ready = false;
 
 				do {
 					Utils.block(Utils.getApiRecheckDelay());
 
-					VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
+					VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, zoneId);
 					ready = VMStatus.READY.equals(metaData.getVMStatus());
 					// TODO status can be error ERROR
 					if(VMStatus.ERROR.equals(metaData.getVMStatus())) {

@@ -20,6 +20,7 @@ package io.ecarf.ccvm;
 
 import static io.ecarf.core.utils.Constants.AMAZON;
 import static io.ecarf.core.utils.Constants.GOOGLE;
+import static io.ecarf.core.utils.Constants.ZONE_KEY;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
@@ -39,10 +40,18 @@ import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -68,7 +77,7 @@ public class EcarfCcvmTask {
 		List<String> nodes = null;
 		
 		// 1- load the schema and do a count of the relevant terms
-		metadata = new VMMetaData();
+		/*metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, bucket);
 		metadata.addValue(VMMetaData.ECARF_SCHEMA, schema);
 		task = new SchemaTermCountTask(metadata, service);
@@ -101,13 +110,13 @@ public class EcarfCcvmTask {
 		task.setInput(input);
 		task.run();
 		
-		results = task.getResults();
+		results = task.getResults();*/
 		
-		nodes = results.getNodes();
+		nodes = Lists.newArrayList("ecarf-evm-1398457340229", "ecarf-evm-1398457340230");//results.getNodes();
 		
 		log.info("Active nodes: " + nodes);
 		
-		List<Item> items = results.getItems();//this.getMockResults(bucket).getItems();//
+		List<Item> items = this.getMockResults(bucket).getItems();//results.getItems();
 		
 		log.info("Term stats for reasoning task split: " + items);
 		
@@ -136,10 +145,10 @@ public class EcarfCcvmTask {
 		List<String> terms = results.getBinItems();
 		
 		// 5- Load the generated files into Big Data table
-		input = (new Input()).setBucket(bucket).setTable(table);	
+		/*input = (new Input()).setBucket(bucket).setTable(table);	
 		task = new DoLoadTask(null, service);
 		task.setInput(input);
-		task.run();
+		task.run();*/
 		
 		// 6- distribute the reasoning between the nodes
 		input = (new Input()).setItems(terms)
@@ -150,6 +159,7 @@ public class EcarfCcvmTask {
 				.setNetworkId(Config.getProperty(Constants.NETWORK_ID_KEY))
 				.setVmType(Config.getProperty(Constants.VM_TYPE_KEY))
 				.setStartupScript(Config.getProperty(Constants.STARTUP_SCRIPT_KEY))
+				.setZoneId(Config.getProperty(ZONE_KEY))
 				;
 		
 		task = new DistributeReasonTask(null, service);
@@ -170,11 +180,11 @@ public class EcarfCcvmTask {
 	 * @return
 	 * @throws IOException 
 	 */
-/*	private Results getMockResults(String bucket) throws IOException {
+	private Results getMockResults(String bucket) throws IOException {
 		Results results = new Results();
 		Map<String, Long> allTermStats = new HashMap<String, Long>();
 		
-		Set<String> files = Sets.newHashSet("ecarf-evm-1397837612135.json", "ecarf-evm-1397837612136.json");
+		Set<String> files = Sets.newHashSet("ecarf-evm-1398457340229.json", "ecarf-evm-1398457340230.json");
 		
 		for(String file: files) {	
 			
@@ -214,7 +224,7 @@ public class EcarfCcvmTask {
 		}
 		
 		return results;
-	}*/
+	}
 	
 	
 	/**

@@ -65,6 +65,8 @@ public class Input {
 	
 	private String schemaFile;
 	
+	private String zoneId;
+	
 	/**
 	 * VM names
 	 */
@@ -263,6 +265,21 @@ public class Input {
 	 */
 	public Input setSchemaFile(String schemaFile) {
 		this.schemaFile = schemaFile;
+		return this;
+	}
+
+	/**
+	 * @return the zoneId
+	 */
+	public String getZoneId() {
+		return zoneId;
+	}
+
+	/**
+	 * @param zoneId the zoneId to set
+	 */
+	public Input setZoneId(String zoneId) {
+		this.zoneId = zoneId;
 		return this;
 	}
 

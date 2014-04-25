@@ -33,7 +33,7 @@ import com.google.api.services.bigquery.model.TableSchema;
 public class GoogleMetaData {
 	
 	// metadata server urls
-	public static final String METADATA_SERVER_URL = "http://metadata/computeMetadata/v1/";
+	public static final String METADATA_SERVER_URL = "http://metadata.google.internal/computeMetadata/v1/";
 	public static final String TOKEN_PATH = "instance/service-accounts/default/token";
 	//private static final String SERVICE_ACCOUNT_PATH = "service-accounts/default/?recursive=true";
 	public static final String INSTANCE_ALL_PATH = "instance/?recursive=true";
