@@ -22,8 +22,8 @@ package io.ecarf.core.compress;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public interface CompressCallback {
+public interface NTripleGzipCallback {
 	
-	public String process(String line);
+	public String process(String[] line);
 
 }

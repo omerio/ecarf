@@ -1,0 +1,7 @@
+Ecarf Framework
+Copyright 2014 Ecarf.io
+
+This product includes the source Apache Commons CSV in the package (/ecarf-core/src/main/java/org/apache/commons/csv)
+Apache Commons CSV http://commons.apache.org/proper/commons-csv/.
+
+

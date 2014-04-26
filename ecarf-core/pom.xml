@@ -16,6 +16,20 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.google.client.version>1.18.0-rc</project.google.client.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>nxparser-repo</id>
+			<url>
+			http://nxparser.googlecode.com/svn/repository
+		</url>
+		</repository>
+		<repository>
+			<id>nxparser-snapshots</id>
+			<url>
+			http://nxparser.googlecode.com/svn/snapshots
+		</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -33,10 +47,10 @@
 			<version>1.8</version>
 		</dependency>
 		<dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-            <version>1.9</version>
-        </dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.9</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
@@ -62,13 +76,8 @@
 			<artifactId>google-api-services-bigquery</artifactId>
 			<version>v2-rev141-1.18.0-rc</version>
 		</dependency>
-		<!-- 
-		<dependency>
-			<groupId>com.google.apis</groupId>
-			<artifactId>google-api-services-datastore-protobuf</artifactId>
-			<version>v1beta2-rev1-2.1.0</version>
-		</dependency>
-		 -->
+		<!-- <dependency> <groupId>com.google.apis</groupId> <artifactId>google-api-services-datastore-protobuf</artifactId> 
+			<version>v1beta2-rev1-2.1.0</version> </dependency> -->
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
@@ -80,10 +89,17 @@
 			<artifactId>google-api-client-servlet</artifactId>
 			<version>${project.google.client.version}</version>
 		</dependency>
+		<!-- 
 		<dependency>
-		    <groupId>net.sf.opencsv</groupId>
-		    <artifactId>opencsv</artifactId>
-		    <version>2.3</version>
+			<groupId>net.sf.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>2.3</version>
+		</dependency>
+		 -->
+		<dependency>
+			<groupId>org.semanticweb.yars</groupId>
+			<artifactId>nxparser</artifactId>
+			<version>1.2.3</version>
 		</dependency>
 		<!-- Servlet Dependency Only -->
 		<!-- Commandline dependencies only -->

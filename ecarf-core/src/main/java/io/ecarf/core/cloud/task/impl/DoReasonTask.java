@@ -45,6 +45,8 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
@@ -150,24 +152,20 @@ public class DoReasonTask extends CommonTask {
 					String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
 
 					// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-					String line = null;
 					try (BufferedReader r = new BufferedReader(new FileReader(term.getFilename()));
-							PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)));) {
+							PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)))) {
 
-						while ((line = r.readLine()) != null) {
+						Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
+
+						for (CSVRecord record : records) {
 
 							Triple instanceTriple = new Triple();
 
 							if(select.size() == 1) {
-								instanceTriple.set(select.get(0), line);
+								instanceTriple.set(select.get(0), record.get(0));
 							} else {
-								try {
-									instanceTriple.set(select, Utils.PARSER.parseLine(line));//StringUtils.split(line, ','));
-								} catch(Exception e) {
-									log.severe("Value of line is: " + line);
-									log.severe("Value of select is: " + select);
-									throw e;
-								}
+								
+								instanceTriple.set(select, record.values());
 							}
 
 							for(Triple schemaTriple: schemaTriples) {

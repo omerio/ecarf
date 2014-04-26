@@ -1,11 +1,17 @@
 package io.ecarf.core.utils;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import io.ecarf.core.cloud.VMMetaData;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +57,15 @@ public class UtilsTest {
 		String [] parts = StringUtils.split(csv, ',');
 		assertTrue(parts.length > 2);
 		
-		parts = Utils.PARSER.parseLine(csv);
+		Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(new StringReader(csv));
+		List<CSVRecord> recordsList = new ArrayList<>();
+		for(CSVRecord record: records) {
+			recordsList.add(record);
+		}
+		assertEquals(1, recordsList.size());
+		
+		parts = recordsList.get(0).values();
+		
 		assertEquals(2, parts.length);
 		
 		assertEquals("<http://dblp.uni-trier.de/rec/bibtex/journals/micro/AndersonNS96>", parts[0]);

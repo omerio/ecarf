@@ -18,17 +18,44 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CLOUD_STORAGE_PREFIX;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_IF_NEEDED;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_NEVER;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WRITE_APPEND;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
-import io.ecarf.core.compress.CompressCallback;
-import io.ecarf.core.compress.CompressProcessor;
+import io.ecarf.core.compress.NTripleGzipCallback;
+import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.term.TermCounter;
-import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.FutureTask;
@@ -556,27 +583,23 @@ public class GoogleCloudService implements CloudService {
 	public String prepareForCloudDatabaseImport(String filename, final TermCounter counter) throws IOException {
 		/*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
 			.append(File.separator).append("out_").append(filename).toString();*/
-		CompressProcessor processor = new CompressProcessor(filename);
+		NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
 
-		String outFilename = processor.process(new CompressCallback() {
+		String outFilename = processor.process(new NTripleGzipCallback() {
 
 			@Override
-			public String process(String line) {
-				String[] terms = TripleUtils.parseNTriple(line);
-				String outLine = null;
-				if(terms != null) {
+			public String process(String [] terms) {
 
-					if(counter != null) {
-						counter.count(terms);
-					}
-
-					for(int i = 0; i < terms.length; i++) {
-						// bigquery requires data to be properly escaped
-						terms[i] = StringEscapeUtils.escapeCsv(terms[i]);
-					}
-					outLine = StringUtils.join(terms, ',');
+				if(counter != null) {
+					counter.count(terms);
 				}
-				return outLine;
+
+				for(int i = 0; i < terms.length; i++) {
+					// bigquery requires data to be properly escaped
+					terms[i] = StringEscapeUtils.escapeCsv(terms[i]);
+				}
+
+				return StringUtils.join(terms, ',');
 			}
 
 		});

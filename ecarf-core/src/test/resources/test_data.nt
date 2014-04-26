@@ -1,0 +1,6 @@
+<http://dblp.uni-trier.de/rec/bibtex/tr/trier/MI99-17> <http://www.w3.org/2000/01/rdf-schema#label> "MMB '99, Messung, Modellierung und Bewertung von Rechen- und Kommunikationssystemen, 10. GI/NTG-Fachtagung, 22.-24. September 1999, Trier, Kurzbeiträge und Toolbeschreibungen" .
+<http://dblp.uni-trier.de/rec/bibtex/tr/trier/MI99-17> <http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> "MMB (Kurzvorträge)" .
+<http://dblp.uni-trier.de/rec/bibtex/conf/gesellschaft/1988> <http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> "Informatik und \"Dritte Welt\"" .
+<http://dblp.uni-trier.de/rec/bibtex/tr/trier/MI99-17> <http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://example.org/UniversitatTrier,Mathematik_Informatik,Forschungsbericht> .
+_:B54825b3X3A145001032dcX3AX2D2523 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq> .
+<http://dblp.uni-trier.de/rec/bibtex/tr/trier/MI99-17> <http://lsdis.cs.uga.edu/projects/semdis/opus#editor> _:B54825b3X3A145001032dcX3AX2D2524 .

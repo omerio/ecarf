@@ -19,7 +19,6 @@
 package io.ecarf.core.term;
 
 import io.ecarf.core.triple.SchemaURIType;
-import io.ecarf.core.triple.TripleUtils;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -28,6 +27,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mortbay.log.Log;
+import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.parser.NxParser;
+import org.semanticweb.yars.nx.util.NxUtil;
+
 import com.google.common.collect.Sets;
 
 /**
@@ -35,16 +39,16 @@ import com.google.common.collect.Sets;
  *
  */
 public class TermUtils {
-	
+
 	/**
 	 * All the schema terms we care about in this version of the implementation
 	 */
 	public static final Set<SchemaURIType> RDFS_TBOX = Sets.newHashSet(
-									SchemaURIType.RDFS_DOMAIN, 
-									SchemaURIType.RDFS_RANGE, 
-									SchemaURIType.RDFS_SUBCLASS, 
-									SchemaURIType.RDFS_SUBPROPERTY);
-	
+			SchemaURIType.RDFS_DOMAIN, 
+			SchemaURIType.RDFS_RANGE, 
+			SchemaURIType.RDFS_SUBCLASS, 
+			SchemaURIType.RDFS_SUBPROPERTY);
+
 	/**
 	 * Analyse the provided schema file and return a set containing all the relevant terms
 	 * @param schemaFile
@@ -57,15 +61,26 @@ public class TermUtils {
 	 */
 	public static Set<String> getRelevantSchemaTerms(String schemaFile, Set<SchemaURIType> relevantUris) 
 			throws FileNotFoundException, IOException {
-		
+
 		Set<String> relevantTerms = new HashSet<String>();
-		String line = null;
+
 		try (BufferedReader r = new BufferedReader(new FileReader(schemaFile))) {
 
-			while ((line = r.readLine()) != null) {
+			String[] terms;
+			NxParser nxp = new NxParser(r);
 
-				String[] terms = TripleUtils.parseNTriple(line);
-				if(terms != null) {
+			while (nxp.hasNext())  {
+
+				Node[] ns = nxp.next();
+
+				//We are only interested in triples, no quads
+				if (ns.length == 3) {
+					terms = new String [3];
+
+					for (int i = 0; i < ns.length; i++)  {
+						terms[i] = NxUtil.unescape(ns[i].toN3());
+					}
+
 					String subject = terms[0];
 					String predicate = terms[1];
 					//String object = terms[2];
@@ -77,10 +92,12 @@ public class TermUtils {
 						// subject is used for ABox (instance) reasoning
 						relevantTerms.add(subject);
 					}
+				} else {
+					Log.warn("Ignoring line: " + ns);
 				}
 			}
 		}
 		return relevantTerms;
 	}
-	
+
 }

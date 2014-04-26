@@ -50,8 +50,6 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import au.com.bytecode.opencsv.CSVParser;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -74,9 +72,8 @@ public class Utils {
 	
 	private static final int BUFFER = (int) FileUtils.ONE_KB * 8;
 	
-	public static final CSVParser PARSER = new CSVParser();
+	//public static final CSVParser CSV_PARSER1 = new CSVParser();
 	
-
 	/**
 	 * Copy a url to a local file
 	 * @param url
@@ -320,7 +317,8 @@ public class Utils {
 		}
 		return new IOException(Constants.EVM_EXCEPTION + instanceId, cause);
 	}
-
+	
+	
 //	/*
 //	 * Determines if a byte array is compressed. The java.util.zip GZip
 //	 * Implementation does not expose the GZip header so it is difficult to determine

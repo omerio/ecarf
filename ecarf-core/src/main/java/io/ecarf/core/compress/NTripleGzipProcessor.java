@@ -35,6 +35,10 @@ import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mortbay.log.Log;
+import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.parser.NxParser;
+import org.semanticweb.yars.nx.util.NxUtil;
 
 /**
  * Processes a normal/gzip input file and outputs
@@ -43,7 +47,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class CompressProcessor {
+public class NTripleGzipProcessor {
 	
 	private String inputFile;
 	
@@ -55,7 +59,7 @@ public class CompressProcessor {
 	 * @param inputFile
 	 * @param outputFile
 	 */
-	public CompressProcessor(String inputFile) {
+	public NTripleGzipProcessor(String inputFile) {
 		super();
 		this.inputFile = inputFile;
 		// get the file name before the ext
@@ -71,7 +75,7 @@ public class CompressProcessor {
 	 * @param callback
 	 * @throws IOException 
 	 */
-	public String process(CompressCallback callback) throws IOException {
+	public String process(NTripleGzipCallback callback) throws IOException {
 
 		try(InputStream fileIn = new FileInputStream(this.inputFile);) {
 
@@ -90,13 +94,31 @@ public class CompressProcessor {
 			try(BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
 					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile)));) {
 				String outLine;
-				String inLine;
-				while ((inLine = bf.readLine()) != null) {
-					outLine = callback.process(inLine);
-					if(outLine != null) {
-						writer.println(outLine);
+				String[] terms;
+				
+				NxParser nxp = new NxParser(bf);
+
+				while (nxp.hasNext())  {
+
+					Node[] ns = nxp.next();
+					
+					//We are only interested in triples, no quads
+					if (ns.length == 3) {
+						terms = new String [3];
+						
+						for (int i = 0; i < ns.length; i++)  {
+							terms[i] = NxUtil.unescape(ns[i].toN3());
+						}
+						outLine = callback.process(terms);
+						if(outLine != null) {
+							writer.println(outLine);
+						}
+					
+					} else {
+						Log.warn("Ignoring line: " + ns);
 					}
 				}
+
 			}
 			
 			return this.outputFile;

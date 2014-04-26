@@ -13,55 +13,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.mortbay.log.Log;
+import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.parser.NxParser;
+import org.semanticweb.yars.nx.util.NxUtil;
+
 /**
  * @author omerio
  *
  */
 public class TripleUtils {
 
-	/**
-	 * Parse an N Triple, based on a utility from Webpie 
-	 * (http://www.few.vu.nl/~jui200/webpie.html)
-	 * FIXME rewrite or use a triple parsing library (Jena, etc...)
-	 * @param triple
-	 * @return
-	 * @throws Exception
-	 */
-	public static String[] parseNTriple(String triple) {
-		String[] values = null;
 
-		// added by Omer, ignore comments
-		if(!triple.startsWith("#")) {
-			values = new String[3];
-
-			// Parse subject
-			if (triple.startsWith("<")) {
-				values[0] = triple.substring(0, triple.indexOf('>') + 1);
-			} else { // Is a bnode
-				values[0] = triple.substring(0, triple.indexOf(' '));
-			}
-
-			triple = triple.substring(values[0].length() + 1);
-			// Parse predicate. It can be only a URI
-			values[1] = triple.substring(0, triple.indexOf('>') + 1);
-
-			// Parse object
-			triple = triple.substring(values[1].length() + 1);
-			if (triple.startsWith("<")) { // URI
-				values[2] = triple.substring(0, triple.indexOf('>') + 1);
-			} else if (triple.charAt(0) == '"') { // Literal
-				values[2] = triple.substring(0,
-						triple.substring(1).indexOf('"') + 2);
-				triple = triple.substring(values[2].length(), triple.length());
-				values[2] += triple.substring(0, triple.indexOf(' '));
-			} else { // Bnode
-				values[2] = triple.substring(0, triple.indexOf(' '));
-			}
-		}
-
-		return values;
-	}
-	
 	/**
 	 * Analyse the provided schema file and return a set containing all the relevant triples keyed by their terms
 	 * @param schemaFile
@@ -74,16 +37,26 @@ public class TripleUtils {
 	 */
 	public static Map<String, Set<Triple>> getRelevantSchemaTriples(String schemaFile, Set<SchemaURIType> relevantUris) 
 			throws FileNotFoundException, IOException {
-		
+
 		Map<String, Set<Triple>> schemaTriples = new HashMap<>();
-		String line = null;
 		Triple triple;
 		try (BufferedReader r = new BufferedReader(new FileReader(schemaFile))) {
 
-			while ((line = r.readLine()) != null) {
+			String[] terms;
+			NxParser nxp = new NxParser(r);
 
-				String[] terms = TripleUtils.parseNTriple(line);
-				if(terms != null) {
+			while (nxp.hasNext())  {
+
+				Node[] ns = nxp.next();
+
+				//We are only interested in triples, no quads
+				if (ns.length == 3) {
+					terms = new String [3];
+
+					for (int i = 0; i < ns.length; i++)  {
+						terms[i] = NxUtil.unescape(ns[i].toN3());
+					}
+
 					String subject = terms[0];
 					String predicate = terms[1];
 					String object = terms[2];
@@ -91,22 +64,26 @@ public class TripleUtils {
 					if(SchemaURIType.isSchemaUri(predicate) && 
 							SchemaURIType.isRdfTbox(predicate) && 
 							relevantUris.contains(SchemaURIType.getByUri(predicate))) {
-						
+
 						triple = new Triple(subject, predicate, object);
-						
+
 						// subject is used for ABox (instance) reasoning
 						if(!schemaTriples.containsKey(subject)) {
 							schemaTriples.put(subject, new HashSet<Triple>());
 						}
 						schemaTriples.get(subject).add(triple);
 					}
+
+				} else {
+					Log.warn("Ignoring line: " + ns);
 				}
 			}
+
 		}
-		
+
 		return schemaTriples;
 	}
-	
+
 	/**
 	 * 
 	 * @param triples
@@ -117,7 +94,7 @@ public class TripleUtils {
 		addToTriples(triples, store);
 		return store;
 	}
-	
+
 	/**
 	 * 
 	 * @param triples
@@ -130,7 +107,7 @@ public class TripleUtils {
 			addToTriples(triple.getObject(), triple, store);
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param term
@@ -143,7 +120,7 @@ public class TripleUtils {
 		}
 		store.get(term).add(triple);
 	}
-	
+
 	/**
 	 * 
 	 * @param term
@@ -156,7 +133,7 @@ public class TripleUtils {
 		}
 		store.get(term).addAll(triples);
 	}
-	
+
 	/**
 	 * 
 	 * @param triples1
