@@ -18,35 +18,7 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CLOUD_STORAGE_PREFIX;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_IF_NEEDED;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_NEVER;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WRITE_APPEND;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -829,9 +801,22 @@ public class GoogleCloudService implements CloudService {
 					String zoneId = config.getZoneId();
 					zoneId = zoneId != null ? zoneId : this.zone;
 					// check the instance status
-					Instance instance = this.getInstance(config.getInstanceId(), zoneId);
-					status = instance.getStatus();
-					log.info(config.getInstanceId() + ", current status is: " + status);
+					Instance instance = null;
+					
+					// seems the Api sometimes return a not found exception
+					try {
+						instance = this.getInstance(config.getInstanceId(), zoneId);
+						status = instance.getStatus();
+						log.info(config.getInstanceId() + ", current status is: " + status);
+						
+					} catch(GoogleJsonResponseException e) {
+						if(e.getMessage().indexOf(NOT_FOUND) == 0) {
+							log.warning("Instance not found: " + config.getInstanceId());
+
+						} else {
+							throw e;
+						}
+					}
 
 				} while (InstanceStatus.IN_PROGRESS.contains(status));
 
@@ -1404,10 +1389,11 @@ public class GoogleCloudService implements CloudService {
 				if(rows != null) {
 					log.info("Saving " + rows.size() + ", records to file: " + filename);
 
+					// save as CSV and properly escape the data to avoid failures on parsing
 					// one field only
 					if(numFields == 1) {
 						for (TableRow row : rows) {
-							writer.println(row.getF().get(0).getV());		
+							writer.println(StringEscapeUtils.escapeCsv((String) row.getF().get(0).getV()));		
 						}
 
 					} else {
@@ -1415,7 +1401,7 @@ public class GoogleCloudService implements CloudService {
 						for (TableRow row : rows) {
 							List<Object> fields = new ArrayList<>();
 							for (TableCell field : row.getF()) {
-								fields.add(field.getV());
+								fields.add(StringEscapeUtils.escapeCsv((String) field.getV()));
 							}
 							writer.println(joiner.join(fields));		
 						}

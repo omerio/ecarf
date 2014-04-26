@@ -40,7 +40,8 @@ public class GoogleMetaData {
 	//private static final String PROJECT_ALL_PATH = "project/?recursive=true";
 	public static final String PROJECT_ID_PATH = "project/project-id";
 	public static final String ATTRIBUTES_PATH = "instance/attributes/?recursive=true";
-	public static final String WAIT_FOR_CHANGE = "&wait_for_change=true";
+	// without timeout it doesn't return
+	public static final String WAIT_FOR_CHANGE = "&wait_for_change=true&timeout_sec=360";
 	
 	// scopes
 	public static final String DATASTORE_SCOPE = "https://www.googleapis.com/auth/datastore";
@@ -72,6 +73,7 @@ public class GoogleMetaData {
 	public static final String STARTUP_SCRIPT = "startup-script";
 	
 	public static final String CLOUD_STORAGE_PREFIX = "gs://";
+	public static final String NOT_FOUND = "404 Not Found";
 	
 	// BigQuery create/write disposition
 	public static final String CREATE_NEVER = "CREATE_NEVER";

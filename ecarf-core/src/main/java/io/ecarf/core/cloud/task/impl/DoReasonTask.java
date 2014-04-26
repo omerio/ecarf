@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -148,6 +149,7 @@ public class DoReasonTask extends CommonTask {
 				if(!BigInteger.ZERO.equals(rows)) {
 
 					int inferredTriples = 0;
+					int failedTriples = 0;
 
 					String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
 
@@ -156,29 +158,36 @@ public class DoReasonTask extends CommonTask {
 							PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)))) {
 
 						Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
+						
+						try {
+							
+							for (CSVRecord record : records) {
 
-						for (CSVRecord record : records) {
+								Triple instanceTriple = new Triple();
 
-							Triple instanceTriple = new Triple();
+								if(select.size() == 1) {
+									instanceTriple.set(select.get(0), record.get(0));
+								} else {
 
-							if(select.size() == 1) {
-								instanceTriple.set(select.get(0), record.get(0));
-							} else {
-								
-								instanceTriple.set(select, record.values());
+									instanceTriple.set(select, record.values());
+								}
+
+								for(Triple schemaTriple: schemaTriples) {
+									Rule rule = GenericRule.getRule(schemaTriple);
+									Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+									writer.println(inferredTriple.toCsv());
+									inferredTriples++;
+								}
 							}
-
-							for(Triple schemaTriple: schemaTriples) {
-								Rule rule = GenericRule.getRule(schemaTriple);
-								Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-								writer.println(inferredTriple.toCsv());
-								inferredTriples++;
-							}
+						} catch(Exception e) {
+							log.log(Level.SEVERE, "Failed to parse selected terms", e);
+							failedTriples++;
 						}
 					}
 
 					inferredFiles.add(inferredTriplesFile);
-					log.info("\nSelect Triples: " + rows + ", Inferred " + inferredTriples + " Triples for term: " + term);
+					log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriples + 
+							", Triples for term: " + term + ", Failed Triples: " + failedTriples);
 
 				}
 			}

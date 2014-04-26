@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * The program p of the Ecarf framework
  * 
@@ -60,35 +62,44 @@ public class EcarfEvmTask {
 	public void run() throws IOException {
 		
 		//final Thread currentThread = Thread.currentThread();
+		String status = null;
 		
 		while(true) {
 			try {
-				// Load task
-				
-				// set status to BUSY
-				metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
-				this.service.updateInstanceMetadata(metadata);
+				// only process tasks if the status is empty
+				if(StringUtils.isBlank(status)) {
+					// set status to BUSY
+					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
+					this.service.updateInstanceMetadata(metadata);
 
-				// run the task
-				Task task = TaskFactory.getTask(metadata, service);
-				if(task != null) {
-					task.run();
-				} 
-				// else {
-				// no task is set, just set status to ready and wait for tasks
-				//}
-				
-				// finished processing
-				// blank the task type and set the status to READY
-				metadata.clearValues();
-				metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
+					// run the task
+					Task task = TaskFactory.getTask(metadata, service);
+					if(task != null) {
+						task.run();
 
-				this.service.updateInstanceMetadata(metadata);
+					} else {
+						//no task is set, just set status to ready and wait for tasks
+						log.info("No task is set!");
+					}
+					
+					// finished processing
+					// blank the task type and set the status to READY
+					metadata.clearValues();
+					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
+
+					this.service.updateInstanceMetadata(metadata);
+
+				} else {
+					log.info("will continue waiting for instructions as status is currently: " + status);
+				}
 
 				// now wait for any change in the metadata
 				log.info("Waiting for new instructions from ccvm");
 				metadata = this.service.getEcarfMetaData(true);
-				
+
+				// check the status in the metadata
+				status = metadata.getStatus();
+
 			} catch(Exception e) {
 				
 				log.log(Level.SEVERE, "An error has occurred whilst running/waiting for tasks", e);
@@ -96,6 +107,8 @@ public class EcarfEvmTask {
 				try {
 					
 					metadata = this.service.getEcarfMetaData(false);
+					// blank the task type and set the status to ERROR
+					metadata.clearValues();
 					Utils.exceptionToEcarfError(metadata, e);
 					this.service.updateInstanceMetadata(metadata);
 					

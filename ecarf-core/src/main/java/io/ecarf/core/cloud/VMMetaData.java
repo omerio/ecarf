@@ -146,6 +146,14 @@ public class VMMetaData {
 	}
 	
 	/**
+	 * Get the status
+	 * @return
+	 */
+	public String getStatus() {
+		return (String) this.attributes.get(ECARF_STATUS);
+	}
+	
+	/**
 	 * Get the schema terms file
 	 * @return
 	 */
