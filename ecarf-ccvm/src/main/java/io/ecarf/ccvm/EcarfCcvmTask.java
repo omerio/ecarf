@@ -77,7 +77,7 @@ public class EcarfCcvmTask {
 		List<String> nodes = null;
 		
 		// 1- load the schema and do a count of the relevant terms
-		/*metadata = new VMMetaData();
+		metadata = new VMMetaData();
 		metadata.addValue(VMMetaData.ECARF_BUCKET, bucket);
 		metadata.addValue(VMMetaData.ECARF_SCHEMA, schema);
 		task = new SchemaTermCountTask(metadata, service);
@@ -110,13 +110,13 @@ public class EcarfCcvmTask {
 		task.setInput(input);
 		task.run();
 		
-		results = task.getResults();*/
+		results = task.getResults();
 		
-		nodes = Lists.newArrayList("ecarf-evm-1398457340229", "ecarf-evm-1398457340230");//results.getNodes();
+		nodes = results.getNodes(); //Lists.newArrayList("ecarf-evm-1398457340229", "ecarf-evm-1398457340230");
 		
 		log.info("Active nodes: " + nodes);
 		
-		List<Item> items = this.getMockResults(bucket).getItems();//results.getItems();
+		List<Item> items = results.getItems(); //this.getMockResults(bucket).getItems();
 		
 		log.info("Term stats for reasoning task split: " + items);
 		
@@ -140,15 +140,18 @@ public class EcarfCcvmTask {
 		
 		for(List<Item> bin: bins) {
 			log.info("Set: " + bin + ", Sum: " + Utils.sum(bin) + "\n");
+			for(Item item: bin) {
+				System.out.println(item.getKey() + "," + item.getWeight());
+			}
 		}
 		
 		List<String> terms = results.getBinItems();
 		
 		// 5- Load the generated files into Big Data table
-		/*input = (new Input()).setBucket(bucket).setTable(table);	
+		input = (new Input()).setBucket(bucket).setTable(table);	
 		task = new DoLoadTask(null, service);
 		task.setInput(input);
-		task.run();*/
+		task.run();
 		
 		// 6- distribute the reasoning between the nodes
 		input = (new Input()).setItems(terms)
@@ -180,7 +183,7 @@ public class EcarfCcvmTask {
 	 * @return
 	 * @throws IOException 
 	 */
-	private Results getMockResults(String bucket) throws IOException {
+	/*private Results getMockResults(String bucket) throws IOException {
 		Results results = new Results();
 		Map<String, Long> allTermStats = new HashMap<String, Long>();
 		
@@ -224,7 +227,7 @@ public class EcarfCcvmTask {
 		}
 		
 		return results;
-	}
+	}*/
 	
 	
 	/**
