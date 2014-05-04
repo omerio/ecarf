@@ -58,6 +58,27 @@
 					</webApp>
 				</configuration>
 			</plugin>
+			<plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>io.ecarf.ccvm.EcarfCcvmTask</mainClass>
+                    <systemProperties>
+                        <systemProperty>
+                            <key>java.util.logging.config.file</key>
+                            <value>logging.properties</value>
+                        </systemProperty>
+                    </systemProperties>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 </project>
