@@ -121,7 +121,8 @@ public class EcarfEvmTask {
 					// all has failed with no hope of recovery
 					log.log(Level.SEVERE, "An error has occurred whilst trying to recover", e);
 					// self terminate :-(
-					this.service.shutdownInstance();
+					// FIXME uncomment once testing is thoroughly done
+					//this.service.shutdownInstance();
 				}
 			}
 		}
