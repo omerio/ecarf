@@ -1068,8 +1068,8 @@ public class GoogleCloudService implements CloudService {
 
 		log.info("Job ID of Load Job is: " + jobRef.getJobId());
 
-
-		return this.checkBigQueryJobResults(jobRef.getJobId());
+		// TODO add retry support
+		return this.checkBigQueryJobResults(jobRef.getJobId(), false);
 
 	}
 	
@@ -1175,7 +1175,8 @@ public class GoogleCloudService implements CloudService {
         List<String> completedIds = new ArrayList<>();
         
         for(String jobId: jobIds) {
-        	completedIds.add(this.checkBigQueryJobResults(jobId));
+        	// TODO add retry support
+        	completedIds.add(this.checkBigQueryJobResults(jobId, false));
         }
 		return completedIds;
 		
@@ -1224,7 +1225,7 @@ public class GoogleCloudService implements CloudService {
 	 * @return a reference to the completed Job
 	 * @throws IOException
 	 */
-	protected String checkBigQueryJobResults(String jobId) throws IOException {
+	protected String checkBigQueryJobResults(String jobId, boolean retry) throws IOException {
 		// Variables to keep track of total query time
 		Stopwatch stopwatch = new Stopwatch();
 		stopwatch.start();
@@ -1252,10 +1253,76 @@ public class GoogleCloudService implements CloudService {
 
 		stopwatch.stop();
 		
+		String completedJobId = pollJob.getJobReference().getJobId();
+		
 		log.info("Job completed successfully" + pollJob.toPrettyString());
 		this.printJobStats(pollJob);
+		
+		if(retry && (pollJob.getStatus().getErrorResult() != null)) {
+			completedJobId = this.retryFailedBigQueryJob(pollJob);
+		}
 
-		return pollJob.getJobReference().getJobId();
+		return completedJobId;
+	}
+	
+	/**
+	 * Retry if a bigquery job has failed due to transient errors
+	 * {
+		  "configuration" : {
+		    "query" : {
+		      "createDisposition" : "CREATE_IF_NEEDED",
+		      "destinationTable" : {
+		        "datasetId" : "_f14a24df5a43859914cb508177aa01d64466d055",
+		        "projectId" : "ecarf-1000",
+		        "tableId" : "anon3fe271d7c2fafca6fbe9e0490a1488c103a3a8fd"
+		      },
+		      "query" : "select subject,object from [ontologies.swetodblp@-221459-] where predicate=\"<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date>\";",
+		      "writeDisposition" : "WRITE_TRUNCATE"
+		    }
+		  },
+		  "etag" : "\"lJkBaCYfTrFXwh5N7-r9owDp5yw/O-f9DO_VlENTr60IoQaXlNb3dFQ\"",
+		  "id" : "ecarf-1000:job_QGAraWZPcZLYbm6IhmIyT7aOhmQ",
+		  "jobReference" : {
+		    "jobId" : "job_QGAraWZPcZLYbm6IhmIyT7aOhmQ",
+		    "projectId" : "ecarf-1000"
+		  },
+		  "kind" : "bigquery#job",
+		  "selfLink" : "https://www.googleapis.com/bigquery/v2/projects/ecarf-1000/jobs/job_QGAraWZPcZLYbm6IhmIyT7aOhmQ",
+		  "statistics" : {
+		    "creationTime" : "1399203726826",
+		    "endTime" : "1399203727264",
+		    "startTime" : "1399203727120"
+		  },
+		  "status" : {
+		    "errorResult" : {
+		      "message" : "Connection error. Please try again.",
+		      "reason" : "backendError"
+		    },
+		    "errors" : [ {
+		      "message" : "Connection error. Please try again.",
+		      "reason" : "backendError"
+		    } ],
+		    "state" : "DONE"
+		  }
+		}
+	 * @throws IOException 
+	 */
+	private String retryFailedBigQueryJob(Job job) throws IOException {
+		String jobId = job.getJobReference().getJobId();
+		log.info("Retrying failed job: " + jobId);
+		log.info("Error result" + job.getStatus().getErrorResult());
+		JobConfiguration config = job.getConfiguration();
+		String newCompletedJobId = null;
+		if((config != null) && (config.getQuery() != null)) {
+			// get the query
+			String query = config.getQuery().getQuery();
+			// re-execute the query
+			Utils.block(Utils.getApiRecheckDelay());
+			String newJobId = startBigDataQuery(query);
+			Utils.block(Utils.getApiRecheckDelay());
+			newCompletedJobId = checkBigQueryJobResults(newJobId, false);
+		}
+		return newCompletedJobId;
 	}
 	
 	/**
@@ -1403,8 +1470,8 @@ public class GoogleCloudService implements CloudService {
 	 */
 	@Override
 	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException {
-
-		String completedJob = checkBigQueryJobResults(jobId);
+		// query with retry support
+		String completedJob = checkBigQueryJobResults(jobId, true);
 		Joiner joiner = Joiner.on(',');
 		String pageToken = null;
 		BigInteger totalRows = null;

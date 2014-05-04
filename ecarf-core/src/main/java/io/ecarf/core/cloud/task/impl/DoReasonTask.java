@@ -142,7 +142,15 @@ public class DoReasonTask extends CommonTask {
 				List<String> select = GenericRule.getSelect(schemaTriples);
 
 				// block and wait for each job to complete then save results to a file
-				BigInteger rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+				BigInteger rows = BigInteger.ZERO;
+				
+				try {
+					rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+					
+				} catch(IOException ioe) {
+					// transient backend errors
+					log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
+				}
 
 				log.info("Query found " + rows + ", rows");
 
@@ -209,6 +217,8 @@ public class DoReasonTask extends CommonTask {
 				emptyRetries++;
 			}
 
+			log.info("Total inferred triples so far = " + totalInferredTriples);
+			
 			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
 			
 			// FIXME move into the particular cloud implementation service
