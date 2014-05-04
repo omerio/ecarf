@@ -83,6 +83,7 @@ import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.JobStatistics;
 import com.google.api.services.bigquery.model.JobStatistics2;
+import com.google.api.services.bigquery.model.JobStatistics3;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.TableCell;
@@ -1262,22 +1263,33 @@ public class GoogleCloudService implements CloudService {
 	 * @param job
 	 */
 	private void printJobStats(Job job) {
-		JobStatistics stats = job.getStatistics();
-		JobConfiguration config = job.getConfiguration();
-		// log the query
-		if(config != null) {
-			log.info("query: " + config.getQuery() != null ? config.getQuery().getQuery() : "");
+		try {
+			JobStatistics stats = job.getStatistics();
+			JobConfiguration config = job.getConfiguration();
+			// log the query
+			if(config != null) {
+				log.info("query: " + (config.getQuery() != null ? config.getQuery().getQuery() : ""));
+			}
+			// log the total bytes processed
+			JobStatistics2 qStats = stats.getQuery();
+			if(qStats != null) {
+				log.info("Total Bytes processed: " + ((double) qStats.getTotalBytesProcessed() / FileUtils.ONE_GB) + " GB");
+				log.info("Cache hit: " + qStats.getCacheHit());
+			}
+			
+			JobStatistics3 lStats = stats.getLoad();
+			if(lStats != null) {
+				log.info("Output rows: " + lStats.getOutputRows());
+				
+			}
+			
+			long time = stats.getEndTime() - stats.getCreationTime();
+			log.info("Elapsed query time (ms): " + time);
+			log.info("Elapsed query time (s): " + TimeUnit.MILLISECONDS.toSeconds(time));
+			
+		} catch(Exception e) {
+			log.log(Level.WARNING, "failed to log job stats", e);
 		}
-		// log the total bytes processed
-		JobStatistics2 qStats = stats.getQuery();
-		if(qStats != null) {
-			log.info("Total Bytes processed: " + ((double) qStats.getTotalBytesProcessed() / FileUtils.ONE_GB) + " GB");
-			log.info("Cache hit: " + qStats.getCacheHit());
-		}
-		
-		long time = stats.getEndTime() - stats.getCreationTime();
-		log.info("Elapsed query time (ms): " + time);
-		log.info("Elapsed query time (s): " + TimeUnit.MILLISECONDS.toSeconds(time));
 	}
 
 	/**
