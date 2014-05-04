@@ -47,6 +47,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.NotImplementedException;
 
 /**
+ * Run using maven:
+ * mvn -q exec:java -Dexec.args="/home/omerio/job.json" > /home/omerio/output.log 2>&1 & exit 0
  * @author Omer Dawelbeit (omerio)
  *
  */

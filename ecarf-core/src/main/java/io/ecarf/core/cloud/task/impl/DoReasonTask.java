@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,6 +50,7 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 
@@ -57,6 +59,8 @@ import com.google.api.client.repackaged.com.google.common.base.Joiner;
  *
  */
 public class DoReasonTask extends CommonTask {
+	
+	private static final int MAX_CACHE = 1000000;
 	
 	/**
 	 * 
@@ -168,25 +172,41 @@ public class DoReasonTask extends CommonTask {
 
 						Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
 						
+						// records will contain lots of duplicates
+						Set<String> inferredAlready = new HashSet<String>();
+						
 						try {
 							
 							for (CSVRecord record : records) {
+								
+								String values = ((select.size() == 1) ? record.get(0): StringUtils.join(record.values(), ','));
+								
+								if(!inferredAlready.contains(values)) {
+									inferredAlready.add(values);
 
-								Triple instanceTriple = new Triple();
+									Triple instanceTriple = new Triple();
 
-								if(select.size() == 1) {
-									instanceTriple.set(select.get(0), record.get(0));
-								} else {
+									if(select.size() == 1) {
+										instanceTriple.set(select.get(0), record.get(0));
+									} else {
 
-									instanceTriple.set(select, record.values());
+										instanceTriple.set(select, record.values());
+									}
+
+									for(Triple schemaTriple: schemaTriples) {
+										Rule rule = GenericRule.getRule(schemaTriple);
+										Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+										writer.println(inferredTriple.toCsv());
+										inferredTriples++;
+									}
+									
+									// this is just to avoid any memory issues
+									if(inferredAlready.size() > MAX_CACHE) {
+										inferredAlready.clear();
+										log.info("Cleared cache of inferred terms");
+									}
 								}
-
-								for(Triple schemaTriple: schemaTriples) {
-									Rule rule = GenericRule.getRule(schemaTriple);
-									Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-									writer.println(inferredTriple.toCsv());
-									inferredTriples++;
-								}
+								
 							}
 						} catch(Exception e) {
 							log.log(Level.SEVERE, "Failed to parse selected terms", e);

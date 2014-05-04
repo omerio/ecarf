@@ -22,12 +22,10 @@ import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.term.TermCounter;
-import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +43,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ProcessLoadTask extends CommonTask {
 
-	
+
 	public ProcessLoadTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
@@ -59,56 +57,50 @@ public class ProcessLoadTask extends CommonTask {
 	public void run() throws IOException {
 
 		String bucket = metadata.getBucket();
-		
+
 		// get the schema terms if provided
 		String schemaTermsFile = metadata.getSchemaTermsFile();
 		TermCounter counter = null;
-		
+
 		if(StringUtils.isNoneBlank(schemaTermsFile)) {
 			String localSchemaTermsFile = Utils.TEMP_FOLDER + schemaTermsFile;
 			this.cloud.downloadObjectFromCloudStorage(schemaTermsFile, localSchemaTermsFile, bucket);
-			
+
 			// convert from JSON
 			Set<String> schemaTerms = Utils.jsonFileToSet(localSchemaTermsFile);
 			counter = new TermCounter();
 			counter.setTermsToCount(schemaTerms);
 		} 
-		
+
 		Set<String> files = metadata.getFiles();
 		log.info("Loading files: " + files);
-		
-		
-		final Set<String> localFiles = new HashSet<>();
-		Set<String> localProcessedFiles = new HashSet<>();
-		final Set<String> uploadedFiles = new HashSet<>();
-		
+
 		for(final String file: files) {
-			
-			final String localFile = Utils.TEMP_FOLDER + file;
+
+			String localFile = Utils.TEMP_FOLDER + file;
+
 			log.info("Downloading file: " + file);
-			this.cloud.downloadObjectFromCloudStorage(file, 
-					localFile, bucket, new Callback() {
-				
-				@Override
-				public void execute() {
-					log.info("Download complete, file saved to: " + localFile);
-					// add the file to the list of downloaded files
-					localFiles.add(localFile);
-				}
-			});
-		}
-		
-		Utils.waitForEquality(files.size(), localFiles.size(), Utils.getApiRecheckDelay());
-		
-		// all downloaded, carryon now, process the files
-		for(String file: localFiles) {
-			log.info("Processing file: " + file);
-			String outFile = this.cloud.prepareForCloudDatabaseImport(file, counter);
-			localProcessedFiles.add(outFile);
+
+			this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
+
+			// all downloaded, carryon now, process the files
+
+			log.info("Processing file: " + localFile);
+			String outFile = this.cloud.prepareForCloudDatabaseImport(localFile, counter);
+
 			// once the processing is done then delete the local file
-			Utils.deleteFile(file);
+			Utils.deleteFile(localFile);
+
+			// now upload the files again
+
+			log.info("Uploading file: " + outFile);
+			this.cloud.uploadFileToCloudStorage(outFile, bucket);
+
+			// now delete all the locally processed files
+			Utils.deleteFile(outFile);
+
 		}
-		
+
 		// write term stats to file and upload
 		if(counter != null) {
 			log.info("Saving terms stats");
@@ -117,28 +109,7 @@ public class ProcessLoadTask extends CommonTask {
 
 			this.cloud.uploadFileToCloudStorage(countStatsFile, bucket);
 		}
-		
-		// now upload the files again
-		for(final String file: localProcessedFiles) {
-			log.info("Uploading file: " + file);
-			this.cloud.uploadFileToCloudStorage(file, bucket, new Callback() {
-				
-				@Override
-				public void execute() {
-					log.info("Upload complete of file: " + file);
-					// add the file to the list of downloaded files
-					uploadedFiles.add(file);
-				}
-			});
-		}
-		
-		Utils.waitForEquality(localProcessedFiles.size(), uploadedFiles.size(), Utils.getApiRecheckDelay());
-		
-		// now delete all the locally processed files
-		for(final String file: localProcessedFiles) {
-			Utils.deleteFile(file);
-		}
-		
+
 		log.info("All files are processed and uploaded successfully");
 	}
 
