@@ -143,12 +143,12 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void testSaveBigDataToFile() throws IOException {
-		String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
-		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
-			 "select subject from swetodlp.swetodlp_triple where " +
-			 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
+		String query = "SELECT TOP( title, 20) as title, COUNT(*) as revision_count "
+		        + "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
+			// "select subject from swetodlp.swetodlp_triple where " +
+			 //"object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
 		
 		String jobId = this.service.startBigDataQuery(query);
 		String filename = Utils.TEMP_FOLDER + 
@@ -171,6 +171,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
+	@Ignore
 	public void testLoadLocalFilesIntoBigData() throws IOException {
 		List<String> jobIds = this.service.loadLocalFilesIntoBigData(
 				Arrays.asList("/Users/omerio/Downloads/umbel_links.nt_out.gz", 

@@ -101,6 +101,7 @@ public class DoReasonTask extends CommonTask {
 		
 		String decoratedTable = table;
 		int emptyRetries = 0;
+		int totalInferredTriples = 0;
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
 		
 		// timestamp loop
@@ -188,6 +189,8 @@ public class DoReasonTask extends CommonTask {
 					inferredFiles.add(inferredTriplesFile);
 					log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriples + 
 							", Triples for term: " + term + ", Failed Triples: " + failedTriples);
+					
+					totalInferredTriples += inferredTriples;
 
 				}
 			}
@@ -215,6 +218,8 @@ public class DoReasonTask extends CommonTask {
 			log.info("Using table decorator: " + decoratedTable + ". Empty retries count: " + emptyRetries);
 
 		} while(!(emptyRetries == maxRetries)); // end timestamp loop
+		
+		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
 	}
 
 	/**
