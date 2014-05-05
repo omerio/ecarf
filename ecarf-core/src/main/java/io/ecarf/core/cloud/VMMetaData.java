@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * A collection of vm instance metadata used by ecarf. 
  * 
@@ -37,6 +39,8 @@ import java.util.logging.Logger;
 public class VMMetaData {
 	
 	private final static Logger log = Logger.getLogger(VMMetaData.class.getName()); 
+	
+	public static final int MAX_METADATA_SIZE = 32768;
 	
 	// the prefix of the vm name
 	public static final String ECARF_VM_PREFIX = "ecarf-evm-";
@@ -61,6 +65,10 @@ public class VMMetaData {
 	
 	// a list of terms that the evm should be responsible for
 	public static final String ECARF_TERMS = "ecarf-terms";
+	
+	// a file list of terms that the evm should be responsible for, this is if the size of the terms text is too large
+	// most cloud providers put a limit on the metadata
+	public static final String ECARF_TERMS_FILE = "ecarf-terms-file";
 	
 	// the cloud storage bucket to use for processing the relevant ontology files
 	public static final String ECARF_BUCKET = "ecarf-bucket";
@@ -176,7 +184,11 @@ public class VMMetaData {
 	 */
 	public Set<String> getTerms() {
 		String termsStr = (String) this.attributes.get(ECARF_TERMS);
-		return Utils.csvToSet(termsStr);
+		Set<String> terms = null;
+		if(StringUtils.isNotBlank(termsStr)) {
+			terms = Utils.csvToSet(termsStr);
+		}
+		return terms;
 	}
 	
 	

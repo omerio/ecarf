@@ -81,7 +81,20 @@ public class DoReasonTask extends CommonTask {
 		Set<String> terms = metadata.getTerms();
 		String schemaFile = metadata.getValue(VMMetaData.ECARF_SCHEMA);
 		String bucket = metadata.getBucket();
+		
+		if(terms == null) {
+			// too large, probably saved as a file
+			String termsFile = metadata.getValue(VMMetaData.ECARF_TERMS_FILE);
+			log.info("Using json file for terms: " + termsFile);
+			
+			String localTermsFile = Utils.TEMP_FOLDER + termsFile;
+			this.cloud.downloadObjectFromCloudStorage(termsFile, localTermsFile, bucket);
 
+			// convert from JSON
+			terms = Utils.jsonFileToSet(localTermsFile);
+			
+		}
+		
 		String localSchemaFile = Utils.TEMP_FOLDER + schemaFile;
 		// download the file from the cloud storage
 		this.cloud.downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);

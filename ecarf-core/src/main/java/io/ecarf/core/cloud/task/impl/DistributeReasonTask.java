@@ -25,6 +25,7 @@ import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class DistributeReasonTask extends CommonTask {
 				Lists.newArrayList(this.input.getNodes()) : new ArrayList<String>();
 				
 		String zoneId = this.input.getZoneId();
+		String bucket = this.input.getBucket();
 				
 		List<String> reasonNodes = new ArrayList<>();
 
@@ -74,8 +76,23 @@ public class DistributeReasonTask extends CommonTask {
 
 			long timestamp = (new Date()).getTime();
 			int count = 0;
+			int index = 0;
 			
 			for(String terms: nodeTerms) {
+				
+				String termsFilename = null;
+				if(terms.length() > VMMetaData.MAX_METADATA_SIZE) {
+					log.info("Metadata too large, using file. Size = " + terms.length());
+					// use files instead
+					termsFilename = Constants.NODE_TERMS + index + Constants.DOT_JSON;	
+					String termsFile = Utils.TEMP_FOLDER + termsFilename;
+					// save to file
+					Utils.objectToJsonFile(termsFile, Utils.csvToSet(terms));
+					
+					// upload the file to cloud storage
+					this.cloud.uploadFileToCloudStorage(termsFile, bucket);
+					index++;
+				}
 				
 				// re-program existing vms
 				if(activeNodes.size() > 0) {
@@ -84,7 +101,7 @@ public class DistributeReasonTask extends CommonTask {
 					activeNodes.remove(activeNodes.indexOf(instanceId));
 					VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, zoneId);
 					String fingerprint = metaData.getFingerprint();
-					metaData = this.getReasonMetadata(terms);
+					metaData = this.getReasonMetadata(terms, termsFilename);
 					metaData.setFingerprint(fingerprint);
 					this.cloud.updateInstanceMetadata(metaData, zoneId, instanceId, true);
 					reasonNodes.add(instanceId);
@@ -92,7 +109,7 @@ public class DistributeReasonTask extends CommonTask {
 				 
 				} else {
 					// start new VMs
-					VMMetaData metaData = this.getReasonMetadata(terms);
+					VMMetaData metaData = this.getReasonMetadata(terms, termsFilename);
 
 					String instanceId = VMMetaData.ECARF_VM_PREFIX + (timestamp + count);
 					VMConfig conf = new VMConfig();
@@ -158,10 +175,17 @@ public class DistributeReasonTask extends CommonTask {
 	 * @param terms
 	 * @return
 	 */
-	private VMMetaData getReasonMetadata(String terms) {
+	private VMMetaData getReasonMetadata(String terms, String termsFile) {
 		VMMetaData metaData = new VMMetaData();
+		
+		if(termsFile != null) {
+			metaData.addValue(VMMetaData.ECARF_TERMS_FILE, termsFile);
+			
+		} else {
+			metaData.addValue(VMMetaData.ECARF_TERMS, terms);
+		}
+		
 		metaData.addValue(VMMetaData.ECARF_TASK, TaskType.REASON.toString())
-			.addValue(VMMetaData.ECARF_TERMS, terms)
 			.addValue(VMMetaData.ECARF_BUCKET, this.input.getBucket())
 			.addValue(VMMetaData.ECARF_TABLE, this.input.getTable());
 		// do we have a schema terms file

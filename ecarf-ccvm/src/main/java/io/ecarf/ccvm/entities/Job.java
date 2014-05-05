@@ -25,9 +25,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import com.google.common.collect.Lists;
 import com.google.gson.stream.JsonReader;
 
 /**
@@ -41,7 +43,12 @@ import com.google.gson.stream.JsonReader;
     "maxTriplesPerNode":5000000,
     "newNodePercentage":0.1,
     "vmType":"n1-standard-2",
-    "platform":"google"
+    "platform":"google",
+    "skipLoad":true,
+    "evmAnalysisFiles":[
+        "ecarf-evm-1398457340229.json",
+        "ecarf-evm-1398457340230.json"
+    ]
 }
  * @author Omer Dawelbeit (omerio)
  *
@@ -68,6 +75,10 @@ public class Job implements Serializable {
 	private String vmType;
 	
 	private String platform;
+	
+	private boolean skipLoad;
+	
+	private List<String> evmAnalysisFiles;
 
 	/**
 	 * @return the bucket
@@ -182,6 +193,34 @@ public class Job implements Serializable {
 	}
 
 	/**
+	 * @return the skipLoad
+	 */
+	public boolean isSkipLoad() {
+		return skipLoad;
+	}
+
+	/**
+	 * @param skipLoad the skipLoad to set
+	 */
+	public void setSkipLoad(boolean skipLoad) {
+		this.skipLoad = skipLoad;
+	}
+
+	/**
+	 * @return the evmAnalysisFiles
+	 */
+	public List<String> getEvmAnalysisFiles() {
+		return evmAnalysisFiles;
+	}
+
+	/**
+	 * @param evmAnalysisFiles the evmAnalysisFiles to set
+	 */
+	public void setEvmAnalysisFiles(List<String> evmAnalysisFiles) {
+		this.evmAnalysisFiles = evmAnalysisFiles;
+	}
+
+	/**
 	 * Convert to JSON
 	 * @return
 	 */
@@ -216,6 +255,8 @@ public class Job implements Serializable {
 		job.schema = "opus_august2007_closure.nt";
 		job.table = "ontologies.swetodblp";
 		job.vmType = "n1-standard-2";
+		job.skipLoad = true;
+		job.evmAnalysisFiles = Lists.newArrayList("ecarf-evm-1398457340229.json", "ecarf-evm-1398457340230.json");
 		
 		return job;
 	}

@@ -45,6 +45,8 @@ public class Constants {
 	
 	public static final String DOT_JSON = ".json";
 	
+	public static final String NODE_TERMS = "node_terms_";
+	
 	public static final String DOT_TERMS = ".terms";
 	
 	public static final String DOT_INF = ".inf";
