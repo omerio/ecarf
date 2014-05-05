@@ -60,6 +60,7 @@ public class TaskFactory {
 				
 			case UPLOAD_LOGS:
 				task = new DoUploadOutputLogTask(metadata, cloud);
+				break;
 
 			default:
 				throw new IllegalArgumentException("Unknown task type: " + type);
