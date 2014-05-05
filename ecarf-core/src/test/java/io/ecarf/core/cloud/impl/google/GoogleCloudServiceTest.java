@@ -138,7 +138,7 @@ public class GoogleCloudServiceTest {
 			 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
 		
 		String jobId = this.service.startBigDataQuery(query);
-		String completedJob = this.service.checkBigQueryJobResults(jobId, false);
+		String completedJob = this.service.checkBigQueryJobResults(jobId, false, true);
 		this.service.displayQueryResults(completedJob);
 	}
 	

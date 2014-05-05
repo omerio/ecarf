@@ -305,8 +305,14 @@ public class EcarfCcvmTask {
 		default:
 			throw new IllegalArgumentException("Unknow platform: " + platform);
 		}
-
-		task.run();
+		try {
+			task.run();
+			System.exit(0);
+			
+		} catch(Exception e) {
+			log.log(Level.SEVERE, "Failed to run CCVM", e);
+			System.exit(1);
+		}
 	}
 
 }

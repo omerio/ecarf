@@ -18,7 +18,36 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CLOUD_STORAGE_PREFIX;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_IF_NEEDED;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_NEVER;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NOT_FOUND;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WRITE_APPEND;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -75,6 +104,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Data;
 import com.google.api.services.bigquery.Bigquery;
+import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.JobConfiguration;
@@ -1069,7 +1099,7 @@ public class GoogleCloudService implements CloudService {
 		log.info("Job ID of Load Job is: " + jobRef.getJobId());
 
 		// TODO add retry support
-		return this.checkBigQueryJobResults(jobRef.getJobId(), false);
+		return this.checkBigQueryJobResults(jobRef.getJobId(), false, true);
 
 	}
 	
@@ -1176,7 +1206,7 @@ public class GoogleCloudService implements CloudService {
         
         for(String jobId: jobIds) {
         	// TODO add retry support
-        	completedIds.add(this.checkBigQueryJobResults(jobId, false));
+        	completedIds.add(this.checkBigQueryJobResults(jobId, false, false));
         }
 		return completedIds;
 		
@@ -1225,7 +1255,7 @@ public class GoogleCloudService implements CloudService {
 	 * @return a reference to the completed Job
 	 * @throws IOException
 	 */
-	protected String checkBigQueryJobResults(String jobId, boolean retry) throws IOException {
+	protected String checkBigQueryJobResults(String jobId, boolean retry, boolean throwError) throws IOException {
 		// Variables to keep track of total query time
 		Stopwatch stopwatch = new Stopwatch();
 		stopwatch.start();
@@ -1260,6 +1290,12 @@ public class GoogleCloudService implements CloudService {
 		
 		if(retry && (pollJob.getStatus().getErrorResult() != null)) {
 			completedJobId = this.retryFailedBigQueryJob(pollJob);
+		}
+		
+		if(throwError && (pollJob.getStatus().getErrorResult() != null)) {
+			ErrorProto error = pollJob.getStatus().getErrorResult();
+			log.info("Error result" + error);
+			throw new IOException("message: " + error.getMessage() + ", reason: " + error.getReason());
 		}
 
 		return completedJobId;
@@ -1320,7 +1356,7 @@ public class GoogleCloudService implements CloudService {
 			Utils.block(Utils.getApiRecheckDelay());
 			String newJobId = startBigDataQuery(query);
 			Utils.block(Utils.getApiRecheckDelay());
-			newCompletedJobId = checkBigQueryJobResults(newJobId, false);
+			newCompletedJobId = checkBigQueryJobResults(newJobId, false, false);
 		}
 		return newCompletedJobId;
 	}
@@ -1471,7 +1507,7 @@ public class GoogleCloudService implements CloudService {
 	@Override
 	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException {
 		// query with retry support
-		String completedJob = checkBigQueryJobResults(jobId, true);
+		String completedJob = checkBigQueryJobResults(jobId, true, false);
 		Joiner joiner = Joiner.on(',');
 		String pageToken = null;
 		BigInteger totalRows = null;
