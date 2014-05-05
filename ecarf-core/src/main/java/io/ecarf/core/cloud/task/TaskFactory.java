@@ -20,8 +20,9 @@ package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
 import io.ecarf.core.cloud.task.impl.DoReasonTask;
+import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
+import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.cloud.types.TaskType;
 
@@ -55,6 +56,10 @@ public class TaskFactory {
 
 			case COUNT:
 				task = new SchemaTermCountTask(metadata, cloud);
+				break;
+				
+			case UPLOAD_LOGS:
+				task = new DoUploadOutputLogTask(metadata, cloud);
 
 			default:
 				throw new IllegalArgumentException("Unknown task type: " + type);

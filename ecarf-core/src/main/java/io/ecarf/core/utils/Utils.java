@@ -50,6 +50,7 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -137,6 +138,17 @@ public class Utils {
 	public static boolean deleteFile(String filename) {
 		File file = new File(filename);
 		return file.delete();
+	}
+	
+	/**
+	 * copy the file with the provided string
+	 * @param filename
+	 * @return
+	 * @throws IOException 
+	 */
+	public static void copyFile(String filename, String newName) throws IOException {
+		File file = new File(filename);
+		Files.copy(file, new File(newName));
 	}
 	
 	/**

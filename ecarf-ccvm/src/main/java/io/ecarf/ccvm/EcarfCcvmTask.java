@@ -30,6 +30,7 @@ import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.DistributeReasonTask;
+import io.ecarf.core.cloud.task.impl.DistributeUploadOutputLogTask;
 import io.ecarf.core.cloud.task.impl.DoLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
@@ -184,7 +185,14 @@ public class EcarfCcvmTask {
 		// All nodes, which we can shut down
 		List<String> allNodes = task.getResults().getNodes();
 		log.info("All active nodes: " + allNodes);
-
+		
+		// 7- all nodes to upload their logs
+		input = (new Input()).setBucket(bucket).setNodes(allNodes)
+				.setZoneId(Config.getProperty(ZONE_KEY));
+		
+		task = new DistributeUploadOutputLogTask(null, service);
+		task.setInput(input);
+		task.run();
 		// TODO shutdown active nodes
 
 	}
