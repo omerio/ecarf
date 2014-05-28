@@ -829,6 +829,7 @@ public class GoogleCloudService implements CloudService {
 				String status = InstanceStatus.PROVISIONING.toString();
 
 				do {
+					int retries = 10;
 					// sleep for 10 seconds before checking the vm status
 					Utils.block(Utils.getApiRecheckDelay());
 
@@ -846,7 +847,11 @@ public class GoogleCloudService implements CloudService {
 					} catch(GoogleJsonResponseException e) {
 						if(e.getMessage().indexOf(NOT_FOUND) == 0) {
 							log.warning("Instance not found: " + config.getInstanceId());
-
+							if(retries <= 0) {
+								throw e;
+							}
+							retries--;
+							
 						} else {
 							throw e;
 						}
