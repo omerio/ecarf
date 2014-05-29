@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.cloud.task.impl;
 
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NOT_FOUND;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -131,23 +133,32 @@ public class DistributeLoadTask extends CommonTask {
 						String statsFile = instanceId + Constants.DOT_JSON;
 
 						String localStatsFile = Utils.TEMP_FOLDER + statsFile;
-						this.cloud.downloadObjectFromCloudStorage(statsFile, localStatsFile, bucket);
-
-						// convert from JSON
-						Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
-
-						for(Entry<String, Long> term: termStats.entrySet()) {
-							String key = term.getKey();
-							Long value = term.getValue();
-
-							if(allTermStats.containsKey(key)) {
-								value = allTermStats.get(key) + value;
-							} 
-
-							allTermStats.put(key, value);
-						}
 						
-						log.info("Evms analysed: " + allTermStats.size() + ", terms");
+						try {
+							this.cloud.downloadObjectFromCloudStorage(statsFile, localStatsFile, bucket);
+
+							// convert from JSON
+							Map<String, Long> termStats = Utils.jsonFileToMap(localStatsFile);
+
+							for(Entry<String, Long> term: termStats.entrySet()) {
+								String key = term.getKey();
+								Long value = term.getValue();
+
+								if(allTermStats.containsKey(key)) {
+									value = allTermStats.get(key) + value;
+								} 
+
+								allTermStats.put(key, value);
+							}
+
+							log.info("Evms analysed: " + allTermStats.size() + ", terms");
+						} catch(IOException e) {
+							// a file not found means the evm didn't find any schema terms so didn't generate any stats
+							log.log(Level.SEVERE, "failed to download file: " + localStatsFile, e);
+							if(!(e.getMessage().indexOf(NOT_FOUND) >= 0)) {
+								throw e;
+							}
+						}
 
 					}
 

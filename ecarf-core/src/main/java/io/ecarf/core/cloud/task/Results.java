@@ -22,6 +22,7 @@ import io.ecarf.core.partition.Item;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,6 +33,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public class Results {
+	
+	private final static Logger log = Logger.getLogger(Results.class.getName()); 
 	
 	/**
 	 * Bins for task distribution
@@ -56,16 +59,23 @@ public class Results {
 		List<String> binItems = null;
 		if(bins.size() > 0) {
 			binItems = new ArrayList<>();
-			
+			Long totalWeight = 0L;
 			for(List<Item> bin: bins) {
 				//System.out.println("Set total: " + bin.size() + ", Set" + bin + ", Sum: " + Utils.sum(bin) + "\n");
 				List<String> files = new ArrayList<>();
+				Long binWeight = 0L;
 				for(Item item: bin) {
 					files.add(item.getKey());
+					binWeight += item.getWeight();
+					
 				}
+				log.info("Bin weight: " + binWeight + ", bin items: " + bin.size());
+				
+				totalWeight += binWeight;
 				
 				binItems.add(StringUtils.join(files, ','));
 			}
+			log.info("Total weight of all items: " + totalWeight);
 		}
 		return binItems;
 	}
