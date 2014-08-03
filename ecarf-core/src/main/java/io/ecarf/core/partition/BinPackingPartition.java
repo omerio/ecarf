@@ -63,8 +63,9 @@ public class BinPackingPartition implements PartitionFunction {
 		//System.out.println("Maximum is: " + max);
 
 		//System.out.println("New set if sum of items larger than: " + (max * newBinPercentage));
+		Utils.setScale(items, max);
 
-		long sum = Utils.sum(items);
+		long sum = Utils.sum(items, max);
 
 		//System.out.println("Total sum is: " + sum);
 
@@ -84,29 +85,34 @@ public class BinPackingPartition implements PartitionFunction {
 		for(int i = 0; i < finalNumBins; i++) {
 			List<Item> bin = new ArrayList<Item>();
 			bins.add(bin);
-			Item largestItem = items.get(0);
-			//Long currentMax = largestItem.getWeight();
-			bin.add(largestItem);
-			items.remove(largestItem);
 
-			Long currentSum = Utils.sum(bin);
+			// check if we have ran out of items
+			if(!items.isEmpty()) {
+				
+				Item largestItem = items.get(0);
+				//Long currentMax = largestItem.getWeight();
+				bin.add(largestItem);
+				items.remove(largestItem);
 
-			if(currentSum < max) {
-				Long diff = max - currentSum;
-				for(int j = 0; j < items.size(); j++) {
-					Item item = items.get(j);
-					if(item.getWeight() <= diff) {	
+				Long currentSum = Utils.sum(bin);
 
-						bin.add(item);
-						items.remove(j);
+				if(currentSum < max) {
+					Long diff = max - currentSum;
+					for(int j = 0; j < items.size(); j++) {
+						Item item = items.get(j);
+						if(item.getWeight() <= diff) {	
 
-						if(item.getWeight() == diff) {
-							break;
-						} else {
-							// look for an even small number to fill the gap
-							diff = max - Utils.sum(bin);
-						}
-					} 
+							bin.add(item);
+							items.remove(j);
+
+							if(item.getWeight() == diff) {
+								break;
+							} else {
+								// look for an even small number to fill the gap
+								diff = max - Utils.sum(bin);
+							}
+						} 
+					}
 				}
 			}
 		}
@@ -126,7 +132,7 @@ public class BinPackingPartition implements PartitionFunction {
 		return bins;
 
 	}
-
+	
 
 	@Override
 	public void addItem(Item item) {

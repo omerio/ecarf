@@ -20,13 +20,13 @@ package io.ecarf.core.compress;
 
 import io.ecarf.core.utils.Constants;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -35,7 +35,6 @@ import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.mortbay.log.Log;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.util.NxUtil;
@@ -48,6 +47,8 @@ import org.semanticweb.yars.nx.util.NxUtil;
  *
  */
 public class NTripleGzipProcessor {
+	
+	private final static Logger log = Logger.getLogger(NTripleGzipProcessor.class.getName());
 	
 	private String inputFile;
 	
@@ -83,20 +84,20 @@ public class NTripleGzipProcessor {
 			
 			// gzip
 			if(GzipUtils.isCompressedFilename(this.inputFile)) {
-				deflated = new GZIPInputStream(fileIn);
+				deflated = new GZIPInputStream(fileIn, 65536);
 			
 			} 
 			// bz2
 			else if(BZip2Utils.isCompressedFilename(this.inputFile)) {
-				deflated = new BZip2CompressorInputStream(fileIn);
+				deflated = new BZip2CompressorInputStream(new BufferedInputStream(fileIn));
 			}
 
-			try(BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
-					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile)));) {
+			try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
+					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), 65536));) {
 				String outLine;
 				String[] terms;
 				
-				NxParser nxp = new NxParser(bf);
+				NxParser nxp = new NxParser(deflated);
 
 				while (nxp.hasNext())  {
 
@@ -115,7 +116,7 @@ public class NTripleGzipProcessor {
 						}
 					
 					} else {
-						Log.warn("Ignoring line: " + ns);
+						log.warning("Ignoring line: " + ns);
 					}
 				}
 

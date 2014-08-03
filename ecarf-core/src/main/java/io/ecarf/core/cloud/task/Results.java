@@ -21,7 +21,9 @@ package io.ecarf.core.cloud.task;
 import io.ecarf.core.partition.Item;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +54,11 @@ public class Results {
 	private List<String> nodes;
 	
 	/**
+	 * The scale of each item
+	 */
+	private Map<String, Double> itemScales;
+	
+	/**
 	 * Return a list of comma separated items for each bin
 	 * @return
 	 */
@@ -59,6 +66,8 @@ public class Results {
 		List<String> binItems = null;
 		if(bins.size() > 0) {
 			binItems = new ArrayList<>();
+			this.itemScales = new HashMap<>();
+			
 			Long totalWeight = 0L;
 			for(List<Item> bin: bins) {
 				//System.out.println("Set total: " + bin.size() + ", Set" + bin + ", Sum: " + Utils.sum(bin) + "\n");
@@ -69,11 +78,17 @@ public class Results {
 					binWeight += item.getWeight();
 					
 				}
-				log.info("Bin weight: " + binWeight + ", bin items: " + bin.size());
+				
+				Double scale = (bin.size() == 1) ? bin.get(0).getScale() : 1d;
+				
+				log.info("Bin weight: " + binWeight + ", bin items: " + bin.size() + ", scale: " + scale);
 				
 				totalWeight += binWeight;
 				
-				binItems.add(StringUtils.join(files, ','));
+				String itemsStr = StringUtils.join(files, ',');	
+				binItems.add(itemsStr);
+				this.itemScales.put(itemsStr, scale);
+				
 			}
 			log.info("Total weight of all items: " + totalWeight);
 		}
@@ -133,5 +148,13 @@ public class Results {
 		this.items = items;
 		return this;
 	}
+	
+	/**
+	 * @return the itemScales
+	 */
+	public Map<String, Double> getItemScales() {
+		return itemScales;
+	}
+
 
 }

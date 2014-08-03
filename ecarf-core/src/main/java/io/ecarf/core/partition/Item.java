@@ -28,7 +28,15 @@ public class Item implements Comparable<Item>	{
 
 	private String key;
 
+	/**
+	 * The weight of this item
+	 */
 	private Long weight;
+	
+	/**
+	 * The scale of this item compared to another item
+	 */
+	private Double scale;
 
 	/**
 	 * 
@@ -77,6 +85,20 @@ public class Item implements Comparable<Item>	{
 		return this;
 	}
 
+	/**
+	 * @return the scale
+	 */
+	public Double getScale() {
+		return scale;
+	}
+
+	/**
+	 * @param scale the scale to set
+	 */
+	public void setScale(Double scale) {
+		this.scale = scale;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -85,6 +107,7 @@ public class Item implements Comparable<Item>	{
 		return new ToStringBuilder(this).
 				append("key", key).
 				append("weight", weight).
+				append("scale", scale).
 				toString();
 	}
 

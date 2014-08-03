@@ -32,6 +32,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.channels.Channels;
@@ -68,6 +70,8 @@ public class Utils {
 	public static final String PATH_SEPARATOR = File.separator;
 	
 	public static final String TEMP_FOLDER = System.getProperty("java.io.tmpdir") + PATH_SEPARATOR;
+	
+	public static final byte [] SEPARATOR = System.getProperty("line.separator").getBytes();
 	
 	public static Gson GSON = new Gson();
 	
@@ -281,6 +285,45 @@ public class Utils {
 			sum += item.getWeight();
 		}
 		return sum;
+	}
+	
+	/**
+	 * Sums a list of numbers, if a number is greater than max only max will be summed
+	 * @param items
+	 * @return
+	 */
+	public static Long sum(List<Item> items, long max) {
+		long sum = 0;
+		for(Item item: items) {
+			Long weight = item.getWeight();
+			if(weight > max) {
+				weight = max;
+			}
+			sum += weight;
+		}
+		return sum;
+	}
+	
+	/**
+	 * Set the scale of items based on the max provided
+	 * 1/2, 1, 2, 3, 4, 5, ..., n
+	 * @param max
+	 */
+	public static List<Item> setScale(List<Item> items, long max) {
+		for(Item item: items) {
+			long weight = item.getWeight();
+			Double scale = (double) weight / (double) max;
+			if(scale >= 1d) {
+				scale = (new BigDecimal(scale)).setScale(0, RoundingMode.HALF_UP).doubleValue();
+			} else if(scale < 1d && scale > 0.5d) {
+				scale = 1d;
+			} else if(scale <= 0.5d) {
+				scale = 0.5d;
+			}
+			
+			item.setScale(scale);
+		}
+		return items;
 	}
 	
 	/**

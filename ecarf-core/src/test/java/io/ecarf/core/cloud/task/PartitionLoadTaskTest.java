@@ -67,7 +67,7 @@ public class PartitionLoadTaskTest {
 	@Test
 	public void testRun() throws IOException {
 		
-		Input input = (new Input()).setBucket("dbpedia").setWeightPerNode(757643034L)
+		Input input = (new Input()).setBucket("dbpedia").setWeightPerNode(509643034L)
 				.setNewBinPercentage(0.0);
 		PartitionLoadTask task = new PartitionLoadTask(null, service);
 		task.setInput(input);
@@ -82,7 +82,7 @@ public class PartitionLoadTaskTest {
 		}
 		
 		assertNotNull(nodeFiles);
-		assertEquals(2, nodeFiles.size());
+		assertEquals(10, nodeFiles.size());
 		
 		Set<String> allFiles = new HashSet<>();
 		

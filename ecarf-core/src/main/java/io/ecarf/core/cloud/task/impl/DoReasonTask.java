@@ -238,6 +238,7 @@ public class DoReasonTask extends CommonTask {
 
 			if(!inferredFiles.isEmpty()) {
 				log.info("Inserting " + inferredFiles.size() + ", files into Big Data table");
+				//FIXME need to replace this load with live streaming into Bigquery
 				List<String> jobIds = this.cloud.loadLocalFilesIntoBigData(inferredFiles, table, false);
 				log.info("All inferred triples are inserted into Big Data table, completed jobIds: " + jobIds);
 				
