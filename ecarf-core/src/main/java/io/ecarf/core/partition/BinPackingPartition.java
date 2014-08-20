@@ -55,7 +55,7 @@ public class BinPackingPartition implements PartitionFunction {
 	}
 
 	@Override
-	public List<List<Item>> partition() {
+	public List<Partition> partition() {
 		// sort descending
 		Collections.sort(items, Collections.reverseOrder());
 
@@ -81,9 +81,9 @@ public class BinPackingPartition implements PartitionFunction {
 		//System.out.println("Number of required sets: " + finalNumBins);
 
 		// 
-		List<List<Item>> bins = new ArrayList<>();
+		List<Partition> bins = new ArrayList<>();
 		for(int i = 0; i < finalNumBins; i++) {
-			List<Item> bin = new ArrayList<Item>();
+			Partition bin = new Partition();
 			bins.add(bin);
 
 			// check if we have ran out of items
@@ -94,7 +94,7 @@ public class BinPackingPartition implements PartitionFunction {
 				bin.add(largestItem);
 				items.remove(largestItem);
 
-				Long currentSum = Utils.sum(bin);
+				Long currentSum = bin.sum();
 
 				if(currentSum < max) {
 					Long diff = max - currentSum;
@@ -109,12 +109,13 @@ public class BinPackingPartition implements PartitionFunction {
 								break;
 							} else {
 								// look for an even small number to fill the gap
-								diff = max - Utils.sum(bin);
+								diff = max - bin.sum();
 							}
 						} 
 					}
 				}
 			}
+			bin.calculateScale();
 		}
 
 		//add anything that is remaining to the last set

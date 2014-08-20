@@ -24,6 +24,7 @@ import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.partition.Item;
+import io.ecarf.core.partition.Partition;
 import io.ecarf.core.partition.PartitionFunction;
 import io.ecarf.core.partition.PartitionFunctionFactory;
 import io.ecarf.core.utils.Constants;
@@ -74,7 +75,7 @@ public class PartitionLoadTask extends CommonTask {
 		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
 				this.input.getNewBinPercentage(), 
 				this.input.getWeightPerNode());
-		List<List<Item>> bins = function.partition();
+		List<Partition> bins = function.partition();
 		
 		this.results = new Results();
 		results.setBins(bins);

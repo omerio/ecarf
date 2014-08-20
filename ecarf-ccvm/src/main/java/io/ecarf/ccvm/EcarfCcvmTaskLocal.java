@@ -34,24 +34,17 @@ import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.partition.Item;
+import io.ecarf.core.partition.Partition;
 import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -134,13 +127,13 @@ public class EcarfCcvmTaskLocal {
 		
 		results = task.getResults();
 		
-		List<List<Item>> bins = results.getBins();
+		List<Partition> bins = results.getBins();
 		
 		log.info("Total number of required evms is: " + bins.size());
 		
-		for(List<Item> bin: bins) {
-			log.info("Set: " + bin + ", Sum: " + Utils.sum(bin) + "\n");
-			for(Item item: bin) {
+		for(Partition bin: bins) {
+			log.info("Set: " + bin + ", Sum: " + bin.sum() + "\n");
+			for(Item item: bin.getItems()) {
 				System.out.println(item.getKey() + "," + item.getWeight());
 			}
 		}

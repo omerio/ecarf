@@ -42,6 +42,6 @@ public interface PartitionFunction {
 	 * partition the items based on the partitioning function used
 	 * @return
 	 */
-	public List<List<Item>> partition();
+	public List<Partition> partition();
 	
 }

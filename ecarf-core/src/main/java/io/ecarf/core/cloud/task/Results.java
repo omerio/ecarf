@@ -19,6 +19,7 @@
 package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.partition.Item;
+import io.ecarf.core.partition.Partition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ public class Results {
 	/**
 	 * Bins for task distribution
 	 */
-	private List<List<Item>> bins;
+	private List<Partition> bins;
 	
 	/**
 	 * A list of items that have a key and weight, could be terms/occurrences or files/sizes
@@ -69,11 +70,11 @@ public class Results {
 			this.itemScales = new HashMap<>();
 			
 			Long totalWeight = 0L;
-			for(List<Item> bin: bins) {
+			for(Partition bin: bins) {
 				//System.out.println("Set total: " + bin.size() + ", Set" + bin + ", Sum: " + Utils.sum(bin) + "\n");
 				List<String> files = new ArrayList<>();
 				Long binWeight = 0L;
-				for(Item item: bin) {
+				for(Item item: bin.getItems()) {
 					files.add(item.getKey());
 					binWeight += item.getWeight();
 					
@@ -104,7 +105,7 @@ public class Results {
 	/**
 	 * @return the bins
 	 */
-	public List<List<Item>> getBins() {
+	public List<Partition> getBins() {
 		return bins;
 	}
 
@@ -112,7 +113,7 @@ public class Results {
 	/**
 	 * @param bins the bins to set
 	 */
-	public Results setBins(List<List<Item>> bins) {
+	public Results setBins(List<Partition> bins) {
 		this.bins = bins;
 		return this;
 	}

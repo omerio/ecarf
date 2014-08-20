@@ -130,12 +130,12 @@ public class SetPartition {
 		}
 		
 		PartitionFunction function = PartitionFunctionFactory.createBinPacking(cItems, 0.1, null);
-		List<List<Item>> bins = function.partition();
+		List<Partition> bins = function.partition();
 		
 		//System.out.println(bins);
 
-		for(List<Item> bin: bins) {
-			System.out.println("Set: " + bin + ", Sum: " + Utils.sum(bin) + "\n");
+		for(Partition bin: bins) {
+			System.out.println("Set: " + bin + ", Sum: " + bin.sum() + "\n");
 		}
 		
 			

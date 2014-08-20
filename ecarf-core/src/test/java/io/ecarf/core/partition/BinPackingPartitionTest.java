@@ -67,12 +67,12 @@ public class BinPackingPartitionTest {
 	@Test
 	public void testPartitionLargestGTMax() {
 		PartitionFunction function = PartitionFunctionFactory.createBinPacking(this.createItems(), 0.0, 10L);
-		List<List<Item>> bins = function.partition();
+		List<Partition> bins = function.partition();
 		
-		for(List<Item> bin: bins) {
+		for(Partition bin: bins) {
 			System.out.println(bin);
 			
-			for(Item item: bin) {
+			for(Item item: bin.getItems()) {
 				//System.out.println(item);
 				assertEquals(SCALE1.get(item.getWeight()), item.getScale());
 			}
@@ -84,13 +84,13 @@ public class BinPackingPartitionTest {
 	@Test
 	public void testPartitionEqual() {
 		PartitionFunction function = PartitionFunctionFactory.createBinPacking(this.createItems(5L, 10), 0.0, 10L);
-		List<List<Item>> bins = function.partition();
+		List<Partition> bins = function.partition();
 		
 		Double point5 = new Double(0.5);
-		for(List<Item> bin: bins) {
+		for(Partition bin: bins) {
 			System.out.println(bin);
 			
-			for(Item item: bin) {
+			for(Item item: bin.getItems()) {
 				//System.out.println(item);
 				assertEquals(point5, item.getScale());
 			}
@@ -103,10 +103,10 @@ public class BinPackingPartitionTest {
 		bins = function.partition();
 		
 		Double one = new Double(1.0);
-		for(List<Item> bin: bins) {
+		for(Partition bin: bins) {
 			System.out.println(bin);
 			
-			for(Item item: bin) {
+			for(Item item: bin.getItems()) {
 				//System.out.println(item);
 				assertEquals(one, item.getScale());
 			}
