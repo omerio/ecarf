@@ -55,6 +55,8 @@ public class ProcessLoadTask extends CommonTask {
 	 */
 	@Override
 	public void run() throws IOException {
+		
+		log.info("START: processing files for bigquery import");
 
 		String bucket = metadata.getBucket();
 
@@ -110,7 +112,7 @@ public class ProcessLoadTask extends CommonTask {
 			this.cloud.uploadFileToCloudStorage(countStatsFile, bucket);
 		}
 
-		log.info("All files are processed and uploaded successfully");
+		log.info("FINISH: All files are processed and uploaded successfully");
 	}
 
 }
