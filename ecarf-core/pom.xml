@@ -14,7 +14,8 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.google.client.version>1.18.0-rc</project.google.client.version>
+		<google.client.version>1.18.0-rc</google.client.version>
+		<google.compute.api.version>v1-rev31-1.19.0</google.compute.api.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -69,7 +70,7 @@
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-compute</artifactId>
-			<version>v1-rev14-1.18.0-rc</version>
+			<version>${google.compute.api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.apis</groupId>
@@ -81,13 +82,13 @@
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
-			<version>${project.google.client.version}</version>
+			<version>${google.client.version}</version>
 		</dependency>
 		<!-- Servlet Dependency Only -->
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client-servlet</artifactId>
-			<version>${project.google.client.version}</version>
+			<version>${google.client.version}</version>
 		</dependency>
 		<!-- 
 		<dependency>
@@ -106,12 +107,12 @@
 		<dependency>
 			<groupId>com.google.http-client</groupId>
 			<artifactId>google-http-client-jackson2</artifactId>
-			<version>${project.google.client.version}</version>
+			<version>${google.client.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.oauth-client</groupId>
 			<artifactId>google-oauth-client-jetty</artifactId>
-			<version>${project.google.client.version}</version>
+			<version>${google.client.version}</version>
 		</dependency>
 		<!-- Commandline dependencies only -->
 		<dependency>

@@ -28,6 +28,7 @@ public class VMConfig {
 
 	private String instanceId;
 
+	// for Google, this is an example
 	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/zones/us-central1-a
 	private String zoneId;
 
@@ -41,6 +42,11 @@ public class VMConfig {
 	// for Google, this is an example
 	// https://www.googleapis.com/compute/v1/projects/ecarf-1000/global/networks/default
 	private String networkId;
+	
+	// for Google, this is an example
+	// https://www.googleapis.com/compute/v1/projects/<project-id>/zones/<zone>/diskTypes/pd-ssd
+	// https://www.googleapis.com/compute/v1/projects/<project-id>/zones/<zone>/diskTypes/pd-standard
+	private String diskType;
 	
 	private String startupScript;
 
@@ -136,15 +142,7 @@ public class VMConfig {
 		this.networkId = networkId;
 		return this;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
-		return ReflectionToStringBuilder.toString(this);
-	}
-
+	
 	/**
 	 * @return the startupScript
 	 */
@@ -155,8 +153,34 @@ public class VMConfig {
 	/**
 	 * @param startupScript the startupScript to set
 	 */
-	public void setStartupScript(String startupScript) {
+	public VMConfig setStartupScript(String startupScript) {
 		this.startupScript = startupScript;
+		return this;
 	}
+
+	/**
+	 * @return the diskType
+	 */
+	public String getDiskType() {
+		return diskType;
+	}
+
+	/**
+	 * @param diskType the diskType to set
+	 */
+	public VMConfig setDiskType(String diskType) {
+		this.diskType = diskType;
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this);
+	}
+
+	
 
 }

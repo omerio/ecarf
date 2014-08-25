@@ -52,6 +52,9 @@ public class Input {
 	//"f1-micro"
 	private String vmType;
 	
+	// i.e. pd-standard, pd-ssd
+	private String diskType;
+	
 	private String startupScript;
 	
 	//Config.getLongProperty(Constants.FILE_BIN_CAP_KEY, FileUtils.ONE_GB)
@@ -280,6 +283,21 @@ public class Input {
 	 */
 	public Input setZoneId(String zoneId) {
 		this.zoneId = zoneId;
+		return this;
+	}
+
+	/**
+	 * @return the diskType
+	 */
+	public String getDiskType() {
+		return diskType;
+	}
+
+	/**
+	 * @param diskType the diskType to set
+	 */
+	public Input setDiskType(String diskType) {
+		this.diskType = diskType;
 		return this;
 	}
 

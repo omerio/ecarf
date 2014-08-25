@@ -74,9 +74,15 @@ public class Job implements Serializable {
 	
 	private String vmType;
 	
+	private String diskType;
+	
 	private String platform;
 	
 	private boolean skipLoad;
+	
+	private boolean skipReason;
+	
+	private boolean shutdown;
 	
 	private List<String> evmAnalysisFiles;
 
@@ -207,6 +213,20 @@ public class Job implements Serializable {
 	}
 
 	/**
+	 * @return the skipReason
+	 */
+	public boolean isSkipReason() {
+		return skipReason;
+	}
+
+	/**
+	 * @param skipReason the skipReason to set
+	 */
+	public void setSkipReason(boolean skipReason) {
+		this.skipReason = skipReason;
+	}
+
+	/**
 	 * @return the evmAnalysisFiles
 	 */
 	public List<String> getEvmAnalysisFiles() {
@@ -218,6 +238,34 @@ public class Job implements Serializable {
 	 */
 	public void setEvmAnalysisFiles(List<String> evmAnalysisFiles) {
 		this.evmAnalysisFiles = evmAnalysisFiles;
+	}
+
+	/**
+	 * @return the diskType
+	 */
+	public String getDiskType() {
+		return diskType;
+	}
+
+	/**
+	 * @param diskType the diskType to set
+	 */
+	public void setDiskType(String diskType) {
+		this.diskType = diskType;
+	}
+
+	/**
+	 * @return the shutdown
+	 */
+	public boolean isShutdown() {
+		return shutdown;
+	}
+
+	/**
+	 * @param shutdown the shutdown to set
+	 */
+	public void setShutdown(boolean shutdown) {
+		this.shutdown = shutdown;
 	}
 
 	/**

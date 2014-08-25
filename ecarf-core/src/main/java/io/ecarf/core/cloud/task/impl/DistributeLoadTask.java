@@ -93,6 +93,7 @@ public class DistributeLoadTask extends CommonTask {
 					.setMetaData(metaData)
 					.setNetworkId(input.getNetworkId())
 					.setVmType(input.getVmType())
+					.setDiskType(input.getDiskType())
 					.setStartupScript(input.getStartupScript());
 				
 				this.results.getNodes().add(instanceId);

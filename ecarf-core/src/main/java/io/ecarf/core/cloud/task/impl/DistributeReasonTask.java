@@ -118,6 +118,7 @@ public class DistributeReasonTask extends CommonTask {
 						.setMetaData(metaData)
 						.setNetworkId(input.getNetworkId())
 						.setVmType(input.getVmType())
+						.setDiskType(input.getDiskType())
 						.setZoneId(zoneId)
 						.setStartupScript(input.getStartupScript());
 
