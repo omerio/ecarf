@@ -143,7 +143,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void testSaveBigDataToFile() throws IOException {
 		String query = "SELECT TOP( title, 20) as title, COUNT(*) as revision_count "
 		        + "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
@@ -200,7 +200,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void testCreateInstance() throws IOException {
 		
 		
@@ -209,11 +209,12 @@ public class GoogleCloudServiceTest {
 			//.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
 		
 		VMConfig conf = new VMConfig();
-		conf.setImageId("centos-cloud/global/images/centos-6-v20140408")
-			.setInstanceId("ecarf-evm-1")
+		conf.setImageId("centos-cloud/global/images/centos-6-v20140718")
+			.setInstanceId("ecarf-test-vm")
 			.setMetaData(metaData)
 			.setNetworkId("default")
-			.setVmType("f1-micro");
+			.setVmType("n1-standard-1")
+			.setDiskType("pd-ssd");
 		
 		boolean success = this.service.startInstance(Lists.newArrayList(conf), true);
 		

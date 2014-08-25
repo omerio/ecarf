@@ -775,15 +775,16 @@ public class GoogleCloudService implements CloudService {
 			AttachedDiskInitializeParams params = new AttachedDiskInitializeParams();
 			params.setDiskName(config.getInstanceId());
 			params.setSourceImage(RESOURCE_BASE_URL + config.getImageId());
+			//params.setDiskSizeGb(diskSizeGb)
 
 			disk.setAutoDelete(true).setBoot(true)
 			.setDeviceName(config.getInstanceId())
 			.setType(PERSISTENT)
 			.setInitializeParams(params);
 			
-			if(StringUtils.isNoneBlank(config.getDiskType())) {
+			if(StringUtils.isNotBlank(config.getDiskType())) {
 				// standard or SSD based disks
-				disk.setType(RESOURCE_BASE_URL + 
+				params.setDiskType(RESOURCE_BASE_URL + 
 					this.projectId + ZONES + zoneId + DISK_TYPES + config.getDiskType());
 			}
 
@@ -805,8 +806,10 @@ public class GoogleCloudService implements CloudService {
 			for(VMConfig config: configs) {
 				String status = InstanceStatus.PROVISIONING.toString();
 
+				int retries = 10;
+				
 				do {
-					int retries = 10;
+					
 					// sleep for 10 seconds before checking the vm status
 					Utils.block(Utils.getApiRecheckDelay());
 
