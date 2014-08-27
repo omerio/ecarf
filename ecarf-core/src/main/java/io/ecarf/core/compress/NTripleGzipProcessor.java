@@ -50,7 +50,7 @@ public class NTripleGzipProcessor {
 	
 	private final static Logger log = Logger.getLogger(NTripleGzipProcessor.class.getName());
 	
-	private static final int BUF_SIZE = 1024 * 1024 * 50;
+	private static final int BUF_SIZE = 1024 * 1024 * 100;
 	
 	private String inputFile;
 	
