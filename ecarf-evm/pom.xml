@@ -49,7 +49,7 @@
 					<arguments>
 						<argument>-Xms4g</argument>
                         <argument>-Xmx4g</argument>
-                        <argument>-Djava.util.logging.config.file=logging.properties</argument>
+                        <argument>-Djava.util.logging.config.file=${basedir}/src/main/resources/logging.properties</argument>
 						<argument>-classpath</argument>
 						<!-- automatically creates the classpath using all project dependencies, 
 							also adding the project build directory -->

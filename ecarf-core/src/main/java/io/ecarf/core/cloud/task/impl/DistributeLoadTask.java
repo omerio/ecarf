@@ -112,7 +112,21 @@ public class DistributeLoadTask extends CommonTask {
 					
 					do {
 						Utils.block(Utils.getApiRecheckDelay());
-						
+						// TODO cater for this error
+						/*
+						 * SEVERE: Failed to run CCVM
+							com.google.api.client.googleapis.json.GoogleJsonResponseException: 503 Service Unavailable
+							{
+							  "code" : 503,
+							  "errors" : [ {
+							    "domain" : "global",
+							    "message" : "Backend Error",
+							    "reason" : "backendError"
+							  } ],
+							  "message" : "Backend Error"
+							}
+
+						 */
 						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
 						ready = VMStatus.READY.equals(metaData.getVMStatus());
 						// TODO status can be error ERROR
