@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.types.TaskType;
+import io.ecarf.core.triple.Triple;
+import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
@@ -37,6 +39,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
@@ -123,7 +126,7 @@ public class GoogleCloudServiceTest {
 	public void testRunBigDataQuery() throws IOException {
 		 String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
 			        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
-				 "select subject from swetodlp.swetodlp_triple where " +
+				 "select subject from ontologies.swetodblp where " +
 				 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
 		 
 		this.service.runBigDataQuery(query, System.out);
@@ -159,6 +162,19 @@ public class GoogleCloudServiceTest {
 		System.err.println(rows);
 		
 		
+	}
+	
+	/**
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testStreamDataIntoBigQuery() throws IOException {
+		//gutenberg_links.nt
+		// load the triples from a file
+		Set<Triple> triples = TripleUtils.loadTriples("/Users/omerio/Documents/phd/ecarf/ecarf-core/src/test/resources/gutenberg_links.nt");
+		System.out.println("Number of triples: " + triples.size());
+		this.service.streamTriplesIntoBigData(triples, "ontologies.test");
 	}
 	
 	@Test
@@ -200,7 +216,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void testCreateInstance() throws IOException {
 		
 		

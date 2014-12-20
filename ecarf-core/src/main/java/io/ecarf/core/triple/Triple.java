@@ -3,6 +3,7 @@
  */
 package io.ecarf.core.triple;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -308,6 +309,18 @@ public class Triple {
 		 return new StringBuilder(StringEscapeUtils.escapeCsv(this.subject)).append(',')
 					.append(StringEscapeUtils.escapeCsv(this.predicate)).append(',')
 					.append(StringEscapeUtils.escapeCsv(this.object)).toString();
+	}
+	
+	/**
+	 * Convert to a hashmap, easy to serialize as json
+	 * @return
+	 */
+	public Map<String, Object> toMap() {
+		Map<String, Object> map = new HashMap<>();
+		map.put(TermType.subject, this.subject);
+		map.put(TermType.predicate, this.predicate);
+		map.put(TermType.object, this.object);
+		return map;
 	}
 
 }

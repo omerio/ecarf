@@ -18,7 +18,37 @@
  */
 package io.ecarf.core.cloud.impl.google;
 
-import static io.ecarf.core.cloud.impl.google.GoogleMetaData.*;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ACCESS_TOKEN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ATTRIBUTES_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CLOUD_STORAGE_PREFIX;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_IF_NEEDED;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.CREATE_NEVER;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DATASTORE_SCOPE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DEFAULT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DISK_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.DONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EMAIL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXPIRES_IN;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.EXT_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.HOSTNAME;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.INSTANCE_ALL_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MACHINE_TYPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.METADATA_SERVER_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.MIGRATE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NETWORK;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NOT_FOUND;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ONE_TO_ONE_NAT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PERSISTENT;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.PROJECT_ID_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.RESOURCE_BASE_URL;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SCOPES;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.SERVICE_ACCOUNTS;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.TOKEN_PATH;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WAIT_FOR_CHANGE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.WRITE_APPEND;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONE;
+import static io.ecarf.core.cloud.impl.google.GoogleMetaData.ZONES;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -28,6 +58,8 @@ import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
 import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.triple.Triple;
+import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.FutureTask;
@@ -47,11 +79,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +122,8 @@ import com.google.api.services.bigquery.model.JobStatistics3;
 import com.google.api.services.bigquery.model.QueryRequest;
 import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.TableCell;
+import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
+import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.compute.Compute;
@@ -1197,6 +1233,66 @@ public class GoogleCloudService implements CloudService {
 		
 	}
 
+	/**
+	 * Stream local files into big query
+	 * @param files
+	 * @param table
+	 * @throws IOException
+	 */
+	@Override
+	public void streamLocalFilesIntoBigData(List<String> files, String table) throws IOException {
+		Set<Triple> triples = null;
+		for(String file: files) {
+			triples = TripleUtils.loadTriples(file);
+			
+			if(!triples.isEmpty()) {
+				this.streamTriplesIntoBigData(triples, table);
+			}
+		}
+	}
+	
+	/**
+	 * Stream triple data into big query
+	 * @param files
+	 * @param table
+	 * @param createTable
+	 * @throws IOException
+	 */
+	@Override
+	public void streamTriplesIntoBigData(Collection<Triple> triples, String table) throws IOException {
+
+
+        String [] names = StringUtils.split(table, '.');
+
+		String datasetId = names[0];
+		String tableId = names[1];
+		//String timestamp = Long.toString((new Date()).getTime());
+		
+		List<TableDataInsertAllRequest.Rows>  rowList = new ArrayList<>();
+		
+		//TableRow row;
+		TableDataInsertAllRequest.Rows rows;
+
+		for(Triple triple: triples) {
+			//row = new TableRow();
+			//row.set
+			rows = new TableDataInsertAllRequest.Rows();
+			//rows.setInsertId(timestamp);
+			rows.setJson(triple.toMap());
+			rowList.add(rows);
+		}
+		
+		
+		TableDataInsertAllRequest content = new TableDataInsertAllRequest().setRows(rowList);
+		TableDataInsertAllResponse response =
+				this.getBigquery().tabledata().insertAll(
+						this.projectId, datasetId, tableId, content)
+						.setOauthToken(this.getOAuthToken()).execute();
+		
+		log.info(response.toPrettyString());
+		
+		// TODO return errors
+	}
 
 	/**
 	 * Creates an asynchronous Query Job for a particular query on a dataset

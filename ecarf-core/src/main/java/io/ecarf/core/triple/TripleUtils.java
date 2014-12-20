@@ -83,6 +83,50 @@ public class TripleUtils {
 
 		return schemaTriples;
 	}
+	
+	/**
+	 * Load triples from a file
+	 * @param schemaFile
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static Set<Triple> loadTriples(String schemaFile) throws FileNotFoundException, IOException {
+
+		Set<Triple> triples = new HashSet<>();
+
+		try (BufferedReader r = new BufferedReader(new FileReader(schemaFile))) {
+
+			String[] terms;
+			NxParser nxp = new NxParser(r);
+
+			while (nxp.hasNext())  {
+
+				Node[] ns = nxp.next();
+
+				//We are only interested in triples, no quads
+				if (ns.length == 3) {
+					terms = new String [3];
+
+					for (int i = 0; i < ns.length; i++)  {
+						terms[i] = NxUtil.unescape(ns[i].toN3());
+					}
+
+					String subject = terms[0];
+					String predicate = terms[1];
+					String object = terms[2];
+
+					triples.add(new Triple(subject, predicate, object));
+
+				} else {
+					Log.warn("Ignoring line: " + ns);
+				}
+			}
+
+		}
+
+		return triples;
+	}
 
 	/**
 	 * 

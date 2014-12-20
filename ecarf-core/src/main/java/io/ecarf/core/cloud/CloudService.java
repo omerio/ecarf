@@ -20,10 +20,12 @@ package io.ecarf.core.cloud;
 
 import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -211,6 +213,22 @@ public interface CloudService {
 	 * @throws IOException
 	 */
 	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException;
+
+	/**
+	 * Stream local files into big query
+	 * @param files
+	 * @param table
+	 * @throws IOException
+	 */
+	public void streamLocalFilesIntoBigData(List<String> files, String table) throws IOException;
+
+	/**
+	 * Stream triple data into big query
+	 * @param triples
+	 * @param table
+	 * @throws IOException
+	 */
+	public void streamTriplesIntoBigData(Collection<Triple> triples, String table) throws IOException;
 
 	
 

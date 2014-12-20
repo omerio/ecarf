@@ -27,7 +27,7 @@ public class TestBigqueryStreaming {
 	@Test
 	public void test() throws IOException {
 		String projectId = "";
-		String datasetId = "";
+		String datasetId = "ontologies";
 		String tableId = "";
 		String timestamp = Long.toString((new Date()).getTime());
 		
