@@ -19,8 +19,8 @@
 		<google.compute.api.version>v1-rev31-1.19.0</google.compute.api.version>
 		<!-- v2-rev141-1.18.0-rc -->
 		<google.bigquery.api.version>v2-rev183-1.19.0</google.bigquery.api.version>
-		<!-- v1-rev23-1.19.0 -->
-		<google.storage.api.version>v1beta2-rev42-1.18.0-rc</google.storage.api.version>
+		<!-- v1beta2-rev42-1.18.0-rc-->
+		<google.storage.api.version>v1-rev23-1.19.0</google.storage.api.version>
 	</properties>
 	<repositories>
 		<repository>

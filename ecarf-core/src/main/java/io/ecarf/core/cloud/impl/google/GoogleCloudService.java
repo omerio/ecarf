@@ -357,11 +357,11 @@ public class GoogleCloudService implements CloudService {
 	 */
 	private Storage getStorage() throws IOException {
 		if(this.storage == null) {
-			this.storage = new  Storage.Builder(getHttpTransport(), JSON_FACTORY, new HttpRequestInitializer() {
+			this.storage = new  Storage.Builder(getHttpTransport(), JSON_FACTORY, null/*, new HttpRequestInitializer() {
 				public void initialize(HttpRequest request) {
 					request.setUnsuccessfulResponseHandler(new RedirectHandler());
 				}
-			})
+			}*/)
 			.setApplicationName(Constants.APP_NAME).build();
 		}
 		return this.storage;
@@ -1188,6 +1188,9 @@ public class GoogleCloudService implements CloudService {
         JACKSON.createJsonParser(new FileInputStream("schema.json"))
         .parseArrayAndClose(schema.getFields(), TableFieldSchema.class, null);
         schema.setFactory(JACKSON);*/
+		
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
 
         String [] names = StringUtils.split(table, '.');
 		TableReference tableRef = (new TableReference())
@@ -1229,6 +1232,9 @@ public class GoogleCloudService implements CloudService {
         	// TODO add retry support
         	completedIds.add(this.checkBigQueryJobResults(jobId, false, false));
         }
+        
+        log.info("Uploaded " + files.size() + " files into bigquery in " + stopwatch );
+        
 		return completedIds;
 		
 	}
@@ -1260,7 +1266,9 @@ public class GoogleCloudService implements CloudService {
 	 */
 	@Override
 	public void streamTriplesIntoBigData(Collection<Triple> triples, String table) throws IOException {
-
+		
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
 
         String [] names = StringUtils.split(table, '.');
 
@@ -1282,7 +1290,49 @@ public class GoogleCloudService implements CloudService {
 			rowList.add(rows);
 		}
 		
+		int maxBigQueryRequestSize = 7000;
 		
+		if(rowList.size() > maxBigQueryRequestSize) {
+			
+			int itr = (int) Math.ceil(rowList.size() * 1.0 / maxBigQueryRequestSize);
+			
+			for(int i = 1; i <= itr; i++) {
+				
+				int index;
+				
+				if(i == itr) {
+					// last iteration
+					index = rowList.size();
+					
+				} else {
+					index = maxBigQueryRequestSize;
+				}
+				
+				List<TableDataInsertAllRequest.Rows> requestRows = rowList.subList(0, index);
+				this.streamRowsIntoBigQuery(datasetId, tableId, requestRows);
+				requestRows.clear();
+			}
+			
+		} else {
+			this.streamRowsIntoBigQuery(datasetId, tableId, rowList);
+		}
+		
+		stopwatch.stop();
+		
+		log.info("Streamed " + triples.size() + " triples into bigquery in " + stopwatch );
+		
+		
+		// TODO return errors
+	}
+	
+	/**
+	 * Stream a list of rows into bigquery
+	 * @param datasetId
+	 * @param tableId
+	 * @param rowList
+	 * @throws IOException
+	 */
+	private void streamRowsIntoBigQuery(String datasetId, String tableId, List<TableDataInsertAllRequest.Rows>  rowList) throws IOException {
 		TableDataInsertAllRequest content = new TableDataInsertAllRequest().setRows(rowList);
 		TableDataInsertAllResponse response =
 				this.getBigquery().tabledata().insertAll(
@@ -1290,8 +1340,6 @@ public class GoogleCloudService implements CloudService {
 						.setOauthToken(this.getOAuthToken()).execute();
 		
 		log.info(response.toPrettyString());
-		
-		// TODO return errors
 	}
 
 	/**
