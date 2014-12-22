@@ -26,6 +26,10 @@ import java.util.List;
 
 /**
  * A variation of the Bin Packing algorithm
+ * 1- First fit
+ * 2- Ordered first fit (First fit decreasing)
+ * 3- Full Bin
+ * 
  * @see http://mathworld.wolfram.com/Bin-PackingProblem.html
  * @author Omer Dawelbeit (omerio)
  *
@@ -68,7 +72,7 @@ public class BinPackingPartition implements PartitionFunction {
 		long sum = Utils.sum(items, max);
 
 		//System.out.println("Total sum is: " + sum);
-
+		// lower bound number of bin
 		double numBins = (sum / (float) max);
 		double numWholeBins = Math.floor(numBins);
 		int finalNumBins = (int) numWholeBins;
@@ -80,7 +84,7 @@ public class BinPackingPartition implements PartitionFunction {
 		//System.out.println("Number of required sets: " + (sum / (float) max));
 		//System.out.println("Number of required sets: " + finalNumBins);
 
-		// 
+		// Mix of First Fit Decreasing (FFD) strategy and Full Bin strategy
 		List<Partition> bins = new ArrayList<>();
 		for(int i = 0; i < finalNumBins; i++) {
 			Partition bin = new Partition();

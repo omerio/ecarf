@@ -53,13 +53,13 @@ public class TaskFactory {
 
 			case REASON:
 				// reasoning with asynchronous file upload
-				task = new DoReasonTask(metadata, cloud);
-				break;
-				
-			case REASON1:
-				// reasoning with streaming
 				task = new DoReasonTask1(metadata, cloud);
 				break;
+				
+			/*case REASON1:
+				// reasoning with streaming
+				task = new DoReasonTask1(metadata, cloud);
+				break;*/
 
 			case COUNT:
 				task = new SchemaTermCountTask(metadata, cloud);
