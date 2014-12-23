@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.cloud.task;
 
+import io.ecarf.core.cloud.types.DataLoadType;
 import io.ecarf.core.partition.Item;
 
 import java.util.List;
@@ -71,7 +72,7 @@ public class Input {
 	private String zoneId;
 	
 	// stream the inferred data into big data service
-	private boolean streamData;
+	private DataLoadType dataLoad;
 	
 	/**
 	 * VM names
@@ -305,17 +306,17 @@ public class Input {
 	}
 
 	/**
-	 * @return the streamData
+	 * @return the dataLoad
 	 */
-	public boolean isStreamData() {
-		return streamData;
+	public DataLoadType getDataLoad() {
+		return dataLoad;
 	}
 
 	/**
-	 * @param streamData the streamData to set
+	 * @param dataLoad the dataLoad to set
 	 */
-	public Input setStreamData(boolean streamData) {
-		this.streamData = streamData;
+	public Input setDataLoad(DataLoadType dataLoad) {
+		this.dataLoad = dataLoad;
 		return this;
 	}
 

@@ -189,7 +189,7 @@ public class EcarfCcvmTask {
 						.setVmType(this.job.getVmType())
 						.setDiskType(this.job.getDiskType())
 						// do we stream the inferred data or not
-						.setStreamData(this.job.isStreamData());
+						.setDataLoad(this.job.getDataLoad());
 
 				task = new DistributeReasonTask(null, service);
 				task.setInput(input);

@@ -18,6 +18,7 @@
  */
 package io.ecarf.ccvm.entities;
 
+import io.ecarf.core.cloud.types.DataLoadType;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
@@ -85,7 +86,7 @@ public class Job implements Serializable {
 	private boolean shutdown;
 	
 	// stream the inferred data into big data
-	private boolean streamData;
+	private DataLoadType dataLoad;
 	
 	private List<String> evmAnalysisFiles;
 
@@ -270,19 +271,20 @@ public class Job implements Serializable {
 	public void setShutdown(boolean shutdown) {
 		this.shutdown = shutdown;
 	}
-	
+
+
 	/**
-	 * @return the streamData
+	 * @return the dataLoad
 	 */
-	public boolean isStreamData() {
-		return streamData;
+	public DataLoadType getDataLoad() {
+		return dataLoad;
 	}
 
 	/**
-	 * @param streamData the streamData to set
+	 * @param dataLoad the dataLoad to set
 	 */
-	public void setStreamData(boolean streamData) {
-		this.streamData = streamData;
+	public void setDataLoad(DataLoadType dataLoad) {
+		this.dataLoad = dataLoad;
 	}
 
 	/**

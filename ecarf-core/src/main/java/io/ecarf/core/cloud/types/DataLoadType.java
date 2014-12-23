@@ -19,16 +19,23 @@
 package io.ecarf.core.cloud.types;
 
 /**
+ * 
+ * The various ways we can upload data into big data services
+ * 
  * @author Omer Dawelbeit (omerio)
  *
  */
-public enum TaskType {
-	
-	LOAD, 
-	REASON, // direct upload into big data
-	REASON1, // stream into big data
-	REASON2, // upload via cloud storage
-	COUNT, 
-	UPLOAD_LOGS;
-
+public enum DataLoadType {
+	/**
+	 * Upload the data directly
+	 */
+	DIRECT, 
+	/**
+	 * Stream the data
+	 */
+	STREAM, 
+	/**
+	 * Upload via cloud storage
+	 */
+	CLOUD_STORAGE;
 }

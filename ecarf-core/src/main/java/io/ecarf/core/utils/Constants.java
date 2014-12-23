@@ -65,6 +65,7 @@ public class Constants {
 	
 	public static final String EVM_EXCEPTION = "EVM Exception: ";
 	
+	public static final int GZIP_BUF_SIZE = 1024 * 1024 * 100;
 	
 	// config keys
 	public static final String TERM_NEW_BIN_KEY = "ecarf.io.term.partition.new.bin.percentage";

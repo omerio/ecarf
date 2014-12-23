@@ -50,8 +50,6 @@ public class NTripleGzipProcessor {
 	
 	private final static Logger log = Logger.getLogger(NTripleGzipProcessor.class.getName());
 	
-	private static final int BUF_SIZE = 1024 * 1024 * 100;
-	
 	private String inputFile;
 	
 	private String outputFile;
@@ -86,7 +84,7 @@ public class NTripleGzipProcessor {
 			
 			// gzip
 			if(GzipUtils.isCompressedFilename(this.inputFile)) {
-				deflated = new GZIPInputStream(fileIn, BUF_SIZE);
+				deflated = new GZIPInputStream(fileIn, Constants.GZIP_BUF_SIZE);
 			
 			} 
 			// bz2
@@ -95,7 +93,7 @@ public class NTripleGzipProcessor {
 			}
 
 			try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
-					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), BUF_SIZE));) {
+					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE));) {
 				String outLine;
 				String[] terms;
 				

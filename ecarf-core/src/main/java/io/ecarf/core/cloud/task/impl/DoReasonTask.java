@@ -180,8 +180,9 @@ public class DoReasonTask extends CommonTask {
 					String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
 
 					// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-					try (BufferedReader r = new BufferedReader(new FileReader(term.getFilename()));
-							PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)))) {
+					try (BufferedReader r = new BufferedReader(new FileReader(term.getFilename()), Constants.GZIP_BUF_SIZE);
+							PrintWriter writer = 
+									new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile), Constants.GZIP_BUF_SIZE))) {
 
 						Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
 						

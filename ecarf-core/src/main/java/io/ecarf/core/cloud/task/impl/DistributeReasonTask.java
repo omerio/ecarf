@@ -193,17 +193,26 @@ public class DistributeReasonTask extends CommonTask {
 		} else {
 			metaData.addValue(VMMetaData.ECARF_TERMS, terms);
 		}
-		
-		TaskType task = null;
-		
-		if(this.input.isStreamData()) {
+
+		TaskType task;
+
+		switch(this.input.getDataLoad()) {
+		case CLOUD_STORAGE:
+			task = TaskType.REASON2;
+			break;
+
+		case STREAM:
 			task = TaskType.REASON1;
-			log.info("*************************************** Streaming inferred triples into big data service ***************************************");
-			
-		} else {
+			break;
+
+		case DIRECT:
+		default:
 			task = TaskType.REASON;
-			log.info("*************************************** Asynchronously loading inferred triples into big data service ***************************************");
+			break;
+
 		}
+		
+		log.info("Reasoning task is: " + task);
 		
 		metaData.addValue(VMMetaData.ECARF_TASK, task.toString())
 			.addValue(VMMetaData.ECARF_BUCKET, this.input.getBucket())
