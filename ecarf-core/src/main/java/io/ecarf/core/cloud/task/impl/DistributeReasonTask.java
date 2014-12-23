@@ -194,7 +194,18 @@ public class DistributeReasonTask extends CommonTask {
 			metaData.addValue(VMMetaData.ECARF_TERMS, terms);
 		}
 		
-		metaData.addValue(VMMetaData.ECARF_TASK, TaskType.REASON.toString())
+		TaskType task = null;
+		
+		if(this.input.isStreamData()) {
+			task = TaskType.REASON1;
+			log.info("*************************************** Streaming inferred triples into big data service ***************************************");
+			
+		} else {
+			task = TaskType.REASON;
+			log.info("*************************************** Asynchronously loading inferred triples into big data service ***************************************");
+		}
+		
+		metaData.addValue(VMMetaData.ECARF_TASK, task.toString())
 			.addValue(VMMetaData.ECARF_BUCKET, this.input.getBucket())
 			.addValue(VMMetaData.ECARF_TABLE, this.input.getTable());
 		// do we have a schema terms file

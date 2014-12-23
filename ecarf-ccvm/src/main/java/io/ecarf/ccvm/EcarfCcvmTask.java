@@ -188,7 +188,8 @@ public class EcarfCcvmTask {
 						.setZoneId(Config.getProperty(ZONE_KEY))
 						.setVmType(this.job.getVmType())
 						.setDiskType(this.job.getDiskType())
-						;
+						// do we stream the inferred data or not
+						.setStreamData(this.job.isStreamData());
 
 				task = new DistributeReasonTask(null, service);
 				task.setInput(input);

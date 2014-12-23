@@ -53,13 +53,16 @@ public class TaskFactory {
 
 			case REASON:
 				// reasoning with asynchronous file upload
+				task = new DoReasonTask(metadata, cloud);
+				break;
+				
+			case REASON1:
+				// reasoning with streaming
 				task = new DoReasonTask1(metadata, cloud);
 				break;
 				
-			/*case REASON1:
-				// reasoning with streaming
-				task = new DoReasonTask1(metadata, cloud);
-				break;*/
+			// TODO third reason option to load files into cloud storage first then load them into big query from there
+			// may be faster
 
 			case COUNT:
 				task = new SchemaTermCountTask(metadata, cloud);

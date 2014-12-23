@@ -70,6 +70,9 @@ public class Input {
 	
 	private String zoneId;
 	
+	// stream the inferred data into big data service
+	private boolean streamData;
+	
 	/**
 	 * VM names
 	 */
@@ -298,6 +301,21 @@ public class Input {
 	 */
 	public Input setDiskType(String diskType) {
 		this.diskType = diskType;
+		return this;
+	}
+
+	/**
+	 * @return the streamData
+	 */
+	public boolean isStreamData() {
+		return streamData;
+	}
+
+	/**
+	 * @param streamData the streamData to set
+	 */
+	public Input setStreamData(boolean streamData) {
+		this.streamData = streamData;
 		return this;
 	}
 

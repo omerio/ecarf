@@ -84,6 +84,9 @@ public class Job implements Serializable {
 	
 	private boolean shutdown;
 	
+	// stream the inferred data into big data
+	private boolean streamData;
+	
 	private List<String> evmAnalysisFiles;
 
 	/**
@@ -267,6 +270,20 @@ public class Job implements Serializable {
 	public void setShutdown(boolean shutdown) {
 		this.shutdown = shutdown;
 	}
+	
+	/**
+	 * @return the streamData
+	 */
+	public boolean isStreamData() {
+		return streamData;
+	}
+
+	/**
+	 * @param streamData the streamData to set
+	 */
+	public void setStreamData(boolean streamData) {
+		this.streamData = streamData;
+	}
 
 	/**
 	 * Convert to JSON
@@ -308,4 +325,6 @@ public class Job implements Serializable {
 		
 		return job;
 	}
+
+	
 }
