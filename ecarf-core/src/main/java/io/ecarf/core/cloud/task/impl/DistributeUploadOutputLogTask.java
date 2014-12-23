@@ -28,6 +28,7 @@ import io.ecarf.core.utils.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.google.api.client.util.Lists;
 
@@ -69,6 +70,8 @@ public class DistributeUploadOutputLogTask extends CommonTask {
 				this.cloud.updateInstanceMetadata(metaData, zoneId, instanceId, true);
 			}
 
+			IOException nodeException = null;
+			
 			// wait for the VMs to finish their loading
 			for(String instanceId: activeNodes) {	
 				boolean ready = false;
@@ -80,13 +83,17 @@ public class DistributeUploadOutputLogTask extends CommonTask {
 					ready = VMStatus.READY.equals(metaData.getVMStatus());
 					// TODO status can be error ERROR
 					if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
-						// for now we are throwing an exception, in the future need to return a status 
-						// so tasks can be retried
-						throw Utils.exceptionFromEcarfError(metaData, instanceId);
-
+						nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
+						log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
 					}
 
 				} while (!ready);
+			}
+			
+			// if any of the nodes has failed then throw an exception
+			if(nodeException != null) {
+				// for now we are throwing an exception, in the future need to return a status so tasks can be retried
+				throw nodeException;
 			}
 
 		}

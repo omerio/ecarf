@@ -106,6 +106,9 @@ public class DistributeLoadTask extends CommonTask {
 			boolean success = this.cloud.startInstance(vms, true);
 
 			if(success) {
+								
+				IOException nodeException = null;
+				
 				// wait for the VMs to finish their loading
 				for(String instanceId: this.results.getNodes()) {	
 					boolean ready = false;
@@ -129,14 +132,20 @@ public class DistributeLoadTask extends CommonTask {
 						 */
 						VMMetaData metaData = this.cloud.getEcarfMetaData(instanceId, null);
 						ready = VMStatus.READY.equals(metaData.getVMStatus());
-						// TODO status can be error ERROR
-						if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
-							// for now we are throwing an exception, in the future need to return a status so tasks can be retried
-							throw Utils.exceptionFromEcarfError(metaData, instanceId);
+						// check for ERROR status
+						if(VMStatus.ERROR.equals(metaData.getVMStatus())) {		
+							nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
+							log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
 							
 						}
 						
 					} while (!ready);
+				}
+				
+				// if any of the nodes has failed then throw an exception
+				if(nodeException != null) {
+					// for now we are throwing an exception, in the future need to return a status so tasks can be retried
+					throw nodeException;
 				}
 				
 				// all done, now get the results from cloud storage and combine the schema terms stats

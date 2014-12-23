@@ -20,6 +20,7 @@ package io.ecarf.core.utils;
 
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.exceptions.NodeException;
 import io.ecarf.core.partition.Item;
 
 import java.io.BufferedInputStream;
@@ -370,7 +371,7 @@ public class Utils {
 			log.log(Level.WARNING, "failed to load exception class from evm");
 			cause = new IOException(message);
 		}
-		return new IOException(Constants.EVM_EXCEPTION + instanceId, cause);
+		return new NodeException(Constants.EVM_EXCEPTION + instanceId, cause, instanceId);
 	}
 	
 	
