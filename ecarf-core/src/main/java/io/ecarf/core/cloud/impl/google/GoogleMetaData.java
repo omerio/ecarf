@@ -83,6 +83,10 @@ public class GoogleMetaData {
 	
 	public static final String TYPE_STRING = "STRING";
 	
+	// API error reasons
+	public static final String RATE_LIMIT_EXCEEDED = "rateLimitExceeded";
+	public static final String QUOTA_EXCEEDED = "quotaExceeded";
+	
 	
 	/**
 	 * BigQuery table schema

@@ -61,6 +61,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Callback;
+import io.ecarf.core.utils.Config;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.FutureTask;
 import io.ecarf.core.utils.Utils;
@@ -101,13 +102,13 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.BackOff;
 import com.google.api.client.util.Data;
+import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.model.ErrorProto;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
@@ -124,6 +125,7 @@ import com.google.api.services.bigquery.model.QueryResponse;
 import com.google.api.services.bigquery.model.TableCell;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
+import com.google.api.services.bigquery.model.TableDataInsertAllResponse.InsertErrors;
 import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.compute.Compute;
@@ -1290,7 +1292,8 @@ public class GoogleCloudService implements CloudService {
 			rowList.add(rows);
 		}
 		
-		int maxBigQueryRequestSize = 7000;
+		int maxBigQueryRequestSize = Config.getIntegerProperty("ecarf.io.google.bigquery.max.rows.per.request", 7000);
+		int delay = Config.getIntegerProperty("ecarf.io.google.bigquery.stream.delay.seconds", 2);
 		
 		if(rowList.size() > maxBigQueryRequestSize) {
 			
@@ -1309,37 +1312,125 @@ public class GoogleCloudService implements CloudService {
 				}
 				
 				List<TableDataInsertAllRequest.Rows> requestRows = rowList.subList(0, index);
-				this.streamRowsIntoBigQuery(datasetId, tableId, requestRows);
+				this.streamRowsIntoBigQuery(datasetId, tableId, requestRows, 0);
 				requestRows.clear();
+				
+				//block for a short moment to avoid rateLimitExceeded errors
+				Utils.block(delay);
+				
 			}
 			
 		} else {
-			this.streamRowsIntoBigQuery(datasetId, tableId, rowList);
+			this.streamRowsIntoBigQuery(datasetId, tableId, rowList, 0);
 		}
 		
 		stopwatch.stop();
 		
 		log.info("Streamed " + triples.size() + " triples into bigquery in " + stopwatch );
 		
-		
-		// TODO return errors
 	}
 	
 	/**
-	 * Stream a list of rows into bigquery
+	 * Stream a list of rows into bigquery. Retries 3 times if the insert of some rows has failed, i.e. Bigquery returns
+	 * an insert error
+	 * 
+	 *  {
+		  "insertErrors" : [ {
+		    "errors" : [ {
+		      "reason" : "timeout"
+		    } ],
+		    "index" : 8
+		  }],
+  		  "kind" : "bigquery#tableDataInsertAllResponse"
+  		}
+	 *	  
 	 * @param datasetId
 	 * @param tableId
 	 * @param rowList
 	 * @throws IOException
 	 */
-	private void streamRowsIntoBigQuery(String datasetId, String tableId, List<TableDataInsertAllRequest.Rows>  rowList) throws IOException {
+	private void streamRowsIntoBigQuery(String datasetId, String tableId, 
+			List<TableDataInsertAllRequest.Rows>  rowList, int retries) throws IOException {
+		
+		/*
+		 * ExponentialBackOff backoff = ExponentialBackOff.builder()
+	    .setInitialIntervalMillis(500)
+	    .setMaxElapsedTimeMillis(900000)
+	    .setMaxIntervalMillis(6000)
+	    .setMultiplier(1.5)
+	    .setRandomizationFactor(0.5)
+	    .build();
+		 */
+		
 		TableDataInsertAllRequest content = new TableDataInsertAllRequest().setRows(rowList);
-		TableDataInsertAllResponse response =
-				this.getBigquery().tabledata().insertAll(
+		
+		boolean retrying = false;
+		ExponentialBackOff backOff = new ExponentialBackOff();
+		
+		TableDataInsertAllResponse response = null;
+		// keep trying and exponentially backoff as needed
+		do {
+			try {
+
+				response = this.getBigquery().tabledata().insertAll(
 						this.projectId, datasetId, tableId, content)
 						.setOauthToken(this.getOAuthToken()).execute();
+
+				log.info(response.toPrettyString());
+				retrying = false;
+
+			} catch(GoogleJsonResponseException e) {
+				log.log(Level.SEVERE, "Failed to stream data", e);
+
+				GoogleJsonError error = e.getDetails();	
+				
+				// check for rate limit errors
+				if((error != null) && (error.getErrors() != null) && !error.getErrors().isEmpty() &&
+						GoogleMetaData.RATE_LIMIT_EXCEEDED.equals(error.getErrors().get(0).getReason())) {
+					
+					long backOffTime = backOff.nextBackOffMillis();
+					
+					if (backOffTime == BackOff.STOP) {
+						// we are not retrying anymore
+						log.warning("Failed after " + backOff.getElapsedTimeMillis() / 1000 + " seconds of elapsed time");
+						throw e;
+						
+					} else {
+						int period = (int) Math.ceil(backOffTime / 1000);
+						log.info("Backing off for " + period + " seconds.");
+						Utils.block(period);
+						retrying = true;
+					}
+					
+				} else {
+					throw e;
+				}
+			}
+			
+		} while(retrying);
 		
-		log.info(response.toPrettyString());
+		// check for failed rows
+		if((response != null) && (response.getInsertErrors() != null) && !response.getInsertErrors().isEmpty()) {
+			List<TableDataInsertAllRequest.Rows> failedList = new ArrayList<>();
+			
+			List<InsertErrors> insertErrors = response.getInsertErrors();
+			
+			for(InsertErrors error: insertErrors) {
+				failedList.add(rowList.get(error.getIndex().intValue()));
+			}
+			
+			// retry again for the failed list
+			if(retries > Config.getIntegerProperty("ecarf.io.google.bigquery.insert.errors.retries", 3)) {
+				
+				log.warning("Failed to stream some rows into bigquery after 3 retries");
+				throw new IOException("Failed to stream some rows into bigquery after 3 retries");
+				
+			} else {
+				retries++;
+				log.warning(failedList.size() + " rows failed to be inserted retrying again. Retries = " + retries); 
+				this.streamRowsIntoBigQuery(datasetId, tableId, failedList, retries);
+			}
+		}
 	}
 
 	/**
