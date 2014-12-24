@@ -154,7 +154,7 @@ public class DoReasonTask1 extends CommonTask {
 				emptyRetries++;
 			}
 
-			log.info("Total inferred triples so far = " + totalInferredTriples);
+			log.info("Total inferred triples so far = " + totalInferredTriples + ", current retry count: " + emptyRetries);
 			
 			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
 			
