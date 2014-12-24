@@ -89,6 +89,8 @@ public class Job implements Serializable {
 	private DataLoadType dataLoad;
 	
 	private List<String> evmAnalysisFiles;
+	
+	private Integer numberOfNodes;
 
 	/**
 	 * @return the bucket
@@ -285,6 +287,20 @@ public class Job implements Serializable {
 	 */
 	public void setDataLoad(DataLoadType dataLoad) {
 		this.dataLoad = dataLoad;
+	}
+
+	/**
+	 * @return the numberOfNodes
+	 */
+	public Integer getNumberOfNodes() {
+		return numberOfNodes;
+	}
+
+	/**
+	 * @param numberOfNodes the numberOfNodes to set
+	 */
+	public void setNumberOfNodes(Integer numberOfNodes) {
+		this.numberOfNodes = numberOfNodes;
 	}
 
 	/**

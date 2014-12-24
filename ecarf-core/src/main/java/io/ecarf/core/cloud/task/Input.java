@@ -74,6 +74,9 @@ public class Input {
 	// stream the inferred data into big data service
 	private DataLoadType dataLoad;
 	
+	// a deterministic number of nodes to use
+	private Integer numberOfNodes;
+	
 	/**
 	 * VM names
 	 */
@@ -317,6 +320,21 @@ public class Input {
 	 */
 	public Input setDataLoad(DataLoadType dataLoad) {
 		this.dataLoad = dataLoad;
+		return this;
+	}
+
+	/**
+	 * @return the numberOfNodes
+	 */
+	public Integer getNumberOfNodes() {
+		return numberOfNodes;
+	}
+
+	/**
+	 * @param numberOfNodes the numberOfNodes to set
+	 */
+	public Input setNumberOfNodes(Integer numberOfNodes) {
+		this.numberOfNodes = numberOfNodes;
 		return this;
 	}
 

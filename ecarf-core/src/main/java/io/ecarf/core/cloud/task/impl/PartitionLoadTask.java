@@ -72,9 +72,16 @@ public class PartitionLoadTask extends CommonTask {
 		
 		// each node should handle a gigbyte of data
 		// read it the configurations
-		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
-				this.input.getNewBinPercentage(), 
-				this.input.getWeightPerNode());
+		PartitionFunction function;
+		
+		if(this.input.getNumberOfNodes() == null) {
+			function = PartitionFunctionFactory.createBinPacking(items, 
+					this.input.getNewBinPercentage(), 
+					this.input.getWeightPerNode());
+		} else {
+			function = PartitionFunctionFactory.createBinPacking(items, this.input.getNumberOfNodes());
+		}
+		
 		List<Partition> bins = function.partition();
 		
 		this.results = new Results();

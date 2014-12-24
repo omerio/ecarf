@@ -116,6 +116,23 @@ public class BinPackingPartitionTest {
 	}
 	
 	@Test
+	public void testSetNumberOfBins() {
+		PartitionFunction function = PartitionFunctionFactory.createBinPacking(this.createItems(), 2);
+		List<Partition> bins = function.partition();
+		
+		for(Partition bin: bins) {
+			System.out.println(bin + ", sum: " + bin.sum());
+			
+			for(Item item: bin.getItems()) {
+				System.out.println(item);
+				//assertEquals(SCALE1.get(item.getWeight()), item.getScale());
+			}
+		}
+		//System.out.println(bins);
+		assertEquals(2, bins.size());
+	}
+	
+	@Test
 	public void testItemScale() {
 		List<Item> items = Utils.setScale(this.createItems(), 10L);
 		for(Item item: items) {

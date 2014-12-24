@@ -41,4 +41,15 @@ public class PartitionFunctionFactory {
 		return binPack;
 	}
 
+	/**
+	 * 
+	 * @param items
+	 * @param numberOfBins
+	 * @return
+	 */
+	public static PartitionFunction createBinPacking(List<Item> items, int numberOfBins) {
+		BinPackingPartition binPack = new BinPackingPartition(items);
+		binPack.setNumberOfBins(numberOfBins);
+		return binPack;
+	}
 }

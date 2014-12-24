@@ -97,7 +97,7 @@ public class EcarfCcvmTask {
 
 				// 2- partition the instance files into bins
 				input = (new Input()).setBucket(bucket).setWeightPerNode(this.job.getMaxFileSizePerNode())
-						.setNewBinPercentage(0.0);
+						.setNewBinPercentage(0.0).setNumberOfNodes(this.job.getNumberOfNodes());
 
 				task = new PartitionLoadTask(null, service);
 				task.setInput(input);
@@ -151,7 +151,9 @@ public class EcarfCcvmTask {
 				input = (new Input()).setWeightedItems(items)
 						.setNewBinPercentage(this.job.getNewNodePercentage())
 						// 5 million triples per node for swetodblp
-						.setWeightPerNode(this.job.getMaxTriplesPerNode());
+						.setWeightPerNode(this.job.getMaxTriplesPerNode())
+						.setNumberOfNodes(this.job.getNumberOfNodes());
+				
 				task = new PartitionReasonTask(null, service);
 				task.setInput(input);
 				task.run(); 

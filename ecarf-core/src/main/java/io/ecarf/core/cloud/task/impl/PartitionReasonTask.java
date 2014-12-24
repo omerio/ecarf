@@ -56,8 +56,15 @@ public class PartitionReasonTask extends CommonTask {
 
 		// each node can handle up to 10% more than the largest term
 		// read from the configurations
-		PartitionFunction function = PartitionFunctionFactory.createBinPacking(items, 
-				this.input.getNewBinPercentage(), this.input.getWeightPerNode());
+		PartitionFunction function;
+		
+		if(this.input.getNumberOfNodes() == null) {
+			
+			function = PartitionFunctionFactory.createBinPacking(items, 
+					this.input.getNewBinPercentage(), this.input.getWeightPerNode());
+		} else {
+			function = PartitionFunctionFactory.createBinPacking(items, this.input.getNumberOfNodes());
+		}
 
 		List<Partition> bins = function.partition();
 
