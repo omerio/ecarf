@@ -1380,13 +1380,15 @@ public class GoogleCloudService implements CloudService {
 				retrying = false;
 
 			} catch(GoogleJsonResponseException e) {
-				log.log(Level.SEVERE, "Failed to stream data", e);
+				
 
 				GoogleJsonError error = e.getDetails();	
 				
 				// check for rate limit errors
 				if((error != null) && (error.getErrors() != null) && !error.getErrors().isEmpty() &&
 						GoogleMetaData.RATE_LIMIT_EXCEEDED.equals(error.getErrors().get(0).getReason())) {
+					
+					log.log(Level.WARNING, "Failed to stream data, error: ", error.getMessage());
 					
 					long backOffTime = backOff.nextBackOffMillis();
 					
@@ -1397,12 +1399,16 @@ public class GoogleCloudService implements CloudService {
 						
 					} else {
 						int period = (int) Math.ceil(backOffTime / 1000);
+						if(period == 0) {
+							period = 1;
+						}
 						log.info("Backing off for " + period + " seconds.");
 						Utils.block(period);
 						retrying = true;
 					}
 					
 				} else {
+					log.log(Level.SEVERE, "Failed to stream data", e);
 					throw e;
 				}
 			}
