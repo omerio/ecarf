@@ -102,7 +102,7 @@ public class EcarfEvmTask {
 
 			} catch(Exception e) {
 				
-				log.log(Level.SEVERE, "An error has occurred whilst running/waiting for tasks", e);
+				log.log(Level.SEVERE, "An error has occurred whilst running/waiting for tasks, setting status to ERROR", e);
 				// try to update the Metadata to a fail status
 				try {
 					
@@ -116,9 +116,10 @@ public class EcarfEvmTask {
 					// now wait for any change in the metadata
 					log.info("Waiting for new instructions from ccvm");
 					metadata = this.service.getEcarfMetaData(true);
+					status = metadata.getStatus();
 					
 				} catch(Exception e1) {
-					// all has failed with no hope of recovery
+					// all has failed with no hope of recovery, retry a few times then terminate
 					log.log(Level.SEVERE, "An error has occurred whilst trying to recover", e);
 					// self terminate :-(
 					// FIXME uncomment once testing is thoroughly done
