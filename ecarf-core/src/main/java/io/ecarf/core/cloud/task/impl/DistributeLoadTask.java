@@ -209,7 +209,7 @@ public class DistributeLoadTask extends CommonTask {
 
 		}
 
-		log.info("Successfully processed distribute load");
+		log.info("Successfully processed distribute load task");
 	}
 	
 	

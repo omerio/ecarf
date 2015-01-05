@@ -176,7 +176,7 @@ public class DistributeReasonTask extends CommonTask {
 
 		}
 
-		log.info("Successfully processed distribute load");
+		log.info("Successfully processed distribute reason task");
 	}
 	
 	/**
