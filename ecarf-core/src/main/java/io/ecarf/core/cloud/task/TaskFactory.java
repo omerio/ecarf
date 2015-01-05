@@ -20,8 +20,8 @@ package io.ecarf.core.cloud.task;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.task.impl.DoReasonTask;
 import io.ecarf.core.cloud.task.impl.DoReasonTask1;
+import io.ecarf.core.cloud.task.impl.DoReasonTask2;
 import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
 import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
@@ -53,7 +53,7 @@ public class TaskFactory {
 
 			case REASON:
 				// reasoning with asynchronous file upload
-				task = new DoReasonTask(metadata, cloud);
+				task = new DoReasonTask2(metadata, cloud);
 				break;
 				
 			case REASON1:
