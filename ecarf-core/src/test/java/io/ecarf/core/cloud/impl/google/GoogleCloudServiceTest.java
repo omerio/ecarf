@@ -172,7 +172,7 @@ public class GoogleCloudServiceTest {
 	public void testStreamDataIntoBigQuery() throws IOException {
 		//gutenberg_links.nt
 		// load the triples from a file
-		Set<Triple> triples = TripleUtils.loadTriples("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt");
+		Set<Triple> triples = TripleUtils.loadNTriples("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt");
 		System.out.println("Number of triples: " + triples.size());
 		this.service.streamTriplesIntoBigData(triples, "ontologies.test");
 	}

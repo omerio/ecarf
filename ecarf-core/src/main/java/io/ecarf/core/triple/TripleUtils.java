@@ -3,16 +3,24 @@
  */
 package io.ecarf.core.triple;
 
+import io.ecarf.core.utils.Constants;
+
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.mortbay.log.Log;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -85,17 +93,17 @@ public class TripleUtils {
 	}
 	
 	/**
-	 * Load triples from a file
-	 * @param schemaFile
+	 * Load N triples from a file
+	 * @param triplesFile
 	 * @return
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static Set<Triple> loadTriples(String schemaFile) throws FileNotFoundException, IOException {
+	public static Set<Triple> loadNTriples(String triplesFile) throws FileNotFoundException, IOException {
 
 		Set<Triple> triples = new HashSet<>();
 
-		try (BufferedReader r = new BufferedReader(new FileReader(schemaFile))) {
+		try (BufferedReader r = new BufferedReader(new FileReader(triplesFile))) {
 
 			String[] terms;
 			NxParser nxp = new NxParser(r);
@@ -126,6 +134,28 @@ public class TripleUtils {
 		}
 
 		return triples;
+	}
+	
+	/**
+	 * load CSV triples from a file
+	 * @param triplesFile
+	 * @return
+	 */
+	public static Set<Triple> loadCompressedCSVTriples(String triplesFile)  throws FileNotFoundException, IOException  {
+		Set<Triple> triples = new HashSet<>();
+		try(Reader reader = new InputStreamReader(new GZIPInputStream(
+				new FileInputStream(triplesFile), Constants.GZIP_BUF_SIZE), Constants.UTF8)) {
+			
+			Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
+
+			for (CSVRecord record : records) {
+				triples.add(Triple.fromCSV(record.values()));
+			}
+
+		}
+		
+		return triples;
+		
 	}
 
 	/**

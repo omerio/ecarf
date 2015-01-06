@@ -56,6 +56,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import com.google.common.base.Stopwatch;
+
 /**
  * Run using maven:
  * mvn -q exec:java -Dexec.args="/home/omerio/job.json" > /home/omerio/output.log 2>&1 & exit 0
@@ -83,6 +85,9 @@ public class EcarfCcvmTask {
 		Input input;
 		List<String> nodes;
 		List<String> allNodes = null;
+		
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.start();
 		
 		try {
 
@@ -127,12 +132,18 @@ public class EcarfCcvmTask {
 				results = task.getResults();
 
 				nodes = results.getNodes(); 
+				
+				
 
 			} else {
 				log.info("Skipping load task");
 				results = this.getResults(bucket, this.job.getEvmAnalysisFiles());
 				nodes = new ArrayList<>();
 			}
+			
+			log.info("TIMER# Completed loading in: " + stopwatch);
+			stopwatch.reset();
+			stopwatch.start();
 
 			log.info("Active nodes: " + nodes);
 			
@@ -204,6 +215,9 @@ public class EcarfCcvmTask {
 			} else {
 				allNodes = nodes;
 			}
+			
+			stopwatch.stop();
+			log.info("TIMER# Completed reasoning in: " + stopwatch);
 
 		} catch(NodeException ne) {
 			log.log(Level.SEVERE, "Some processing nodes have failed", ne);
@@ -211,6 +225,8 @@ public class EcarfCcvmTask {
 		} catch(IOException ie) {
 			log.log(Level.SEVERE, "An error has occurred", ie);
 		}
+		
+		
 
 		// upload logs and shutdown
 		if((allNodes != null) && !allNodes.isEmpty()) {

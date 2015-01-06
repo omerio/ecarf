@@ -1242,7 +1242,7 @@ public class GoogleCloudService implements CloudService {
 	}
 
 	/**
-	 * Stream local files into big query
+	 * Stream local N triple files into big query
 	 * @param files
 	 * @param table
 	 * @throws IOException
@@ -1251,7 +1251,7 @@ public class GoogleCloudService implements CloudService {
 	public void streamLocalFilesIntoBigData(List<String> files, String table) throws IOException {
 		Set<Triple> triples = null;
 		for(String file: files) {
-			triples = TripleUtils.loadTriples(file);
+			triples = TripleUtils.loadNTriples(file);
 			
 			if(!triples.isEmpty()) {
 				this.streamTriplesIntoBigData(triples, table);

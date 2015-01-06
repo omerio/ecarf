@@ -156,6 +156,15 @@ public class Triple {
 	}
 	
 	/**
+	 * Create a new triple from a CSV line
+	 * @param terms
+	 * @return
+	 */
+	public static Triple fromCSV(String[] terms) {
+		return new Triple(terms[0], terms[1], terms[2]);
+	}
+	
+	/**
 	 * Return matching triples for a criteria
 	 * @param term
 	 * @param type
