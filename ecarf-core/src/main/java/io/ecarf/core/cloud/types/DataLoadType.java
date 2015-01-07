@@ -37,5 +37,9 @@ public enum DataLoadType {
 	/**
 	 * Upload via cloud storage
 	 */
-	CLOUD_STORAGE;
+	CLOUD_STORAGE,
+	/**
+	 * Hybrid loading stream + direct or stream + cloud storage;
+	 */
+	HYBRID;
 }

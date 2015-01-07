@@ -141,9 +141,7 @@ public class EcarfCcvmTask {
 				nodes = new ArrayList<>();
 			}
 			
-			log.info("TIMER# Completed loading in: " + stopwatch);
-			stopwatch.reset();
-			stopwatch.start();
+			log.info("TIMER# Completed files processing in: " + stopwatch);	
 
 			log.info("Active nodes: " + nodes);
 			
@@ -189,6 +187,10 @@ public class EcarfCcvmTask {
 				task = new DoLoadTask(null, service);
 				task.setInput(input);
 				task.run();
+				
+				log.info("TIMER# Completed loading phase in: " + stopwatch);
+				stopwatch.reset();
+				stopwatch.start();
 
 				// 6- distribute the reasoning between the nodes
 				input = (new Input()).setItems(terms)
@@ -217,7 +219,7 @@ public class EcarfCcvmTask {
 			}
 			
 			stopwatch.stop();
-			log.info("TIMER# Completed reasoning in: " + stopwatch);
+			log.info("TIMER# Completed reasoning phase in: " + stopwatch);
 
 		} catch(NodeException ne) {
 			log.log(Level.SEVERE, "Some processing nodes have failed", ne);

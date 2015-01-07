@@ -1,5 +1,6 @@
 package io.ecarf.core.triple;
 
+import static org.junit.Assert.*;
 import io.ecarf.core.utils.Constants;
 
 import java.io.BufferedReader;
@@ -9,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -143,6 +145,17 @@ public class TriplesTest {
 			}
 			
 		}
+	}
+	
+	@Test
+	public void testLoadGzippedCSVTriples() throws FileNotFoundException, IOException {
+		Set<Triple> triples = 
+				TripleUtils.loadCompressedCSVTriples("/Users/omerio/SkyDrive/PhD/Experiments/07_01_2015_SwetoDblp_5n_bigquery_direct/1420663781645.inf");
+		assertNotNull(triples);
+		assertFalse(triples.isEmpty());
+		System.out.println(triples.size());
+		System.out.println(triples.iterator().next());
+		
 	}
 
 }

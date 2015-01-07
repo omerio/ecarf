@@ -31,8 +31,10 @@ import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
@@ -50,13 +53,15 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 /**
- * Stream the data directly into Big data service rather than through file upload
+ * Reason task that saves all the inferred triples in each round in a single file then uploads it to Big data
+ * rather than using individual files for each term. Hybrid big data streaming for inferred triples of 100,000 or smaller
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class DoReasonTask1 extends CommonTask {
+public class DoReasonTask3 extends CommonTask {
 	
 	private static final int MAX_CACHE = 1000000;
 	
@@ -65,7 +70,7 @@ public class DoReasonTask1 extends CommonTask {
 	 * @param metadata
 	 * @param cloud
 	 */
-	public DoReasonTask1(VMMetaData metadata, CloudService cloud) {
+	public DoReasonTask3(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
 
@@ -80,9 +85,39 @@ public class DoReasonTask1 extends CommonTask {
 		String schemaFile = metadata.getValue(VMMetaData.ECARF_SCHEMA);
 		String bucket = metadata.getBucket();
 		
+		if(terms == null) {
+			// too large, probably saved as a file
+			String termsFile = metadata.getValue(VMMetaData.ECARF_TERMS_FILE);
+			log.info("Using json file for terms: " + termsFile);
+			
+			String localTermsFile = Utils.TEMP_FOLDER + termsFile;
+			this.cloud.downloadObjectFromCloudStorage(termsFile, localTermsFile, bucket);
+
+			// convert from JSON
+			terms = Utils.jsonFileToSet(localTermsFile);
+			
+		}
 		
+		String localSchemaFile = Utils.TEMP_FOLDER + schemaFile;
+		// download the file from the cloud storage
+		this.cloud.downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);
+
+		// uncompress if compressed
+		if(GzipUtils.isCompressedFilename(schemaFile)) {
+			localSchemaFile = GzipUtils.getUncompressedFilename(localSchemaFile);
+		}
+
+		Map<String, Set<Triple>> allSchemaTriples = 
+				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
+
 		// get all the triples we care about
-		Map<Term, Set<Triple>> schemaTerms = this.getAssignedSchemaTerms(terms, schemaFile, bucket);
+		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
+
+		for(String term: terms) {
+			if(allSchemaTriples.containsKey(term)) {
+				schemaTerms.put(new Term(term), allSchemaTriples.get(term));
+			}
+		}
 		
 		String decoratedTable = table;
 		int emptyRetries = 0;
@@ -92,59 +127,101 @@ public class DoReasonTask1 extends CommonTask {
 		// timestamp loop
 		do {
 
-			// run the reasoning queries on the big data
-			this.runBigDataReasoningQueries(schemaTerms, decoratedTable);
-			
-			long start = System.currentTimeMillis();	
-			// the schema terms that generated inferred triples
-			List<String> productiveTerms = new ArrayList<>();
-			
-			int interimInferredTriples = 0;
+			//List<String> inferredFiles = new ArrayList<>();
 
-			// now loop through the queries
+			// First of all run all the queries asynchronously and remember the jobId and filename for each term
 			for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
 
 				Term term = entry.getKey();
-				log.info("Reasoning for Term: " + term);
 
-				Set<Triple> schemaTriples = entry.getValue();
-				log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
+				// add table decoration to table name
+				String query = GenericRule.getQuery(entry.getValue(), decoratedTable);	
 
-				List<String> select = GenericRule.getSelect(schemaTriples);
+				log.info("\nQuery: " + query);
 
-				// block and wait for each job to complete then save results to a file
-				BigInteger rows = BigInteger.ZERO;
-				
-				try {
-					rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
-					
-				} catch(IOException ioe) {
-					// transient backend errors
-					log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
-				}
+				String jobId = this.cloud.startBigDataQuery(query);
+				String encodedTerm = Utils.encodeFilename(term.getTerm());
+				String filename = Utils.TEMP_FOLDER + encodedTerm + Constants.DOT_TERMS;
 
-				log.info("Query found " + rows + ", rows");
+				// remember the filename and the jobId for this query
+				term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);
 
-				// only process if triples are found matching this term
-				if(!BigInteger.ZERO.equals(rows)) {
+			}
 
-					int inferredTriplesCount = this.streamInferredTriplesIntoBigData(term, select, schemaTriples, rows, table);
+			long start = System.currentTimeMillis();
+			
+			String inferredTriplesFile =  Utils.TEMP_FOLDER + start + Constants.DOT_INF;
+			
+			List<String> productiveTerms = new ArrayList<>();
+			
+			int interimInferredTriples = 0;
+			
+			try(PrintWriter writer = 
+					new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile), Constants.GZIP_BUF_SIZE))) {
 
-					productiveTerms.add(term.getTerm());//inferredTriplesFile);
-					
-					interimInferredTriples += inferredTriplesCount;
+				// now loop through the queries
+				for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
 
+					Term term = entry.getKey();
+					log.info("Reasoning for Term: " + term);
+
+					Set<Triple> schemaTriples = entry.getValue();
+					log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
+
+					List<String> select = GenericRule.getSelect(schemaTriples);
+
+					// block and wait for each job to complete then save results to a file
+					BigInteger rows = BigInteger.ZERO;
+
+					try {
+						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+
+					} catch(IOException ioe) {
+						// transient backend errors
+						log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
+					}
+
+					log.info("Query found " + rows + ", rows");
+
+					// only process if triples are found matching this term
+					if(!BigInteger.ZERO.equals(rows)) {
+						
+						int inferredTriplesCount = this.inferAndSaveTriplesToFile(term, select, schemaTriples, rows, decoratedTable, writer);
+						
+						productiveTerms.add(term.getTerm());
+
+						interimInferredTriples += inferredTriplesCount;
+
+					}
 				}
 			}
 			
 			totalInferredTriples += interimInferredTriples;
 
-			if(!productiveTerms.isEmpty()) {
-				log.info("Successfully streamed " + interimInferredTriples + 
-						", inferred triples into Big Data table for " + productiveTerms.size() + " productive terms.");
-				// need to replace this load with live streaming into Bigquery
-				//List<String> jobIds = this.cloud.loadLocalFilesIntoBigData(inferredFiles, table, false);
-				//log.info("All inferred triples are inserted into Big Data table, completed jobIds: " + jobIds);
+			if(interimInferredTriples > 0) {
+				
+				//TODO stream smaller numbers of inferred triples
+				//TODO try uploading from cloud storage
+				int streamingThreshold = Config.getIntegerProperty("ecarf.io.reasoning.streaming.threshold", 100000);
+				
+				log.info("Inserting " + interimInferredTriples + 
+						", inferred triples into Big Data table for " + productiveTerms.size() + " productive terms. Filename: " + inferredTriplesFile);
+				
+				if(interimInferredTriples <= streamingThreshold) {
+					// stream the data
+					
+					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile);
+					log.info("Total triples to stream into Big Data: " + inferredTriples.size());
+					this.cloud.streamTriplesIntoBigData(inferredTriples, table);
+					
+					log.info("All inferred triples are streamed into Big Data table");
+					
+				} else {
+					
+					// directly upload the data
+					List<String> jobIds = this.cloud.loadLocalFilesIntoBigData(Lists.newArrayList(inferredTriplesFile), table, false);
+					log.info("All inferred triples are directly loaded into Big Data table, completed jobIds: " + jobIds);
+				}
 				
 				// reset empty retries
 				emptyRetries = 0;
@@ -169,108 +246,28 @@ public class DoReasonTask1 extends CommonTask {
 		
 		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
 	}
-
-	/**
-	 * Get the schema terms and their triples that are assigned to this node
-	 * @param terms
-	 * @param schemaFile
-	 * @param bucket
-	 * @return
-	 * @throws IOException
-	 */
-	private Map<Term, Set<Triple>> getAssignedSchemaTerms(Set<String> terms, String schemaFile, String bucket) throws IOException {
-		
-		// the terms will be null if they are too large to be set as meta data
-		// in this case they will be saved to a file and the filename is provided
-		// as meta data
-		if(terms == null) {
-			// too large, probably saved as a file
-			String termsFile = metadata.getValue(VMMetaData.ECARF_TERMS_FILE);
-			log.info("Using json file for terms: " + termsFile);
-			
-			String localTermsFile = Utils.TEMP_FOLDER + termsFile;
-			this.cloud.downloadObjectFromCloudStorage(termsFile, localTermsFile, bucket);
-
-			// convert from JSON
-			terms = Utils.jsonFileToSet(localTermsFile);
-			
-		}
-		
-		// download the schema triples file locally
-		String localSchemaFile = Utils.TEMP_FOLDER + schemaFile;
-		// download the file from the cloud storage
-		this.cloud.downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);
-
-		// uncompress if compressed
-		if(GzipUtils.isCompressedFilename(schemaFile)) {
-			localSchemaFile = GzipUtils.getUncompressedFilename(localSchemaFile);
-		}
-
-		Map<String, Set<Triple>> allSchemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
-
-		// get all the triples we care about
-		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
-
-		for(String term: terms) {
-			if(allSchemaTriples.containsKey(term)) {
-				schemaTerms.put(new Term(term), allSchemaTriples.get(term));
-			}
-		}
-		
-		return schemaTerms;
-	}
 	
 	/**
-	 * Using the schema terms assigned to this node run the big data queries that are needed for reasoning.
-	 * The query will run asynchronously 
-	 * @param schemaTerms
-	 * @param decoratedTable
-	 * @throws IOException
-	 */
-	private void runBigDataReasoningQueries(Map<Term, Set<Triple>> schemaTerms, String decoratedTable) throws IOException {
-		// First of all run all the queries asynchronously and remember the jobId and filename for each term
-		for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
-
-			Term term = entry.getKey();
-
-			// add table decoration to table name
-			String query = GenericRule.getQuery(entry.getValue(), decoratedTable);	
-
-			log.info("\nQuery: " + query);
-
-			String jobId = this.cloud.startBigDataQuery(query);
-			String encodedTerm = Utils.encodeFilename(term.getTerm());
-			String filename = Utils.TEMP_FOLDER + encodedTerm + Constants.DOT_TERMS;
-
-			// remember the filename and the jobId for this query
-			term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);
-
-		}
-	}
-
-	/**
-	 * Stream inferred triples into big data, returns the number of streamed triples
+	 * 
 	 * @param term
 	 * @param select
 	 * @param schemaTriples
 	 * @param rows
+	 * @param table
+	 * @param writer
 	 * @return
+	 * @throws IOException
 	 */
-	private int streamInferredTriplesIntoBigData(Term term, List<String> select, 
-			Set<Triple> schemaTriples, BigInteger rows, String table) throws IOException {
-
-		int inferredTriplesCount = 0;
-		int failedTriplesCount = 0;
-
-		Set<Triple> inferredTriples = new HashSet<>();
-		//String inferredTriplesFile =  Utils.TEMP_FOLDER + term.getEncodedTerm() + Constants.DOT_INF;
+	private int inferAndSaveTriplesToFile(Term term, List<String> select, 
+			Set<Triple> schemaTriples, BigInteger rows, String table, PrintWriter writer) throws IOException {
+		
+		int inferredTriples = 0;
+		int failedTriples = 0;
 
 		// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-		try (BufferedReader reader = new BufferedReader(new FileReader(term.getFilename()))) {
-			//PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile)))) {
+		try (BufferedReader r = new BufferedReader(new FileReader(term.getFilename()), Constants.GZIP_BUF_SIZE)) {
 
-			Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
+			Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
 
 			// records will contain lots of duplicates
 			Set<String> inferredAlready = new HashSet<String>();
@@ -296,9 +293,8 @@ public class DoReasonTask1 extends CommonTask {
 						for(Triple schemaTriple: schemaTriples) {
 							Rule rule = GenericRule.getRule(schemaTriple);
 							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-							//writer.println(inferredTriple.toCsv());
-							inferredTriples.add(inferredTriple);
-							inferredTriplesCount++;
+							writer.println(inferredTriple.toCsv());
+							inferredTriples++;
 						}
 
 						// this is just to avoid any memory issues
@@ -311,23 +307,17 @@ public class DoReasonTask1 extends CommonTask {
 				}
 			} catch(Exception e) {
 				log.log(Level.SEVERE, "Failed to parse selected terms", e);
-				failedTriplesCount++;
+				failedTriples++;
 			}
 		}
 
-		/*productiveTerms.add(term.getTerm());//inferredTriplesFile);*/
-		log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriplesCount + 
-				", Triples for term: " + term + ", Failed Triples: " + failedTriplesCount);
+		//inferredFiles.add(inferredTriplesFile);
+		log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriples + 
+				", Triples for term: " + term + ", Failed Triples: " + failedTriples);
 		
-		log.info("Streaming " + inferredTriples.size() + " Unqiue Inferred Triples into big data");
-
-		this.cloud.streamTriplesIntoBigData(inferredTriples, table);
-		
-		return inferredTriplesCount;
-
-
+		return inferredTriples;
 	}
-	
+
 	/**
 	 * Term details used during the querying and reasoning process
 	 * @author Omer Dawelbeit (omerio)
