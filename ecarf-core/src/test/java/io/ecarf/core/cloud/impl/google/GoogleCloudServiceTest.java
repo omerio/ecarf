@@ -109,16 +109,18 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void testUploadFileToCloudStorage() throws IOException {
 
-		this.service.uploadFileToCloudStorage(Utils.TEMP_FOLDER + "umbel_links.nt_out.gz", "ecarf",  new Callback() {
+		io.ecarf.core.cloud.storage.StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
 			
 			@Override
 			public void execute() {
 				System.out.println("Upload complete");
 			}
 		});
+		
+		System.out.println(file);
 	}
 	
 	@Test
@@ -169,6 +171,7 @@ public class GoogleCloudServiceTest {
 	 * @throws IOException
 	 */
 	@Test
+	@Ignore
 	public void testStreamDataIntoBigQuery() throws IOException {
 		//gutenberg_links.nt
 		// load the triples from a file

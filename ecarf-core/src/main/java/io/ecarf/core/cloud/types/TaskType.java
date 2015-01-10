@@ -25,10 +25,40 @@ package io.ecarf.core.cloud.types;
 public enum TaskType {
 	
 	LOAD, 
-	REASON, // direct upload into big data
-	REASON1, // stream into big data
-	REASON2, // upload via cloud storage
+	REASON_DIRECT, // direct upload into big data
+	REASON_HYBRID_DIRECT, // direct upload into big data
+	REASON_STREAM, // stream into big data
+	REASON_HYBRID_CLOUD_STORAGE, // upload via cloud storage
 	COUNT, 
 	UPLOAD_LOGS;
+	
+	/**
+	 * Get the task type for the particular
+	 * @param loadType
+	 * @return
+	 */
+	public static TaskType getReasonTaskTypeForDataLoadType(DataLoadType loadType) {
+		TaskType task;
+		switch(loadType) {
+		case CLOUD_STORAGE:
+			task = TaskType.REASON_HYBRID_CLOUD_STORAGE;
+			break;
+
+		case STREAM:
+			task = TaskType.REASON_STREAM;
+			break;
+			
+		case HYBRID:
+			task = TaskType.REASON_HYBRID_DIRECT;
+			break;
+
+		case DIRECT:
+		default:
+			task = TaskType.REASON_DIRECT;
+			break;
+
+		}
+		return task;
+	}
 
 }

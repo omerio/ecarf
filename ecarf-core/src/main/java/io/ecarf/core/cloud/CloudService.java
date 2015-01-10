@@ -55,18 +55,20 @@ public interface CloudService {
 	 * @param filename
 	 * @param bucket
 	 * @param callback
+	 * @return 
 	 * @throws IOException
 	 */
-	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException;
+	public StorageObject uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException;
 	
 	
 	/**
 	 * Upload a file to cloud storage and block until it's uploaded
 	 * @param filename
 	 * @param bucket
+	 * @return 
 	 * @throws IOException
 	 */
-	public void uploadFileToCloudStorage(String filename, String bucket) throws IOException;
+	public StorageObject uploadFileToCloudStorage(String filename, String bucket) throws IOException;
 
 	/**
 	 * Download an object from cloud storage to a file

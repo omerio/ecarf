@@ -22,6 +22,8 @@ import io.ecarf.core.utils.Constants;
 
 import java.math.BigInteger;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+
 /**
  * Represent a generic mass cloud storage object
  * 
@@ -115,13 +117,19 @@ public class StorageObject {
 		return uri;
 	}
 
-
-
 	/**
 	 * @param uri the uri to set
 	 */
 	public void setUri(String uri) {
 		this.uri = uri;
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this);
 	}
 
 }

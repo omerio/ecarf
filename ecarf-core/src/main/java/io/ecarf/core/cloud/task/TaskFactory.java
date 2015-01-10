@@ -21,7 +21,9 @@ package io.ecarf.core.cloud.task;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.task.impl.DoReasonTask1;
+import io.ecarf.core.cloud.task.impl.DoReasonTask2;
 import io.ecarf.core.cloud.task.impl.DoReasonTask3;
+import io.ecarf.core.cloud.task.impl.DoReasonTask4;
 import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
 import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
@@ -50,19 +52,26 @@ public class TaskFactory {
 			case LOAD:
 				task = new ProcessLoadTask(metadata, cloud);
 				break;
-
-			case REASON:
-				// reasoning with asynchronous file upload
-				task = new DoReasonTask3(metadata, cloud);
-				break;
 				
-			case REASON1:
-				// reasoning with streaming
+			case REASON_STREAM:
+				// stream into big data
 				task = new DoReasonTask1(metadata, cloud);
 				break;
 				
-			// TODO third reason option to load files into cloud storage first then load them into big query from there
-			// may be faster
+			case REASON_DIRECT:
+				// direct upload into big data
+				task = new DoReasonTask2(metadata, cloud);
+				break;
+				
+			case REASON_HYBRID_DIRECT:
+				// direct upload into big data
+				task = new DoReasonTask3(metadata, cloud);
+				break;
+				
+			case REASON_HYBRID_CLOUD_STORAGE:
+				// load through cloud storage
+				task = new DoReasonTask4(metadata, cloud);
+				break;
 
 			case COUNT:
 				task = new SchemaTermCountTask(metadata, cloud);

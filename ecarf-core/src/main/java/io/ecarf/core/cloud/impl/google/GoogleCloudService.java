@@ -426,7 +426,7 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException 
 	 */
 	@Override
-	public void uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
+	public io.ecarf.core.cloud.storage.StorageObject uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
 
 		FileInputStream fileStream = new FileInputStream(filename);
 		String contentType;
@@ -462,7 +462,9 @@ public class GoogleCloudService implements CloudService {
 			insertObject.getMediaHttpUploader().setDirectUploadEnabled(true);
 		}
 
-		insertObject.execute();
+		StorageObject object = insertObject.execute();
+		
+		return this.getEcarfStorageObject(object, bucket);
 	}
 
 	/**
@@ -472,7 +474,7 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	@Override
-	public void uploadFileToCloudStorage(String filename, String bucket) throws IOException {
+	public io.ecarf.core.cloud.storage.StorageObject uploadFileToCloudStorage(String filename, String bucket) throws IOException {
 
 		final FutureTask task = new FutureTask();
 
@@ -484,12 +486,14 @@ public class GoogleCloudService implements CloudService {
 			}
 		};
 
-		this.uploadFileToCloudStorage(filename, bucket, callback);
+		io.ecarf.core.cloud.storage.StorageObject storageObject = this.uploadFileToCloudStorage(filename, bucket, callback);
 
 		// wait for the upload to finish
 		while(!task.isDone()) {
 			Utils.block(5);
 		}
+		
+		return storageObject;
 
 	}
 
@@ -563,16 +567,27 @@ public class GoogleCloudService implements CloudService {
 
 		for (StorageObject cloudObject : cloudObjects.getItems()) {
 			// Do things!
-			io.ecarf.core.cloud.storage.StorageObject object = 
-					new io.ecarf.core.cloud.storage.StorageObject();
-			object.setContentType(cloudObject.getContentType());
-			object.setDirectLink(cloudObject.getSelfLink());
-			object.setName(cloudObject.getName());
-			object.setSize(cloudObject.getSize());
-			object.setUri(CLOUD_STORAGE_PREFIX + bucket + "/" + cloudObject.getName());
+			io.ecarf.core.cloud.storage.StorageObject object = this.getEcarfStorageObject(cloudObject, bucket);
 			objects.add(object);
 		}
 		return objects;
+	}
+	
+	/**
+	 * Create an ecarf storage object from a Google com.google.api.services.storage.model.StorageObject
+	 * @param cloudObject
+	 * @param bucket
+	 * @return
+	 */
+	private io.ecarf.core.cloud.storage.StorageObject getEcarfStorageObject(StorageObject cloudObject, String bucket) {
+		io.ecarf.core.cloud.storage.StorageObject object = 
+				new io.ecarf.core.cloud.storage.StorageObject();
+		object.setContentType(cloudObject.getContentType());
+		object.setDirectLink(cloudObject.getSelfLink());
+		object.setName(cloudObject.getName());
+		object.setSize(cloudObject.getSize());
+		object.setUri(CLOUD_STORAGE_PREFIX + bucket + "/" + cloudObject.getName());
+		return object;
 	}
 
 	/**
