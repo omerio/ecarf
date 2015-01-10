@@ -124,6 +124,7 @@ public class DoReasonTask4 extends CommonTask {
 		int emptyRetries = 0;
 		int totalInferredTriples = 0;
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
+		String instanceId = this.cloud.getInstanceId();
 		
 		// timestamp loop
 		do {
@@ -151,7 +152,7 @@ public class DoReasonTask4 extends CommonTask {
 
 			long start = System.currentTimeMillis();
 			
-			String inferredTriplesFile =  Utils.TEMP_FOLDER + start + Constants.DOT_INF;
+			String inferredTriplesFile =  Utils.TEMP_FOLDER + instanceId + '_' + start + Constants.DOT_INF;
 			
 			List<String> productiveTerms = new ArrayList<>();
 			
