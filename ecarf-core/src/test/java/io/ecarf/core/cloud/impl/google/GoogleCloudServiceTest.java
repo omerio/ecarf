@@ -264,9 +264,9 @@ public class GoogleCloudServiceTest {
 		
 		// now update the task type
 		metadata.clearValues();
-		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON.toString());
+		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON_DIRECT.toString());
 		this.service.updateInstanceMetadata(metadata);
-		assertEquals(TaskType.REASON, metadata.getTaskType());
+		assertEquals(TaskType.REASON_DIRECT, metadata.getTaskType());
 		assertEquals(1, metadata.getAttributes().size());
 	}
 	
