@@ -109,7 +109,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void testUploadFileToCloudStorage() throws IOException {
 
 		io.ecarf.core.cloud.storage.StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
@@ -148,12 +148,12 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	@Ignore
+	//@Ignore
 	public void testSaveBigDataToFile() throws IOException {
-		String query = "SELECT TOP( title, 20) as title, COUNT(*) as revision_count "
-		        + "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
-			// "select subject from swetodlp.swetodlp_triple where " +
-			 //"object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
+		String query = //"SELECT TOP( title, 20) as title, COUNT(*) as revision_count "
+		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
+			"select subject from ontologies.swetodblp where " +
+			"object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
 		
 		String jobId = this.service.startBigDataQuery(query);
 		String filename = Utils.TEMP_FOLDER + 

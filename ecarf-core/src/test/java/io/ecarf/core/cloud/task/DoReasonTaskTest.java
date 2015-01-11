@@ -67,7 +67,7 @@ public class DoReasonTaskTest {
 	@Test
 	public void testRun() throws IOException {
 		VMMetaData metadata = new VMMetaData();
-		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON1.toString());
+		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON_DIRECT.toString());
 		metadata.addValue(VMMetaData.ECARF_TABLE, "ontologies.swetodblp1");
 		metadata.addValue(VMMetaData.ECARF_BUCKET, "swetodblp");
 		metadata.addValue(VMMetaData.ECARF_SCHEMA, "opus_august2007_closure.nt"); //Webpage, ee, cdrom, Proceedings, isbn

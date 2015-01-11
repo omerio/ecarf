@@ -63,7 +63,7 @@ import com.google.common.collect.Lists;
  */
 public class DoReasonTask2 extends CommonTask {
 	
-	private static final int MAX_CACHE = 1000000;
+	private static final int MAX_CACHE = 10000000;
 	
 	/**
 	 * 
