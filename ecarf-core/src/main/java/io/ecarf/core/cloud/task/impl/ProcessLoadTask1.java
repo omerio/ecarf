@@ -199,13 +199,13 @@ public class ProcessLoadTask1 extends CommonTask {
 			
 			String localFile = Utils.TEMP_FOLDER + file;
 
-			log.info("Downloading file: " + file);
+			log.info(this.toString() + ": Downloading file: " + file);
 
 			this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
 
 			// all downloaded, carryon now, process the files
 
-			log.info("Processing file: " + localFile);
+			log.info(this.toString() + ": Processing file: " + localFile);
 			String outFile = this.cloud.prepareForCloudDatabaseImport(localFile, counter);
 
 			// once the processing is done then delete the local file
@@ -213,7 +213,7 @@ public class ProcessLoadTask1 extends CommonTask {
 
 			// now upload the files again
 
-			log.info("Uploading file: " + outFile);
+			log.info(this.toString() + ": Uploading file: " + outFile);
 			this.cloud.uploadFileToCloudStorage(outFile, bucket);
 
 			// now delete all the locally processed files
