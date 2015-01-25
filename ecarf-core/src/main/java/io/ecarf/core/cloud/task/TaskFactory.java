@@ -25,7 +25,7 @@ import io.ecarf.core.cloud.task.impl.DoReasonTask2;
 import io.ecarf.core.cloud.task.impl.DoReasonTask3;
 import io.ecarf.core.cloud.task.impl.DoReasonTask4;
 import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
-import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
+import io.ecarf.core.cloud.task.impl.ProcessLoadTask1;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.cloud.types.TaskType;
 
@@ -50,7 +50,7 @@ public class TaskFactory {
 			
 			switch(type) {
 			case LOAD:
-				task = new ProcessLoadTask(metadata, cloud);
+				task = new ProcessLoadTask1(metadata, cloud);
 				break;
 				
 			case REASON_STREAM:
