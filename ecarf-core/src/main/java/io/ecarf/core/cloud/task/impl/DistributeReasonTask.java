@@ -155,6 +155,7 @@ public class DistributeReasonTask extends CommonTask {
 					if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
 						nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
 						log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
+						break;
 					}
 
 				} while (!ready);

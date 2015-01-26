@@ -889,7 +889,7 @@ public class GoogleCloudService implements CloudService {
 							throw e;
 						}
 					}
-
+					// FIXME INFO: ecarf-evm-1422261030407, current status is: null
 				} while (InstanceStatus.IN_PROGRESS.contains(status));
 
 				if(InstanceStatus.TERMINATED.equals(status)) {
@@ -1481,7 +1481,7 @@ public class GoogleCloudService implements CloudService {
 
 		insert.setProjectId(projectId);
 		insert.setOauthToken(this.getOAuthToken());
-
+		// TODO java.net.SocketTimeoutException: Read timed out
 		JobReference jobRef = insert.execute().getJobReference();
 
 		log.info("Job ID of Query Job is: " + jobRef.getJobId());
