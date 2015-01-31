@@ -68,6 +68,8 @@ public class DoReasonTask4 extends CommonTask {
 	
 	private int duplicates;
 	
+	private BigInteger totalRows = BigInteger.valueOf(0l);
+	
 	/**
 	 * 
 	 * @param metadata
@@ -195,6 +197,8 @@ public class DoReasonTask4 extends CommonTask {
 						productiveTerms.add(term.getTerm());
 
 						interimInferredTriples += inferredTriplesCount;
+						
+						this.totalRows = this.totalRows.add(rows);
 
 					}
 				}
@@ -254,7 +258,9 @@ public class DoReasonTask4 extends CommonTask {
 
 		} while(!(emptyRetries == maxRetries)); // end timestamp loop
 		
-		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples + ", avoided duplicates = " + this.duplicates);
+		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
+		log.info("Number of avoided duplicate terms = " + this.duplicates);
+		log.info("Total rows retrieved from big data = " + this.totalRows);
 	}
 	
 	/**
