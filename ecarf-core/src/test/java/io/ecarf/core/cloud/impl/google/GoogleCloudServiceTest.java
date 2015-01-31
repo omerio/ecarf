@@ -83,12 +83,29 @@ public class GoogleCloudServiceTest {
 	 * @throws URISyntaxException 
 	 */
 	@Test
-	@Ignore
+	//@Ignore
 	public void testPrepareForCloudDatabaseImport() throws IOException, URISyntaxException {
-		URL url = this.getClass().getResource("/linkedgeodata_links.nt.gz");
+		URL url = this.getClass().getResource("/gutenberg_links.nt.gz");
 		File inputFile = new File(url.toURI());
 		System.out.println(inputFile.getAbsolutePath());
 		String outFile = this.service.prepareForCloudDatabaseImport(inputFile.getAbsolutePath());
+		assertNotNull(outFile);
+		assertTrue(outFile.endsWith("_out.gz")); //
+	}
+	
+	/**
+	 * Test method for {@link io.ecarf.core.cloud.impl.google.GoogleCloudService#
+	 * prepareForCloudDatabaseImport(java.lang.String)}.
+	 * @throws IOException 
+	 * @throws URISyntaxException 
+	 */
+	@Test
+	//@Ignore
+	public void testPrepareForCloudDatabaseImport1() throws IOException, URISyntaxException {
+		/*URL url = this.getClass().getResource("/linkedgeodata_links.nt.gz");
+		File inputFile = new File(url.toURI());
+		System.out.println(inputFile.getAbsolutePath());*/
+		String outFile = this.service.prepareForCloudDatabaseImport("/Users/omerio/Ontologies/dbpedia/tbox/ntriples.nt.gz");
 		assertNotNull(outFile);
 		assertTrue(outFile.endsWith("_out.gz")); //
 	}
@@ -148,7 +165,7 @@ public class GoogleCloudServiceTest {
 	}
 	
 	@Test
-	//@Ignore
+	@Ignore
 	public void testSaveBigDataToFile() throws IOException {
 		String query = //"SELECT TOP( title, 20) as title, COUNT(*) as revision_count "
 		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";

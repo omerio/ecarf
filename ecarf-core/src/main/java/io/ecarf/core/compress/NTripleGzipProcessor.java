@@ -35,6 +35,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 import org.semanticweb.yars.nx.util.NxUtil;
@@ -108,7 +109,17 @@ public class NTripleGzipProcessor {
 						terms = new String [3];
 						
 						for (int i = 0; i < ns.length; i++)  {
-							terms[i] = NxUtil.unescape(ns[i].toN3());
+							
+							// we are not going to unscape literals, these can contain new line and 
+							// unscaping those will slow down the bigquery load, unless offcourse we use JSON
+							// instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
+							if(ns[i] instanceof Literal) {
+								
+								terms[i] = ns[i].toN3();
+								
+							} else {
+								terms[i] = NxUtil.unescape(ns[i].toN3());
+							}
 						}
 						outLine = callback.process(terms);
 						if(outLine != null) {
