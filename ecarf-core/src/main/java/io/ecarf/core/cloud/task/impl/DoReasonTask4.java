@@ -66,6 +66,8 @@ public class DoReasonTask4 extends CommonTask {
 	
 	private static final int MAX_CACHE = 40000000;
 	
+	private int duplicates;
+	
 	/**
 	 * 
 	 * @param metadata
@@ -252,7 +254,7 @@ public class DoReasonTask4 extends CommonTask {
 
 		} while(!(emptyRetries == maxRetries)); // end timestamp loop
 		
-		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
+		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples + ", avoided duplicates = " + this.duplicates);
 	}
 	
 	/**
@@ -310,6 +312,8 @@ public class DoReasonTask4 extends CommonTask {
 							inferredAlready.clear();
 							log.info("Cleared cache of inferred terms");
 						}
+					} else {
+						this.duplicates++;
 					}
 
 				}
