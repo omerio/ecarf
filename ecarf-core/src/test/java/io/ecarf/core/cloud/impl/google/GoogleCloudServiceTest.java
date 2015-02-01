@@ -31,7 +31,9 @@ import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -40,7 +42,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -49,6 +53,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import com.google.api.services.bigquery.model.GetQueryResultsResponse;
+import com.google.api.services.bigquery.model.Job;
+import com.google.api.services.bigquery.model.JobConfiguration;
+import com.google.api.services.bigquery.model.JobStatistics;
+import com.google.api.services.bigquery.model.JobStatistics2;
+import com.google.api.services.bigquery.model.JobStatistics3;
 import com.google.common.collect.Lists;
 
 /**
@@ -83,7 +93,7 @@ public class GoogleCloudServiceTest {
 	 * @throws URISyntaxException 
 	 */
 	@Test
-	//@Ignore
+	@Ignore
 	public void testPrepareForCloudDatabaseImport() throws IOException, URISyntaxException {
 		URL url = this.getClass().getResource("/gutenberg_links.nt.gz");
 		File inputFile = new File(url.toURI());
@@ -93,6 +103,89 @@ public class GoogleCloudServiceTest {
 		assertTrue(outFile.endsWith("_out.gz")); //
 	}
 	
+	@Test
+	public void testGetCompletedBigQueryJob() throws IOException, URISyntaxException {
+		
+		URL url = this.getClass().getResource("/bigquery_jobIds.txt");
+		File inputFile = new File(url.toURI());
+		boolean skipRowQuery = false;
+		
+		int noOfJobs = 0;
+		BigInteger totalRows = BigInteger.ZERO;
+		double totalProcessedBytes = 0d;
+		
+		try (BufferedReader reader = new BufferedReader(new FileReader(inputFile.getAbsolutePath()), Constants.GZIP_BUF_SIZE)) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				Job job = this.service.getCompletedBigQueryJob(line, false);
+				if(job != null) {
+					
+					noOfJobs++;
+					
+					System.out.println("Job Id: " + line);
+					String completedJobId = job.getJobReference().getJobId();
+					
+					//job.getStatistics().get
+					
+					JobStatistics stats = job.getStatistics();
+					JobConfiguration config = job.getConfiguration();
+					// log the query
+					if(config != null) {
+						System.out.println("query: " + (config.getQuery() != null ? config.getQuery().getQuery() : ""));
+					}
+					// log the total bytes processed
+					JobStatistics2 qStats = stats.getQuery();
+					if(qStats != null) {
+						double processedBytes = ((double) qStats.getTotalBytesProcessed() / FileUtils.ONE_GB);
+						
+						totalProcessedBytes = totalProcessedBytes + processedBytes;
+						
+						System.out.println("Total Bytes processed: " + processedBytes + " GB");
+						System.out.println("Cache hit: " + qStats.getCacheHit());
+					}
+					
+					JobStatistics3 lStats = stats.getLoad();
+					if(lStats != null) {
+						System.out.println("Output rows: " + lStats.getOutputRows());
+						
+					}
+					
+					long time = stats.getEndTime() - stats.getCreationTime();
+					System.out.println("Elapsed query time (ms): " + time);
+					System.out.println("Elapsed query time (s): " + TimeUnit.MILLISECONDS.toSeconds(time));
+					
+					// total rows found
+					try {
+						if(!skipRowQuery) {
+							GetQueryResultsResponse queryResult = this.service.getQueryResults(completedJobId, null);
+
+							BigInteger rows = queryResult.getTotalRows();
+							System.out.println("Total rows found for the query: " + rows);
+
+							totalRows = totalRows.add(rows);
+						}
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+					
+
+				}
+				System.out.println("Total number of jobs so far : " + noOfJobs);
+				System.out.println("Total processed bytes so far: " + totalProcessedBytes + "GB");
+				if(!skipRowQuery) {
+					System.out.println("Total rows for the all queries so far: " + totalRows);
+				}
+				System.out.println("----------------------------------------------------------------------------------------------------------------------------------------------------------");
+			}
+		}
+		
+		System.out.println("Total number of job: " + noOfJobs);
+		System.out.println("Total processed bytes: " + totalProcessedBytes + "GB");
+		if(!skipRowQuery) {
+			System.out.println("Total rows for the all queries: " + totalRows);
+		}
+	}
+	
 	/**
 	 * Test method for {@link io.ecarf.core.cloud.impl.google.GoogleCloudService#
 	 * prepareForCloudDatabaseImport(java.lang.String)}.
@@ -100,7 +193,7 @@ public class GoogleCloudServiceTest {
 	 * @throws URISyntaxException 
 	 */
 	@Test
-	//@Ignore
+	@Ignore
 	public void testPrepareForCloudDatabaseImport1() throws IOException, URISyntaxException {
 		/*URL url = this.getClass().getResource("/linkedgeodata_links.nt.gz");
 		File inputFile = new File(url.toURI());

@@ -1543,6 +1543,33 @@ public class GoogleCloudService implements CloudService {
 	}
 	
 	/**
+	 * Check a number of completed jobs
+	 * @param jobId
+	 * @return
+	 * @throws IOException
+	 */
+	protected Job getCompletedBigQueryJob(String jobId, boolean prettyPrint) throws IOException {
+		
+		Job pollJob = this.getBigquery().jobs().get(projectId, jobId)
+					.setOauthToken(this.getOAuthToken()).execute();
+		
+		String status = pollJob.getStatus().getState();
+
+		if (!GoogleMetaData.DONE.equals(status)) {
+			pollJob = null;
+			log.warning("Job has not completed yet, skipping. JobId: " + jobId);
+			
+		} else {
+			if(prettyPrint) {
+				log.info("Job completed successfully" + pollJob.toPrettyString());
+			}
+			this.printJobStats(pollJob);
+		}
+		
+		return pollJob;
+	}
+	
+	/**
 	 * Retry if a bigquery job has failed due to transient errors
 	 * {
 		  "configuration" : {
@@ -1676,7 +1703,7 @@ public class GoogleCloudService implements CloudService {
 	 * @return
 	 * @throws IOException 
 	 */
-	private GetQueryResultsResponse getQueryResults(String jobId, String pageToken) throws IOException {
+	protected GetQueryResultsResponse getQueryResults(String jobId, String pageToken) throws IOException {
 		int retries = 3;
 		boolean retrying = false;
 		GetQueryResultsResponse queryResults = null;
