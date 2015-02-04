@@ -44,6 +44,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -372,6 +374,20 @@ public class Utils {
 			cause = new IOException(message);
 		}
 		return new NodeException(Constants.EVM_EXCEPTION + instanceId, cause, instanceId);
+	}
+	
+	/**
+	 * Create a fixed size thread pool
+	 * @param numOfThreads, the number of threads, if null defaults to the number of 
+	 * 			processors
+	 * @return
+	 */
+	public static ExecutorService createFixedThreadPool(Integer numOfThreads) {
+		if(numOfThreads == null) {
+			numOfThreads = Runtime.getRuntime().availableProcessors();
+		}
+		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
+		return executor;
 	}
 	
 	
