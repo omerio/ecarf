@@ -52,7 +52,6 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
@@ -72,6 +71,8 @@ public class DoReasonTask5 extends CommonTask {
 	
 	private BigInteger totalRows = BigInteger.valueOf(0l);
 	
+	private ExecutorService executor;
+	
 	/**
 	 * 
 	 * @param metadata
@@ -79,6 +80,7 @@ public class DoReasonTask5 extends CommonTask {
 	 */
 	public DoReasonTask5(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
+		this.executor = Utils.createFixedThreadPool(null);
 	}
 
 	/* (non-Javadoc)
@@ -131,15 +133,17 @@ public class DoReasonTask5 extends CommonTask {
 		int totalInferredTriples = 0;
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
 		String instanceId = this.cloud.getInstanceId();
-		ExecutorService executor = Utils.createFixedThreadPool(null);
+		
 		
 		// timestamp loop
 		do {
 
-			//List<String> inferredFiles = new ArrayList<>();
+			List<String> productiveTerms = new ArrayList<>();
+			int interimInferredTriples = 0;
 
 			// First of all run all the queries asynchronously and remember the jobId and filename for each term
 			List<Callable<Void>> queryTasks = new ArrayList<>();
+			List<Callable<Void>> saveTasks = new ArrayList<>();
 			
 			for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
 
@@ -148,27 +152,20 @@ public class DoReasonTask5 extends CommonTask {
 
 				QueryTask queryTask = new QueryTask(term, triples, decoratedTable, cloud);
 				queryTasks.add(queryTask);
+				
+				SaveResultsTask saveTask = new SaveResultsTask(term, cloud);
+				saveTasks.add(saveTask);
 			}
 			
-			try {
-				executor.invokeAll(queryTasks);
-				
-			} catch (InterruptedException e) {
-				
-				log.log(Level.SEVERE, "executor service interrupted", e);
-				throw new IOException(e);
-				
-			} finally {
-				executor.shutdown();
-			}
+			// invoke all the queries in parallel
+			this.invokeAll(queryTasks);
 
 			long start = System.currentTimeMillis();
 			
 			String inferredTriplesFile =  Utils.TEMP_FOLDER + instanceId + '_' + start + Constants.DOT_INF;
 			
-			List<String> productiveTerms = new ArrayList<>();
-			
-			int interimInferredTriples = 0;
+			// save all the query results in files in parallel
+			this.invokeAll(saveTasks);
 			
 			try(PrintWriter writer = 
 					new PrintWriter(new GZIPOutputStream(new FileOutputStream(inferredTriplesFile), Constants.GZIP_BUF_SIZE))) {
@@ -177,29 +174,19 @@ public class DoReasonTask5 extends CommonTask {
 				for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
 
 					Term term = entry.getKey();
-					log.info("Reasoning for Term: " + term);
-
-					Set<Triple> schemaTriples = entry.getValue();
-					log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
-
-					List<String> select = GenericRule.getSelect(schemaTriples);
-
-					// block and wait for each job to complete then save results to a file
-					BigInteger rows = BigInteger.ZERO;
-
-					try {
-						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
-
-					} catch(IOException ioe) {
-						// transient backend errors
-						log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
-					}
-
-					log.info("Query found " + rows + ", rows");
+					
+					BigInteger rows = term.getRows();
 
 					// only process if triples are found matching this term
 					if(!BigInteger.ZERO.equals(rows)) {
 						
+						log.info("Reasoning for Term: " + term);
+
+						Set<Triple> schemaTriples = entry.getValue();
+						log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
+
+						List<String> select = GenericRule.getSelect(schemaTriples);
+			
 						int inferredTriplesCount = this.inferAndSaveTriplesToFile(term, select, schemaTriples, rows, decoratedTable, writer);
 						
 						productiveTerms.add(term.getTerm());
@@ -208,6 +195,8 @@ public class DoReasonTask5 extends CommonTask {
 						
 						this.totalRows = this.totalRows.add(rows);
 
+					} else {
+						log.info("Skipping term as no data found: " + term);
 					}
 				}
 			}
@@ -216,8 +205,8 @@ public class DoReasonTask5 extends CommonTask {
 
 			if(interimInferredTriples > 0) {
 				
-				//TODO stream smaller numbers of inferred triples
-				//TODO try uploading from cloud storage
+				// stream smaller numbers of inferred triples
+				// try uploading from cloud storage
 				int streamingThreshold = Config.getIntegerProperty("ecarf.io.reasoning.streaming.threshold", 100000);
 				
 				log.info("Inserting " + interimInferredTriples + 
@@ -272,6 +261,25 @@ public class DoReasonTask5 extends CommonTask {
 		log.info("Total rows retrieved from big data = " + this.totalRows);
 	}
 	
+	/**
+	 * Invoke all the provided tasks in parallel
+	 * @param tasks
+	 * @throws IOException
+	 */
+	private void invokeAll(List<Callable<Void>> tasks) throws IOException {
+		try {
+			executor.invokeAll(tasks);
+			
+		} catch (InterruptedException e) {
+			
+			log.log(Level.SEVERE, "executor service interrupted", e);
+			executor.shutdown();
+			throw new IOException(e);
+			
+		}
+		
+	}
+
 	/**
 	 * 
 	 * @param term
@@ -345,137 +353,4 @@ public class DoReasonTask5 extends CommonTask {
 		return inferredTriples;
 	}
 	
-	/**
-	 * 
-	 * @author Omer Dawelbeit (omerio)
-	 *
-	 */
-	public class QueryTask implements Callable<Void> {
-		
-		private Term term;
-		private CloudService cloud;
-		private String decoratedTable;
-		private Set<Triple> triples;
-		
-		public QueryTask(Term term, Set<Triple> triples, String decoratedTable, CloudService cloud) {
-			super();
-			this.term = term;
-			this.triples = triples;
-			this.decoratedTable = decoratedTable;
-			this.cloud = cloud;
-		}
-
-		@Override
-		public Void call() throws Exception {
-			// add table decoration to table name
-			String query = GenericRule.getQuery(triples, decoratedTable);	
-
-			log.info("\nQuery: " + query);
-
-			String jobId = this.cloud.startBigDataQuery(query);
-			String encodedTerm = Utils.encodeFilename(term.getTerm());
-			String filename = Utils.TEMP_FOLDER + encodedTerm + Constants.DOT_TERMS;
-
-			// remember the filename and the jobId for this query
-			term.setFilename(filename).setJobId(jobId).setEncodedTerm(encodedTerm);
-			
-			return null;
-		}
-		
-	}
-
-	/**
-	 * Term details used during the querying and reasoning process
-	 * @author Omer Dawelbeit (omerio)
-	 *
-	 */
-	public class Term {
-		
-		private String term;
-		
-		private String filename;
-		
-		private String jobId;
-		
-		private String encodedTerm;
-
-		/**
-		 * @param term
-		 */
-		public Term(String term) {
-			super();
-			this.term = term;
-		}
-
-		/**
-		 * @return the term
-		 */
-		public String getTerm() {
-			return term;
-		}
-
-		/**
-		 * @param term the term to set
-		 */
-		public Term setTerm(String term) {
-			this.term = term;
-			return this;
-		}
-
-		/**
-		 * @return the filename
-		 */
-		public String getFilename() {
-			return filename;
-		}
-
-		/**
-		 * @param filename the filename to set
-		 */
-		public Term setFilename(String filename) {
-			this.filename = filename;
-			return this;
-		}
-
-		/**
-		 * @return the jobId
-		 */
-		public String getJobId() {
-			return jobId;
-		}
-
-		/**
-		 * @param jobId the jobId to set
-		 */
-		public Term setJobId(String jobId) {
-			this.jobId = jobId;
-			return this;
-		}
-
-		/* (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
-		@Override
-		public String toString() {
-			return ReflectionToStringBuilder.toString(this);
-		}
-
-		/**
-		 * @return the encodedTerm
-		 */
-		public String getEncodedTerm() {
-			return encodedTerm;
-		}
-
-		/**
-		 * @param encodedTerm the encodedTerm to set
-		 */
-		public void setEncodedTerm(String encodedTerm) {
-			this.encodedTerm = encodedTerm;
-		}
-		
-		
-		
-	}
-
 }
