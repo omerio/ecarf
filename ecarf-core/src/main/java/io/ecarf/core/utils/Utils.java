@@ -386,6 +386,7 @@ public class Utils {
 		if(numOfThreads == null) {
 			numOfThreads = Runtime.getRuntime().availableProcessors();
 		}
+		log.info("Creating fixed thread pool of size: " + numOfThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
 		return executor;
 	}
