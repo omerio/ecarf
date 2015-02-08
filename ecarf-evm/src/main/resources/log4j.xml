@@ -15,7 +15,7 @@
 
 	<!-- Define an appender for the Trace level logging  -->
 	<appender name="DebugRollingFileAppender" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="File"	value="/home/omerio/output.log" />
+		<param name="File"	value="${user.home}/output.log" />
 		<param name="DatePattern" value="'.'yyyy-MM-dd" />
 		<param name="Append" value="true" />
 		<param name="Threshold" value="DEBUG" />
@@ -26,12 +26,12 @@
 
 	<logger name="io.ecarf" additivity="false">
 		<level value="ALL" />
-		<appender-ref ref="ConsoleAppender" />
+		<appender-ref ref="DebugRollingFileAppender" />
 	</logger>
 
 	<root>
 		<level value="INFO" />
-		<appender-ref ref="ConsoleAppender" />
+		<appender-ref ref="DebugRollingFileAppender" />
 	</root>
 </log4j:configuration>
 
