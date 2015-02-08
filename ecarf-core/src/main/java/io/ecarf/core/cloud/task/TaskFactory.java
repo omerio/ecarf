@@ -26,7 +26,7 @@ import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.cloud.task.impl.load.ProcessLoadTask1;
 import io.ecarf.core.cloud.task.impl.reason.DoReasonTask3;
-import io.ecarf.core.cloud.task.impl.reason.DoReasonTask4;
+import io.ecarf.core.cloud.task.impl.reason.DoReasonTask5;
 import io.ecarf.core.cloud.types.TaskType;
 
 /**
@@ -70,7 +70,7 @@ public class TaskFactory {
 				
 			case REASON_HYBRID_CLOUD_STORAGE:
 				// load through cloud storage
-				task = new DoReasonTask4(metadata, cloud);
+				task = new DoReasonTask5(metadata, cloud);
 				break;
 
 			case COUNT:
