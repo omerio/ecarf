@@ -20,7 +20,8 @@ package io.ecarf.core.cloud.impl.google.storage;
 
 import io.ecarf.core.utils.Callback;
 
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.googleapis.media.MediaHttpDownloader;
 import com.google.api.client.googleapis.media.MediaHttpDownloaderProgressListener;
@@ -33,7 +34,7 @@ import com.google.common.base.Stopwatch;
  */
 public  class DownloadProgressListener implements MediaHttpDownloaderProgressListener {
 	
-	private final static Logger log = Logger.getLogger(DownloadProgressListener.class.getName()); 
+	private final static Log log = LogFactory.getLog(DownloadProgressListener.class);
 	
 	private final Stopwatch stopwatch;
 	

@@ -8,23 +8,25 @@ import io.ecarf.core.utils.Utils;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.logging.Logger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class QueryTask implements Callable<Void> {
-	
-	private final static Logger log = Logger.getLogger(QueryTask.class.getName()); 
+public class QuerySubTask implements Callable<Void> {
+	 
+	private final static Log log = LogFactory.getLog(QuerySubTask.class);
 
 	private Term term;
 	private CloudService cloud;
 	private String decoratedTable;
 	private Set<Triple> triples;
 
-	public QueryTask(Term term, Set<Triple> triples, String decoratedTable, CloudService cloud) {
+	public QuerySubTask(Term term, Set<Triple> triples, String decoratedTable, CloudService cloud) {
 		super();
 		this.term = term;
 		this.triples = triples;
@@ -37,7 +39,7 @@ public class QueryTask implements Callable<Void> {
 		// add table decoration to table name
 		String query = GenericRule.getQuery(triples, decoratedTable);	
 
-		log.info(this + "\nQuery: " + query);
+		log.info("Query: " + query);
 
 		String jobId = this.cloud.startBigDataQuery(query);
 		String encodedTerm = Utils.encodeFilename(term.getTerm());

@@ -25,9 +25,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -36,8 +37,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public class Results {
-	
-	private final static Logger log = Logger.getLogger(Results.class.getName()); 
+	 
+	private final static Log log = LogFactory.getLog(Results.class);
 	
 	/**
 	 * Bins for task distribution

@@ -47,13 +47,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -68,7 +68,7 @@ import com.google.gson.stream.JsonReader;
  */
 public class Utils {
 	
-	private final static Logger log = Logger.getLogger(Utils.class.getName()); 
+	private final static Log log = LogFactory.getLog(Utils.class);
 
 	public static final String PATH_SEPARATOR = File.separator;
 	
@@ -167,7 +167,7 @@ public class Utils {
 			TimeUnit.SECONDS.sleep(seconds);
 			//Thread.sleep(DateUtils.MILLIS_PER_SECOND * seconds);
 		} catch (InterruptedException e1) {
-			log.log(Level.WARNING, "wait interrupted", e1);
+			log.warn("wait interrupted", e1);
 		}
 	}
 	
@@ -196,7 +196,7 @@ public class Utils {
 					new TypeToken<Set<String>>(){}.getType());
 			
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "failed to prase json into set", e);
+			log.error("failed to prase json into set", e);
 			throw new IOException(e);
 		}
 	}
@@ -215,7 +215,7 @@ public class Utils {
 					new TypeToken<Map<String, Long>>(){}.getType());
 			
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "failed to prase json into map", e);
+			log.error("failed to prase json into map", e);
 			throw new IOException(e);
 		}
 	}
@@ -244,7 +244,7 @@ public class Utils {
 		try {
 			filename = URLEncoder.encode(text, Constants.UTF8);
 		} catch (UnsupportedEncodingException e) {
-			log.log(Level.WARNING, "Failed to encode text as filename: " + text, e);
+			log.warn("Failed to encode text as filename: " + text, e);
 		}
 		return filename;
 	}
@@ -361,7 +361,7 @@ public class Utils {
 			try {
 				clazz = Class.forName(metaData.getException());
 			} catch (ClassNotFoundException e) {
-				log.log(Level.WARNING, "failed to load exception class from evm");
+				log.warn("failed to load exception class from evm");
 			}
 		}
 		Exception cause;
@@ -370,7 +370,7 @@ public class Utils {
 			ctor.setAccessible(true);
 			cause = (Exception) ctor.newInstance(message);
 		} catch (Exception e) {
-			log.log(Level.WARNING, "failed to load exception class from evm");
+			log.warn("failed to load exception class from evm");
 			cause = new IOException(message);
 		}
 		return new NodeException(Constants.EVM_EXCEPTION + instanceId, cause, instanceId);

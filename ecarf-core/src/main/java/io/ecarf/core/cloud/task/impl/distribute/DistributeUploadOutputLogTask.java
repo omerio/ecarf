@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.distribute;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
@@ -28,7 +28,6 @@ import io.ecarf.core.utils.Utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 import com.google.api.client.util.Lists;
 
@@ -84,7 +83,7 @@ public class DistributeUploadOutputLogTask extends CommonTask {
 					// TODO status can be error ERROR
 					if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
 						nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
-						log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
+						log.error(instanceId + " processing node has failed", nodeException);
 					}
 
 				} while (!ready);

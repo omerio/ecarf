@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.distribute;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -154,7 +153,7 @@ public class DistributeReasonTask extends CommonTask {
 					// check for ERROR status
 					if(VMStatus.ERROR.equals(metaData.getVMStatus())) {
 						nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
-						log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
+						log.error(instanceId + " processing node has failed", nodeException);
 						break;
 					}
 

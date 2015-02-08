@@ -16,13 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.reason;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
-import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.term.TermUtils;
@@ -45,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -184,7 +182,7 @@ public class DoReasonTask4 extends CommonTask {
 
 					} catch(IOException ioe) {
 						// transient backend errors
-						log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
+						log.warn("failed to save query results to file, jobId: " + term.getJobId());
 					}
 
 					log.info("Query found " + rows + ", rows");
@@ -324,7 +322,7 @@ public class DoReasonTask4 extends CommonTask {
 
 				}
 			} catch(Exception e) {
-				log.log(Level.SEVERE, "Failed to parse selected terms", e);
+				log.error("Failed to parse selected terms", e);
 				failedTriples++;
 			}
 		}

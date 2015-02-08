@@ -29,10 +29,10 @@ import io.ecarf.core.cloud.types.VMStatus;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The program p of the Ecarf framework
@@ -42,7 +42,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class EcarfEvmTask {
 	
-	private final static Logger log = Logger.getLogger(EcarfEvmTask.class.getName()); 
+	private final static Log log = LogFactory.getLog(EcarfEvmTask.class);
 	
 	/**
 	 * Sleep for 10 seconds
@@ -102,7 +102,7 @@ public class EcarfEvmTask {
 
 			} catch(Exception e) {
 				
-				log.log(Level.SEVERE, "An error has occurred whilst running/waiting for tasks, setting status to ERROR", e);
+				log.error("An error has occurred whilst running/waiting for tasks, setting status to ERROR", e);
 				// try to update the Metadata to a fail status
 				try {
 					
@@ -120,7 +120,7 @@ public class EcarfEvmTask {
 					
 				} catch(Exception e1) {
 					// all has failed with no hope of recovery, retry a few times then terminate
-					log.log(Level.SEVERE, "An error has occurred whilst trying to recover", e);
+					log.error("An error has occurred whilst trying to recover", e);
 					// self terminate :-(
 					// FIXME uncomment once testing is thoroughly done
 					//this.service.shutdownInstance();
@@ -202,7 +202,7 @@ public class EcarfEvmTask {
 				task.setMetadata(metadata);
 				
 			} catch(IOException e) {
-				log.log(Level.SEVERE, "Failed to start evm program", e);
+				log.error("Failed to start evm program", e);
 				throw e;
 			}
 			break;

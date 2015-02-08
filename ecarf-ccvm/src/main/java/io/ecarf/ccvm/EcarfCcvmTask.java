@@ -29,13 +29,13 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
-import io.ecarf.core.cloud.task.impl.DistributeLoadTask;
-import io.ecarf.core.cloud.task.impl.DistributeReasonTask;
-import io.ecarf.core.cloud.task.impl.DistributeUploadOutputLogTask;
-import io.ecarf.core.cloud.task.impl.DoLoadTask;
-import io.ecarf.core.cloud.task.impl.PartitionLoadTask;
-import io.ecarf.core.cloud.task.impl.PartitionReasonTask;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
+import io.ecarf.core.cloud.task.impl.distribute.DistributeLoadTask;
+import io.ecarf.core.cloud.task.impl.distribute.DistributeReasonTask;
+import io.ecarf.core.cloud.task.impl.distribute.DistributeUploadOutputLogTask;
+import io.ecarf.core.cloud.task.impl.load.DoLoadTask;
+import io.ecarf.core.cloud.task.impl.partition.PartitionLoadTask;
+import io.ecarf.core.cloud.task.impl.partition.PartitionReasonTask;
 import io.ecarf.core.exceptions.NodeException;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.partition.Partition;
@@ -51,10 +51,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Stopwatch;
 
@@ -66,7 +66,7 @@ import com.google.common.base.Stopwatch;
  */
 public class EcarfCcvmTask {
 
-	private final static Logger log = Logger.getLogger(EcarfCcvmTask.class.getName()); 
+	private final static Log log = LogFactory.getLog(EcarfCcvmTask.class);
 
 	private CloudService service;
 
@@ -222,10 +222,10 @@ public class EcarfCcvmTask {
 			log.info("TIMER# Completed reasoning phase in: " + stopwatch);
 
 		} catch(NodeException ne) {
-			log.log(Level.SEVERE, "Some processing nodes have failed", ne);
+			log.error("Some processing nodes have failed", ne);
 			
 		} catch(IOException ie) {
-			log.log(Level.SEVERE, "An error has occurred", ie);
+			log.error("An error has occurred", ie);
 		}
 		
 		
@@ -356,7 +356,7 @@ public class EcarfCcvmTask {
 				task.setMetadata(metadata);
 
 			} catch(IOException e) {
-				log.log(Level.SEVERE, "Failed to start cvm program", e);
+				log.error("Failed to start cvm program", e);
 				throw e;
 			}
 			break;
@@ -373,7 +373,7 @@ public class EcarfCcvmTask {
 			System.exit(0);
 
 		} catch(Exception e) {
-			log.log(Level.SEVERE, "Failed to run CCVM", e);
+			log.error("Failed to run CCVM", e);
 			System.exit(1);
 		}
 	}

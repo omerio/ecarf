@@ -23,16 +23,17 @@ import io.ecarf.core.cloud.CloudService;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class SaveResultsTask implements Callable<Void> {
+public class SaveResultsSubTask implements Callable<Void> {
 	
-	private final static Logger log = Logger.getLogger(QueryTask.class.getName()); 
+	private final static Log log = LogFactory.getLog(SaveResultsSubTask.class);
 	
 	private Term term;
 	private CloudService cloud;
@@ -40,7 +41,7 @@ public class SaveResultsTask implements Callable<Void> {
 	/**
 	 * 
 	 */
-	public SaveResultsTask(Term term, CloudService cloud) {
+	public SaveResultsSubTask(Term term, CloudService cloud) {
 		this.term = term;
 		this.cloud = cloud;
 	}
@@ -60,10 +61,10 @@ public class SaveResultsTask implements Callable<Void> {
 
 		} catch(IOException ioe) {
 			// transient backend errors
-			log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId(), ioe);
+			log.warn("failed to save query results to file, jobId: " + term.getJobId(), ioe);
 		}
 
-		log.info(this + ", Query found " + rows + ", rows");
+		log.info("Query found " + rows + ", rows");
 		
 		term.setRows(rows);
 		

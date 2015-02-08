@@ -46,7 +46,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -150,10 +149,10 @@ public class DoReasonTask5 extends CommonTask {
 				Term term = entry.getKey();
 				Set<Triple> triples = entry.getValue();
 
-				QueryTask queryTask = new QueryTask(term, triples, decoratedTable, cloud);
+				QuerySubTask queryTask = new QuerySubTask(term, triples, decoratedTable, cloud);
 				queryTasks.add(queryTask);
 				
-				SaveResultsTask saveTask = new SaveResultsTask(term, cloud);
+				SaveResultsSubTask saveTask = new SaveResultsSubTask(term, cloud);
 				saveTasks.add(saveTask);
 			}
 			
@@ -272,7 +271,7 @@ public class DoReasonTask5 extends CommonTask {
 			
 		} catch (InterruptedException e) {
 			
-			log.log(Level.SEVERE, "executor service interrupted", e);
+			log.error("executor service interrupted", e);
 			executor.shutdown();
 			throw new IOException(e);
 			
@@ -341,7 +340,7 @@ public class DoReasonTask5 extends CommonTask {
 
 				}
 			} catch(Exception e) {
-				log.log(Level.SEVERE, "Failed to parse selected terms", e);
+				log.error("Failed to parse selected terms", e);
 				failedTriples++;
 			}
 		}

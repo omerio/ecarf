@@ -21,7 +21,10 @@ package io.ecarf.core.cloud.task;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 
-import java.util.logging.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -29,7 +32,7 @@ import java.util.logging.Logger;
  */
 public abstract class CommonTask implements Task {
 	
-	protected final static Logger log = Logger.getLogger(CommonTask.class.getName()); 
+	protected final static Log log = LogFactory.getLog(CommonTask.class);
 	
 	protected VMMetaData metadata;
 	

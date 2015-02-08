@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+	<!-- Author: Omer Dawelbeit -->
+	<!--
+		Define a console appender to be used for testing and development
+		purposes
+	-->
+	<appender name="ConsoleAppender" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{dd/MM/yyyy HH:mm:ss} [%5p] [%t] %c{3} - %m%n" />
+		</layout>
+	</appender>
+
+	<!-- Define an appender for the Trace level logging  -->
+	<appender name="DebugRollingFileAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File"	value="/home/omerio/output.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<param name="Append" value="true" />
+		<param name="Threshold" value="DEBUG" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{dd/MM/yyyy HH:mm:ss} [%5p] [%t] %c{3} - %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="io.ecarf" additivity="false">
+		<level value="ALL" />
+		<appender-ref ref="ConsoleAppender" />
+	</logger>
+
+	<root>
+		<level value="INFO" />
+		<appender-ref ref="ConsoleAppender" />
+	</root>
+</log4j:configuration>
+

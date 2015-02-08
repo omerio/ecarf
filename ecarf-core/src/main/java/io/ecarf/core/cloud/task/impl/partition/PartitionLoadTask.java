@@ -16,31 +16,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.partition;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.storage.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.partition.Partition;
 import io.ecarf.core.partition.PartitionFunction;
 import io.ecarf.core.partition.PartitionFunctionFactory;
+import io.ecarf.core.utils.Constants;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Read a list of weighted Triple terms and based on their occurrences split them
+ * Read a list of files from cloud storage and based on their size split them
  * using a bin packing algorithm
  * 
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class PartitionReasonTask extends CommonTask {
+public class PartitionLoadTask extends CommonTask {
+	
 
-
-	public PartitionReasonTask(VMMetaData metadata, CloudService cloud) {
+	public PartitionLoadTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);
 	}
 
@@ -49,30 +52,43 @@ public class PartitionReasonTask extends CommonTask {
 	 */
 	@Override
 	public void run() throws IOException {
-
-		log.info("Processing partition reason");
-
-		List<Item> items = this.input.getWeightedItems();
-
-		// each node can handle up to 10% more than the largest term
-		// read from the configurations
+		
+		log.info("Processing partition load");
+		
+		String bucket = this.input.getBucket();
+		
+		List<StorageObject> objects = this.cloud.listCloudStorageObjects(bucket);
+		
+		List<Item> items = new ArrayList<>();
+		
+		for(StorageObject object: objects) {
+			String filename = object.getName();
+			if(filename.endsWith(Constants.COMPRESSED_N_TRIPLES)) {
+				items.add(new Item(filename, object.getSize().longValue()));
+			} else {
+				log.warn("Skipping file: " + filename);
+			}
+		}
+		
+		// each node should handle a gigbyte of data
+		// read it the configurations
 		PartitionFunction function;
 		
 		if(this.input.getNumberOfNodes() == null) {
-			
 			function = PartitionFunctionFactory.createBinPacking(items, 
-					this.input.getNewBinPercentage(), this.input.getWeightPerNode());
+					this.input.getNewBinPercentage(), 
+					this.input.getWeightPerNode());
 		} else {
 			function = PartitionFunctionFactory.createBinPacking(items, this.input.getNumberOfNodes());
 		}
-
+		
 		List<Partition> bins = function.partition();
-
+		
 		this.results = new Results();
 		results.setBins(bins);
-
-		log.info("Successfully created term stats: " + bins);
-
+		
+		log.info("Successfully processed partition load");
 	}
+	
 
 }

@@ -21,8 +21,9 @@ package io.ecarf.core.cloud.impl.google.storage;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.googleapis.media.MediaHttpUploader;
 import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
@@ -36,7 +37,7 @@ import com.google.common.base.Stopwatch;
  */
 public class UploadProgressListener implements MediaHttpUploaderProgressListener {
 	
-	private final static Logger log = Logger.getLogger(UploadProgressListener.class.getName()); 
+	private final static Log log = LogFactory.getLog(UploadProgressListener.class);
 	
 	private final Stopwatch stopwatch = new Stopwatch();
 	
@@ -65,7 +66,7 @@ public class UploadProgressListener implements MediaHttpUploaderProgressListener
 			try {
 				log.info("Progress: " + Math.round(uploader.getProgress() * 100.00) + "%");
 			} catch (IOException e) {
-				log.log(Level.WARNING, "Failed to get progress", e);
+				log.warn("Failed to get progress", e);
 				log.info("Uploaded: " + uploader.getNumBytesUploaded());
 			}
 			

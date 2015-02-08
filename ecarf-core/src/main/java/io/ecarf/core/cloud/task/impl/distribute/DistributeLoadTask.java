@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.distribute;
 
 import static io.ecarf.core.cloud.impl.google.GoogleMetaData.NOT_FOUND;
 import io.ecarf.core.cloud.CloudService;
@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -135,7 +134,7 @@ public class DistributeLoadTask extends CommonTask {
 						// check for ERROR status
 						if(VMStatus.ERROR.equals(metaData.getVMStatus())) {		
 							nodeException = Utils.exceptionFromEcarfError(metaData, instanceId);
-							log.log(Level.SEVERE, instanceId + " processing node has failed", nodeException);
+							log.error(instanceId + " processing node has failed", nodeException);
 							
 						}
 						
@@ -178,7 +177,7 @@ public class DistributeLoadTask extends CommonTask {
 							log.info("Evms analysed: " + allTermStats.size() + ", terms");
 						} catch(IOException e) {
 							// a file not found means the evm didn't find any schema terms so didn't generate any stats
-							log.log(Level.SEVERE, "failed to download file: " + localStatsFile, e);
+							log.error("failed to download file: " + localStatsFile, e);
 							if(!(e.getMessage().indexOf(NOT_FOUND) >= 0)) {
 								throw e;
 							}

@@ -21,6 +21,7 @@ package io.ecarf.core.cloud.task.impl;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.task.CommonTask;
+import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.term.TermUtils;
@@ -43,13 +44,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
@@ -166,7 +165,7 @@ public class DoReasonTask extends CommonTask {
 					
 				} catch(IOException ioe) {
 					// transient backend errors
-					log.log(Level.WARNING, "failed to save query results to file, jobId: " + term.getJobId());
+					log.warn("failed to save query results to file, jobId: " + term.getJobId());
 				}
 
 				log.info("Query found " + rows + ", rows");
@@ -223,7 +222,7 @@ public class DoReasonTask extends CommonTask {
 								
 							}
 						} catch(Exception e) {
-							log.log(Level.SEVERE, "Failed to parse selected terms", e);
+							log.error("Failed to parse selected terms", e);
 							failedTriples++;
 						}
 					}
@@ -265,100 +264,6 @@ public class DoReasonTask extends CommonTask {
 		} while(!(emptyRetries == maxRetries)); // end timestamp loop
 		
 		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
-	}
-
-	/**
-	 * Term details used during the querying and reasoning process
-	 * @author Omer Dawelbeit (omerio)
-	 *
-	 */
-	public class Term {
-		
-		private String term;
-		
-		private String filename;
-		
-		private String jobId;
-		
-		private String encodedTerm;
-
-		/**
-		 * @param term
-		 */
-		public Term(String term) {
-			super();
-			this.term = term;
-		}
-
-		/**
-		 * @return the term
-		 */
-		public String getTerm() {
-			return term;
-		}
-
-		/**
-		 * @param term the term to set
-		 */
-		public Term setTerm(String term) {
-			this.term = term;
-			return this;
-		}
-
-		/**
-		 * @return the filename
-		 */
-		public String getFilename() {
-			return filename;
-		}
-
-		/**
-		 * @param filename the filename to set
-		 */
-		public Term setFilename(String filename) {
-			this.filename = filename;
-			return this;
-		}
-
-		/**
-		 * @return the jobId
-		 */
-		public String getJobId() {
-			return jobId;
-		}
-
-		/**
-		 * @param jobId the jobId to set
-		 */
-		public Term setJobId(String jobId) {
-			this.jobId = jobId;
-			return this;
-		}
-
-		/* (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
-		@Override
-		public String toString() {
-			return ReflectionToStringBuilder.toString(this);
-		}
-
-		/**
-		 * @return the encodedTerm
-		 */
-		public String getEncodedTerm() {
-			return encodedTerm;
-		}
-
-		/**
-		 * @param encodedTerm the encodedTerm to set
-		 */
-		public void setEncodedTerm(String encodedTerm) {
-			this.encodedTerm = encodedTerm;
-		}
-		
-		
-		
 	}
 
 }

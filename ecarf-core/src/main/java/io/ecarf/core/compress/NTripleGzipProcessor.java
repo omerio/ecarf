@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -35,6 +34,8 @@ import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -48,8 +49,8 @@ import org.semanticweb.yars.nx.util.NxUtil;
  *
  */
 public class NTripleGzipProcessor {
-	
-	private final static Logger log = Logger.getLogger(NTripleGzipProcessor.class.getName());
+		
+	private final static Log log = LogFactory.getLog(NTripleGzipProcessor.class);
 	
 	private String inputFile;
 	
@@ -127,7 +128,7 @@ public class NTripleGzipProcessor {
 						}
 					
 					} else {
-						log.warning("Ignoring line: " + ns);
+						log.warn("Ignoring line: " + ns);
 					}
 				}
 

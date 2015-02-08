@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.impl;
+package io.ecarf.core.cloud.task.impl.load;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
@@ -32,10 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -85,7 +83,7 @@ public class ProcessLoadTask1 extends CommonTask {
 		Set<String> files = metadata.getFiles();
 		log.info("Loading files: " + files);
 		Map<String, Integer> count = new HashMap<>();
-		List<ProcessFileTask> tasks = new ArrayList<>();
+		List<ProcessFileSubTask> tasks = new ArrayList<>();
 		int processors = Runtime.getRuntime().availableProcessors();
 
 		for(final String file: files) {
@@ -97,7 +95,7 @@ public class ProcessLoadTask1 extends CommonTask {
 				counter.setTermsToCount(schemaTerms);
 			}
 
-			ProcessFileTask task = new ProcessFileTask(file, bucket, counter, cloud);
+			ProcessFileSubTask task = new ProcessFileSubTask(file, bucket, counter, cloud);
 			tasks.add(task);
 
 		}
@@ -112,7 +110,7 @@ public class ProcessLoadTask1 extends CommonTask {
 			
 		} else if(processors == 1) {
 			// only one process then process synchronously
-			for(ProcessFileTask task: tasks) {
+			for(ProcessFileSubTask task: tasks) {
 				TermCounter counter = task.call();
 				if(counter != null) {
 					this.mergeMaps(count, counter.getCount());
@@ -136,7 +134,7 @@ public class ProcessLoadTask1 extends CommonTask {
 				}
 				
 			} catch(Exception e) {
-				log.log(Level.SEVERE, "Failed to process multiple files", e);
+				log.error("Failed to process multiple files", e);
 				throw new IOException(e);
 				
 			} finally {
@@ -172,55 +170,4 @@ public class ProcessLoadTask1 extends CommonTask {
 		}
 	}
 	
-	/**
-	 * 
-	 * @author Omer Dawelbeit (omerio)
-	 *
-	 */
-	public class ProcessFileTask implements Callable<TermCounter> {
-		
-		private String file;
-		private CloudService cloud;
-		private TermCounter counter;
-		private String bucket;
-
-		public ProcessFileTask(String file, String bucket, TermCounter counter, CloudService cloud) {
-			super();
-			this.file = file;
-			this.cloud = cloud;
-			this.counter = counter;
-			this.bucket = bucket;
-			
-		}
-
-		@Override
-		public TermCounter call() throws IOException {
-			
-			String localFile = Utils.TEMP_FOLDER + file;
-
-			log.info(this.toString() + ": Downloading file: " + file);
-
-			this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
-
-			// all downloaded, carryon now, process the files
-
-			log.info(this.toString() + ": Processing file: " + localFile);
-			String outFile = this.cloud.prepareForCloudDatabaseImport(localFile, counter);
-
-			// once the processing is done then delete the local file
-			Utils.deleteFile(localFile);
-
-			// now upload the files again
-
-			log.info(this.toString() + ": Uploading file: " + outFile);
-			this.cloud.uploadFileToCloudStorage(outFile, bucket);
-
-			// now delete all the locally processed files
-			Utils.deleteFile(outFile);
-			
-			return counter;
-		}
-		
-	}
-
 }

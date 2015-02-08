@@ -88,8 +88,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FileUtils;
@@ -97,6 +95,8 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonError;
@@ -155,7 +155,7 @@ import com.google.common.collect.Lists;
  */
 public class GoogleCloudService implements CloudService {
 
-	private final static Logger log = Logger.getLogger(GoogleCloudService.class.getName()); 
+	private final static Log log = LogFactory.getLog(GoogleCloudService.class);
 
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -260,7 +260,7 @@ public class GoogleCloudService implements CloudService {
 			}
 		} else {
 			String msg = "Metadata server responded with status code: " + responseCode;
-			log.severe(msg);
+			log.error(msg);
 			throw new IOException(msg);
 		}
 		log.info("Successfully retrieved metadata from server");
@@ -280,14 +280,14 @@ public class GoogleCloudService implements CloudService {
 	 */
 	private void authorise() throws IOException {
 
-		log.fine("Refreshing OAuth token from metadata server");
+		log.debug("Refreshing OAuth token from metadata server");
 		Map<String, Object> token = Utils.jsonToMap(getMetaData(TOKEN_PATH));
 		this.accessToken = (String) token.get(ACCESS_TOKEN);
 
 		Double expiresIn = (Double) token.get(EXPIRES_IN);
 		this.tokenExpire = DateUtils.addSeconds(new Date(), expiresIn.intValue());
 
-		log.fine("Successfully refreshed OAuth token from metadata server");
+		log.debug("Successfully refreshed OAuth token from metadata server");
 
 	}
 
@@ -302,7 +302,7 @@ public class GoogleCloudService implements CloudService {
 			try {
 				httpTransport = GoogleNetHttpTransport.newTrustedTransport();
 			} catch (GeneralSecurityException e) {
-				log.log(Level.SEVERE, "failed to create transport", e);
+				log.error("failed to create transport", e);
 				throw new IOException(e);
 			}
 		}
@@ -879,7 +879,7 @@ public class GoogleCloudService implements CloudService {
 						
 					} catch(GoogleJsonResponseException e) {
 						if(e.getMessage().indexOf(NOT_FOUND) == 0) {
-							log.warning("Instance not found: " + config.getInstanceId());
+							log.warn("Instance not found: " + config.getInstanceId());
 							if(retries <= 0) {
 								throw e;
 							}
@@ -1403,13 +1403,13 @@ public class GoogleCloudService implements CloudService {
 				if((error != null) && (error.getErrors() != null) && !error.getErrors().isEmpty() &&
 						GoogleMetaData.RATE_LIMIT_EXCEEDED.equals(error.getErrors().get(0).getReason())) {
 					
-					log.log(Level.WARNING, "Failed to stream data, error: ", error.getMessage());
+					log.error("Failed to stream data, error: " + error.getMessage());
 					
 					long backOffTime = backOff.nextBackOffMillis();
 					
 					if (backOffTime == BackOff.STOP) {
 						// we are not retrying anymore
-						log.warning("Failed after " + backOff.getElapsedTimeMillis() / 1000 + " seconds of elapsed time");
+						log.warn("Failed after " + backOff.getElapsedTimeMillis() / 1000 + " seconds of elapsed time");
 						throw e;
 						
 					} else {
@@ -1423,7 +1423,7 @@ public class GoogleCloudService implements CloudService {
 					}
 					
 				} else {
-					log.log(Level.SEVERE, "Failed to stream data", e);
+					log.error("Failed to stream data", e);
 					throw e;
 				}
 			}
@@ -1443,12 +1443,12 @@ public class GoogleCloudService implements CloudService {
 			// retry again for the failed list
 			if(retries > Config.getIntegerProperty("ecarf.io.google.bigquery.insert.errors.retries", 3)) {
 				
-				log.warning("Failed to stream some rows into bigquery after 3 retries");
+				log.warn("Failed to stream some rows into bigquery after 3 retries");
 				throw new IOException("Failed to stream some rows into bigquery after 3 retries");
 				
 			} else {
 				retries++;
-				log.warning(failedList.size() + " rows failed to be inserted retrying again. Retries = " + retries); 
+				log.warn(failedList.size() + " rows failed to be inserted retrying again. Retries = " + retries); 
 				this.streamRowsIntoBigQuery(datasetId, tableId, failedList, retries);
 			}
 		}
@@ -1557,7 +1557,7 @@ public class GoogleCloudService implements CloudService {
 
 		if (!GoogleMetaData.DONE.equals(status)) {
 			pollJob = null;
-			log.warning("Job has not completed yet, skipping. JobId: " + jobId);
+			log.warn("Job has not completed yet, skipping. JobId: " + jobId);
 			
 		} else {
 			if(prettyPrint) {
@@ -1659,7 +1659,7 @@ public class GoogleCloudService implements CloudService {
 			log.info("Elapsed query time (s): " + TimeUnit.MILLISECONDS.toSeconds(time));
 			
 		} catch(Exception e) {
-			log.log(Level.WARNING, "failed to log job stats", e);
+			log.warn("failed to log job stats", e);
 		}
 	}
 
@@ -1718,7 +1718,7 @@ public class GoogleCloudService implements CloudService {
 				retrying = false;
 						 
 			} catch(IOException e) {
-				log.log(Level.SEVERE, "failed to query job", e);
+				log.error("failed to query job", e);
 				retries--;
 				if(retries == 0) {
 					throw e;

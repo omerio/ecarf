@@ -1,9 +1,10 @@
 package io.ecarf.core.cloud.impl.google;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -21,8 +22,8 @@ import com.google.api.client.http.HttpUnsuccessfulResponseHandler;
  *
  */
 public class RedirectHandler implements HttpUnsuccessfulResponseHandler {
-
-	private final static Logger log = Logger.getLogger(RedirectHandler.class.getName()); 
+	
+	private final static Log log = LogFactory.getLog(RedirectHandler.class);
 
 	private static final String OAUTH_TOKEN_PARAM = "?oauth_token=";
 	/*

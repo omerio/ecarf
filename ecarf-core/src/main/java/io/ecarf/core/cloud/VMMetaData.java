@@ -25,10 +25,10 @@ import io.ecarf.core.utils.Utils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A collection of vm instance metadata used by ecarf. 
@@ -38,7 +38,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class VMMetaData {
 	
-	private final static Logger log = Logger.getLogger(VMMetaData.class.getName()); 
+	private final static Log log = LogFactory.getLog(VMMetaData.class);
 	
 	public static final int MAX_METADATA_SIZE = 32768;
 	
@@ -121,7 +121,7 @@ public class VMMetaData {
 				task = TaskType.valueOf((String) this.attributes.get(ECARF_TASK));
 				
 			} catch(IllegalArgumentException e) {
-				log.log(Level.SEVERE, "Failed to parse task type", e);
+				log.error("Failed to parse task type", e);
 			}
 		}
 		return task;
@@ -138,7 +138,7 @@ public class VMMetaData {
 				vmStatus = VMStatus.valueOf((String) this.attributes.get(ECARF_STATUS));
 				
 			} catch(IllegalArgumentException e) {
-				log.log(Level.SEVERE, "Failed to parse vm status", e);
+				log.error("Failed to parse vm status", e);
 			}
 		}
 		

@@ -21,11 +21,11 @@ package io.ecarf.core.utils;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Configurations management Utility
@@ -35,7 +35,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  */
 public class Config {
 
-	private static final Logger log = Logger.getLogger(Config.class.getName());
+	private final static Log log = LogFactory.getLog(Config.class);
 
 	/**
 	 * <p>The default configuration file</p>
@@ -82,12 +82,12 @@ public class Config {
 					try {
 						singleton = new Config();
 					} catch (ConfigurationException e) {
-						log.log(Level.SEVERE, "Failed to initialize Config instance", e);
+						log.error("Failed to initialize Config instance", e);
 						throw new RuntimeException(e);
 					}
 				}
 			}
-			log.fine("Successfully created Config Singleton");
+			log.debug("Successfully created Config Singleton");
 		}
 
 		return singleton;

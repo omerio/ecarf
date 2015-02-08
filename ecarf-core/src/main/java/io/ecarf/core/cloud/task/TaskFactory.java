@@ -22,11 +22,11 @@ import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.task.impl.DoReasonTask1;
 import io.ecarf.core.cloud.task.impl.DoReasonTask2;
-import io.ecarf.core.cloud.task.impl.DoReasonTask3;
-import io.ecarf.core.cloud.task.impl.DoReasonTask4;
 import io.ecarf.core.cloud.task.impl.DoUploadOutputLogTask;
-import io.ecarf.core.cloud.task.impl.ProcessLoadTask1;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
+import io.ecarf.core.cloud.task.impl.load.ProcessLoadTask1;
+import io.ecarf.core.cloud.task.impl.reason.DoReasonTask3;
+import io.ecarf.core.cloud.task.impl.reason.DoReasonTask4;
 import io.ecarf.core.cloud.types.TaskType;
 
 /**
