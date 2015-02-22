@@ -26,6 +26,7 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
 import io.ecarf.core.cloud.types.VMStatus;
+import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -95,7 +96,14 @@ public class EcarfEvmTask {
 
 				// now wait for any change in the metadata
 				log.info("Waiting for new instructions from ccvm");
-				metadata = this.service.getEcarfMetaData(true);
+				
+				// avoid race condition
+				Utils.block(2);
+				metadata = this.service.getEcarfMetaData(false);
+				// if we still have a status then wait, otherwise proceed
+				if(StringUtils.isNotBlank(metadata.getStatus())) {
+					metadata = this.service.getEcarfMetaData(true);
+				}
 
 				// check the status in the metadata
 				status = metadata.getStatus();

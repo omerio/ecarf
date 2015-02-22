@@ -244,15 +244,17 @@ public class DoReasonTask5 extends CommonTask {
 
 			log.info("Total inferred triples so far = " + totalInferredTriples + ", current retry count: " + emptyRetries);
 			
-			Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
-			
-			// FIXME move into the particular cloud implementation service
-			long elapsed = System.currentTimeMillis() - start;
-			decoratedTable =  "[" + table + "@-" + elapsed + "-]";
-			
-			log.info("Using table decorator: " + decoratedTable + ". Empty retries count: " + emptyRetries);
+			if(emptyRetries < maxRetries) {
+				Utils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
 
-		} while(!(emptyRetries == maxRetries)); // end timestamp loop
+				// FIXME move into the particular cloud implementation service
+				long elapsed = System.currentTimeMillis() - start;
+				decoratedTable =  "[" + table + "@-" + elapsed + "-]";
+
+				log.info("Using table decorator: " + decoratedTable + ". Empty retries count: " + emptyRetries);
+			}
+
+		} while(emptyRetries < maxRetries); // end timestamp loop
 		
 		executor.shutdown();
 		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);

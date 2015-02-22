@@ -29,6 +29,7 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
+import io.ecarf.core.cloud.task.TaskFactory;
 import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeReasonTask;
@@ -36,6 +37,7 @@ import io.ecarf.core.cloud.task.impl.distribute.DistributeUploadOutputLogTask;
 import io.ecarf.core.cloud.task.impl.load.DoLoadTask;
 import io.ecarf.core.cloud.task.impl.partition.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.partition.PartitionReasonTask;
+import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.exceptions.NodeException;
 import io.ecarf.core.partition.Item;
 import io.ecarf.core.partition.Partition;
@@ -249,6 +251,15 @@ public class EcarfCcvmTask {
 				this.service.shutdownInstance(configs);
 			}
 		}
+		
+		// upload the logs
+		log.info("Uploading coordinator output log");
+		VMMetaData data = new VMMetaData();
+		data.addValue(VMMetaData.ECARF_BUCKET, bucket)
+			.addValue(VMMetaData.ECARF_TASK, TaskType.UPLOAD_LOGS.toString());
+		task = TaskFactory.getTask(data, this.service);
+		task.run();
+		
 
 	}
 
