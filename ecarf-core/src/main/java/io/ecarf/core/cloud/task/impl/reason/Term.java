@@ -20,6 +20,9 @@ public class Term {
 	private String encodedTerm;
 	
 	private BigInteger rows = BigInteger.ZERO;
+	
+	private Long bytes = 0L;
+
 
 	/**
 	 * @param term
@@ -106,8 +109,24 @@ public class Term {
 	/**
 	 * @param rows the rows to set
 	 */
-	public void setRows(BigInteger rows) {
+	public Term setRows(BigInteger rows) {
 		this.rows = rows;
+		return this;
+	}
+	
+	/**
+	 * @return the bytes
+	 */
+	public Long getBytes() {
+		return bytes;
+	}
+
+	/**
+	 * @param bytes the bytes to set
+	 */
+	public Term setBytes(Long bytes) {
+		this.bytes = bytes;
+		return this;
 	}
 
 }

@@ -222,7 +222,7 @@ public class GoogleCloudServiceTest {
 	@Ignore
 	public void testUploadFileToCloudStorage() throws IOException {
 
-		io.ecarf.core.cloud.storage.StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
+		io.ecarf.core.cloud.entities.StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
 			
 			@Override
 			public void execute() {
@@ -270,7 +270,7 @@ public class GoogleCloudServiceTest {
 				Utils.encodeFilename("<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>") + 
 				Constants.DOT_TERMS;
 		
-		BigInteger rows = this.service.saveBigQueryResultsToFile(jobId, filename);
+		BigInteger rows = this.service.saveBigQueryResultsToFile(jobId, filename).getTotalRows();
 		System.err.println(rows);
 		
 		

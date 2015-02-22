@@ -20,7 +20,7 @@ package io.ecarf.core.cloud.task.impl.reason;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.storage.StorageObject;
+import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
@@ -51,9 +51,11 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
 /**
@@ -69,6 +71,8 @@ public class DoReasonTask5 extends CommonTask {
 	private int duplicates;
 	
 	private BigInteger totalRows = BigInteger.valueOf(0l);
+	
+	private Long totalBytes = 0L;
 	
 	private ExecutorService executor;
 	
@@ -92,6 +96,8 @@ public class DoReasonTask5 extends CommonTask {
 		Set<String> terms = metadata.getTerms();
 		String schemaFile = metadata.getValue(VMMetaData.ECARF_SCHEMA);
 		String bucket = metadata.getBucket();
+		Stopwatch stopwatch1 = new Stopwatch();
+		Stopwatch stopwatch2 = new Stopwatch();
 		
 		if(terms == null) {
 			// too large, probably saved as a file
@@ -175,9 +181,13 @@ public class DoReasonTask5 extends CommonTask {
 					Term term = entry.getKey();
 					
 					BigInteger rows = term.getRows();
-
+					
+					this.totalBytes = this.totalBytes + term.getBytes();
+					
 					// only process if triples are found matching this term
 					if(!BigInteger.ZERO.equals(rows)) {
+						
+						stopwatch1.start();
 						
 						log.info("Reasoning for Term: " + term);
 
@@ -193,6 +203,8 @@ public class DoReasonTask5 extends CommonTask {
 						interimInferredTriples += inferredTriplesCount;
 						
 						this.totalRows = this.totalRows.add(rows);
+						
+						stopwatch1.stop();
 
 					} else {
 						log.info("Skipping term as no data found: " + term);
@@ -235,11 +247,17 @@ public class DoReasonTask5 extends CommonTask {
 				
 				// reset empty retries
 				emptyRetries = 0;
+				
+				stopwatch2.reset();
 
 			} else {
 				log.info("No new inferred triples");
 				// increment empty retries
 				emptyRetries++;
+				
+				if(!stopwatch2.isRunning()) {
+					stopwatch2.start();
+				}
 			}
 
 			log.info("Total inferred triples so far = " + totalInferredTriples + ", current retry count: " + emptyRetries);
@@ -260,6 +278,9 @@ public class DoReasonTask5 extends CommonTask {
 		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
 		log.info("Number of avoided duplicate terms = " + this.duplicates);
 		log.info("Total rows retrieved from big data = " + this.totalRows);
+		log.info("Total processed GBytes = " + ((double) this.totalBytes / FileUtils.ONE_GB));
+		log.info("Total process reasoning time (serialization in inf file) = " + stopwatch1);
+		log.info("Total time spent in empty inference cycles = " + stopwatch2);
 	}
 	
 	/**

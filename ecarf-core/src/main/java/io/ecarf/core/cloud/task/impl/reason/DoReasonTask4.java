@@ -20,7 +20,7 @@ package io.ecarf.core.cloud.task.impl.reason;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.storage.StorageObject;
+import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
@@ -178,7 +178,7 @@ public class DoReasonTask4 extends CommonTask {
 					BigInteger rows = BigInteger.ZERO;
 
 					try {
-						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename()).getTotalRows();
 
 					} catch(IOException ioe) {
 						// transient backend errors

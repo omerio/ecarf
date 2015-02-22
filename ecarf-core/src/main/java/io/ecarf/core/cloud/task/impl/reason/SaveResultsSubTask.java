@@ -19,6 +19,7 @@
 package io.ecarf.core.cloud.task.impl.reason;
 
 import io.ecarf.core.cloud.CloudService;
+import io.ecarf.core.cloud.entities.QueryStats;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -53,11 +54,14 @@ public class SaveResultsSubTask implements Callable<Void> {
 	public Void call() throws Exception {
 		
 		BigInteger rows = BigInteger.ZERO;
+		Long bytes = 0L;
 		
 		try {
 			// block and wait for each job to complete then save results to a file
 			
-			rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+			QueryStats stats = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+			rows = stats.getTotalRows();
+			bytes = stats.getTotalProcessedBytes();
 
 		} catch(IOException ioe) {
 			// transient backend errors
@@ -66,7 +70,7 @@ public class SaveResultsSubTask implements Callable<Void> {
 
 		log.info("Query found " + rows + ", rows");
 		
-		term.setRows(rows);
+		term.setRows(rows).setBytes(bytes);
 		
 		return null;
 	}

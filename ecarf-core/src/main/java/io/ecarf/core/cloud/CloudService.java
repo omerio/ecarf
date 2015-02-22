@@ -18,13 +18,13 @@
  */
 package io.ecarf.core.cloud;
 
-import io.ecarf.core.cloud.storage.StorageObject;
+import io.ecarf.core.cloud.entities.QueryStats;
+import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Callback;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 
@@ -214,7 +214,7 @@ public interface CloudService {
 	 * @param filename
 	 * @throws IOException
 	 */
-	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException;
+	public QueryStats saveBigQueryResultsToFile(String jobId, String filename) throws IOException;
 
 	/**
 	 * Stream local files into big query

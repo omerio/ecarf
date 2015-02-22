@@ -53,6 +53,7 @@ import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
 import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.entities.QueryStats;
 import io.ecarf.core.cloud.impl.google.storage.DownloadProgressListener;
 import io.ecarf.core.cloud.impl.google.storage.UploadProgressListener;
 import io.ecarf.core.compress.NTripleGzipCallback;
@@ -426,7 +427,7 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException 
 	 */
 	@Override
-	public io.ecarf.core.cloud.storage.StorageObject uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
+	public io.ecarf.core.cloud.entities.StorageObject uploadFileToCloudStorage(String filename, String bucket, Callback callback) throws IOException {
 
 		FileInputStream fileStream = new FileInputStream(filename);
 		String contentType;
@@ -474,7 +475,7 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	@Override
-	public io.ecarf.core.cloud.storage.StorageObject uploadFileToCloudStorage(String filename, String bucket) throws IOException {
+	public io.ecarf.core.cloud.entities.StorageObject uploadFileToCloudStorage(String filename, String bucket) throws IOException {
 
 		final FutureTask task = new FutureTask();
 
@@ -486,7 +487,7 @@ public class GoogleCloudService implements CloudService {
 			}
 		};
 
-		io.ecarf.core.cloud.storage.StorageObject storageObject = this.uploadFileToCloudStorage(filename, bucket, callback);
+		io.ecarf.core.cloud.entities.StorageObject storageObject = this.uploadFileToCloudStorage(filename, bucket, callback);
 
 		// wait for the upload to finish
 		while(!task.isDone()) {
@@ -558,8 +559,8 @@ public class GoogleCloudService implements CloudService {
 	}
 
 	@Override
-	public List<io.ecarf.core.cloud.storage.StorageObject> listCloudStorageObjects(String bucket) throws IOException {
-		List<io.ecarf.core.cloud.storage.StorageObject> objects = new ArrayList<>();
+	public List<io.ecarf.core.cloud.entities.StorageObject> listCloudStorageObjects(String bucket) throws IOException {
+		List<io.ecarf.core.cloud.entities.StorageObject> objects = new ArrayList<>();
 		Storage.Objects.List listObjects =  
 				getStorage().objects().list(bucket).setOauthToken(this.getOAuthToken());
 		// we are not paging, just get everything
@@ -567,7 +568,7 @@ public class GoogleCloudService implements CloudService {
 
 		for (StorageObject cloudObject : cloudObjects.getItems()) {
 			// Do things!
-			io.ecarf.core.cloud.storage.StorageObject object = this.getEcarfStorageObject(cloudObject, bucket);
+			io.ecarf.core.cloud.entities.StorageObject object = this.getEcarfStorageObject(cloudObject, bucket);
 			objects.add(object);
 		}
 		return objects;
@@ -579,9 +580,9 @@ public class GoogleCloudService implements CloudService {
 	 * @param bucket
 	 * @return
 	 */
-	private io.ecarf.core.cloud.storage.StorageObject getEcarfStorageObject(StorageObject cloudObject, String bucket) {
-		io.ecarf.core.cloud.storage.StorageObject object = 
-				new io.ecarf.core.cloud.storage.StorageObject();
+	private io.ecarf.core.cloud.entities.StorageObject getEcarfStorageObject(StorageObject cloudObject, String bucket) {
+		io.ecarf.core.cloud.entities.StorageObject object = 
+				new io.ecarf.core.cloud.entities.StorageObject();
 		object.setContentType(cloudObject.getContentType());
 		object.setDirectLink(cloudObject.getSelfLink());
 		object.setName(cloudObject.getName());
@@ -1773,12 +1774,13 @@ public class GoogleCloudService implements CloudService {
 	 * @throws IOException
 	 */
 	@Override
-	public BigInteger saveBigQueryResultsToFile(String jobId, String filename) throws IOException {
+	public QueryStats saveBigQueryResultsToFile(String jobId, String filename) throws IOException {
 		// query with retry support
 		String completedJob = checkBigQueryJobResults(jobId, true, false);
 		Joiner joiner = Joiner.on(',');
 		String pageToken = null;
 		BigInteger totalRows = null;
+		Long totalBytes = null;
 		Integer numFields = null;
 
 		try(PrintWriter writer = new PrintWriter(new FileOutputStream(filename))) {
@@ -1793,6 +1795,7 @@ public class GoogleCloudService implements CloudService {
 				if(totalRows == null) {
 					totalRows = queryResult.getTotalRows();
 					numFields = queryResult.getSchema().getFields().size();
+					totalBytes = queryResult.getTotalBytesProcessed();
 					log.info("Total rows for query: " + totalRows);
 				}
 
@@ -1822,7 +1825,7 @@ public class GoogleCloudService implements CloudService {
 
 			} while((pageToken != null) && !BigInteger.ZERO.equals(totalRows));
 		}
-		return totalRows;
+		return new QueryStats(totalRows, totalBytes);
 	}
 
 	/* (non-Javadoc)

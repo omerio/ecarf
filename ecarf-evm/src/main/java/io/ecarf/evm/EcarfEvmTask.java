@@ -26,7 +26,6 @@ import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
 import io.ecarf.core.cloud.types.VMStatus;
-import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -34,6 +33,8 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.google.common.base.Stopwatch;
 
 /**
  * The program p of the Ecarf framework
@@ -64,11 +65,16 @@ public class EcarfEvmTask {
 		
 		//final Thread currentThread = Thread.currentThread();
 		String status = null;
+		Stopwatch stopwatch = new Stopwatch();
 		
 		while(true) {
 			try {
 				// only process tasks if the status is empty
 				if(StringUtils.isBlank(status)) {
+					
+					stopwatch.reset();
+					stopwatch.start();
+					
 					// set status to BUSY
 					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
 					this.service.updateInstanceMetadata(metadata);
@@ -89,6 +95,9 @@ public class EcarfEvmTask {
 					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
 
 					this.service.updateInstanceMetadata(metadata);
+					
+					log.info("TIMER# Task " + task + " completed in: " + stopwatch);
+					stopwatch.reset();
 
 				} else {
 					log.info("will continue waiting for instructions as status is currently: " + status);

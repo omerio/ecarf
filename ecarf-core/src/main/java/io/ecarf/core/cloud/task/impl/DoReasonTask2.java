@@ -173,7 +173,7 @@ public class DoReasonTask2 extends CommonTask {
 					BigInteger rows = BigInteger.ZERO;
 
 					try {
-						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename());
+						rows = this.cloud.saveBigQueryResultsToFile(term.getJobId(), term.getFilename()).getTotalRows();
 
 					} catch(IOException ioe) {
 						// transient backend errors

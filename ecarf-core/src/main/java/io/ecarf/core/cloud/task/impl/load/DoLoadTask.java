@@ -20,7 +20,7 @@ package io.ecarf.core.cloud.task.impl.load;
 
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.storage.StorageObject;
+import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
 import io.ecarf.core.utils.Constants;
 
