@@ -39,6 +39,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -389,6 +390,20 @@ public class Utils {
 		log.info("Creating fixed thread pool of size: " + numOfThreads);
 		ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);
 		return executor;
+	}
+	
+	public static int getStringSize(String text) {
+		int size = 0;
+		
+		if(StringUtils.isNotBlank(text)) {
+			try {
+				size = text.getBytes(Constants.UTF8).length;
+			} catch (UnsupportedEncodingException e) {
+				log.warn("Failed to encode text as UTF8: " + text, e);
+			}
+		}
+		
+		return size;
 	}
 	
 	

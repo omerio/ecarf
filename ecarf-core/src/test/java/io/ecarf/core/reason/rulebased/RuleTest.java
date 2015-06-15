@@ -18,6 +18,8 @@
  */
 package io.ecarf.core.reason.rulebased;
 
+import io.ecarf.core.cloud.task.impl.reason.Term;
+import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
@@ -77,6 +79,23 @@ public class RuleTest {
 			System.out.println("Select: " + select);
 			System.out.println("------------------------------------------------------------------------------------------------------------");
 		}
+	}
+	
+	@Test
+	public void testQueryGenerator() throws FileNotFoundException, IOException {
+		Map<String, Set<Triple>> schemaTriples = 
+				TripleUtils.getRelevantSchemaTriples(
+						"/Users/omerio/Ontologies/dbpedia/tbox/dbpedia_3.9_gen_closure.nt",
+						//"/Users/omerio/Ontologies/opus_august2007_closure.nt", 
+						TermUtils.RDFS_TBOX);
+		
+		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
+		for(String term: schemaTriples.keySet()) {
+			schemaTerms.put(new Term(term), schemaTriples.get(term));
+		}
+		
+		QueryGenerator generator = new QueryGenerator(schemaTerms, "table");
+		System.out.println(generator.getQueries());
 	}
 	
 	@Test
