@@ -23,13 +23,12 @@ import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.entities.QueryStats;
 import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
-import io.ecarf.core.cloud.task.impl.reason.QuerySubTask;
-import io.ecarf.core.cloud.task.impl.reason.SaveResultsSubTask;
 import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Config;
@@ -47,19 +46,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
@@ -71,7 +65,7 @@ import com.google.common.collect.Lists;
  */
 public class DoReasonTask6 extends CommonTask {
 	
-	private static final int MAX_CACHE = 40000000;
+	//private static final int MAX_CACHE = 40000000;
 	
 	private int duplicates;
 	
@@ -151,7 +145,7 @@ public class DoReasonTask6 extends CommonTask {
 		// timestamp loop
 		do {
 
-			List<String> productiveTerms = new ArrayList<>();
+			Set<String> productiveTerms = new HashSet<>();
 			int interimInferredTriples = 0;
 
 			// First of all run all the queries asynchronously and remember the jobId and filename for each term
@@ -173,7 +167,8 @@ public class DoReasonTask6 extends CommonTask {
 			}*/
 			
 			List<String> queries = generator.getQueries();
-			String queryResultFilePrefix = Utils.TEMP_FOLDER + instanceId + '_' + System.currentTimeMillis() + '_';
+			log.debug("Generated Queries: " + queries);
+			String queryResultFilePrefix = Utils.TEMP_FOLDER + instanceId + '_' + System.currentTimeMillis() + "_QueryResults_";
 			int fileCount = 0;
 			for(String query: queries) {
 				String jobId = this.cloud.startBigDataQuery(query);
@@ -200,6 +195,7 @@ public class DoReasonTask6 extends CommonTask {
 				} catch(IOException ioe) {
 					// transient backend errors
 					log.warn("failed to save query results to file, jobId: " + queryResult.getJobId(), ioe);
+					//TODO should throw an exception
 				}
 			}
 			
@@ -229,7 +225,7 @@ public class DoReasonTask6 extends CommonTask {
 
 						//List<String> select = GenericRule.getSelect(schemaTriples);
 			
-						int inferredTriplesCount = this.inferAndSaveTriplesToFile(queryResult, decoratedTable, writer);
+						int inferredTriplesCount = this.inferAndSaveTriplesToFile(queryResult, productiveTerms, decoratedTable, writer);
 						
 						//productiveTerms.add(term.getTerm());
 
@@ -346,12 +342,13 @@ public class DoReasonTask6 extends CommonTask {
 	 * @return
 	 * @throws IOException
 	 */
-	private int inferAndSaveTriplesToFile(QueryResult queryResult, String table, PrintWriter writer) throws IOException {
-		
+	private int inferAndSaveTriplesToFile(QueryResult queryResult, Set<String> productiveTerms, String table, PrintWriter writer) throws IOException {
+
 		//Term term, List<String> select, Set<Triple> schemaTriples
+		log.info("********************** Starting Inference Round **********************");
 		
 		int inferredTriples = 0;
-		int failedTriples = 0;
+		//int failedTriples = 0;
 
 		// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
 		try (BufferedReader r = new BufferedReader(new FileReader(queryResult.getFilename()), Constants.GZIP_BUF_SIZE)) {
@@ -371,20 +368,39 @@ public class DoReasonTask6 extends CommonTask {
 					//inferredAlready.add(values);
 
 					Triple instanceTriple = new Triple();
+					instanceTriple.setSubject(record.get(0));
+					instanceTriple.setPredicate(record.get(1));
+					instanceTriple.setObject(record.get(2));
+					
+					String term;
 
-					if(select.size() == 1) {
-						instanceTriple.set(select.get(0), record.get(0));
+					// TODO review for OWL ruleset
+					if(SchemaURIType.RDF_TYPE.getUri().equals(instanceTriple.getPredicate())) {
+						term = instanceTriple.getObject(); // object
 					} else {
-
-						instanceTriple.set(select, record.values());
+						term = instanceTriple.getPredicate(); // predicate
 					}
 
-					for(Triple schemaTriple: schemaTriples) {
-						Rule rule = GenericRule.getRule(schemaTriple);
-						Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-						writer.println(inferredTriple.toCsv());
-						inferredTriples++;
+					Set<Triple> schemaTriples = schemaTerms.get(term);
+
+					if((schemaTriples != null) && !schemaTriples.isEmpty()) {
+						productiveTerms.add(term);
+						
+						for(Triple schemaTriple: schemaTriples) {
+							Rule rule = GenericRule.getRule(schemaTriple);
+							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+							writer.println(inferredTriple.toCsv());
+							inferredTriples++;
+						}
 					}
+
+					//					if(select.size() == 1) {
+					//						instanceTriple.set(select.get(0), record.get(0));
+					//					} else {
+					//
+					//						instanceTriple.set(select, record.values());
+					//					}
+
 
 					// this is just to avoid any memory issues
 					//if(inferredAlready.size() > MAX_CACHE) {
@@ -398,13 +414,17 @@ public class DoReasonTask6 extends CommonTask {
 				}
 			} catch(Exception e) {
 				log.error("Failed to parse selected terms", e);
-				failedTriples++;
+				throw new IOException(e);
+				//failedTriples++;
 			}
 		}
 
-		
+		log.info("\nTotal Rows: " + queryResult.getStats().getTotalRows() + 
+				"Total Processed Bytes: " + queryResult.getStats().getTotalProcessedBytes() + 
+				", Inferred: " + inferredTriples);
 		//log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriples + 
-			//	", Triples for term: " + term + ", Failed Triples: " + failedTriples);
+		//	", Triples for term: " + term + ", Failed Triples: " + failedTriples);
+		log.info("********************** Completed Inference Round **********************");
 		
 		return inferredTriples;
 	}
