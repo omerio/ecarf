@@ -32,7 +32,7 @@ import org.apache.commons.lang3.time.DateUtils;
  */
 public class TestUtils {
 	
-	public static final String TOKEN = "ya29.FAHmFZEyEXfs6FHAULaTqUhIXLzfDfjsyYZephuimmTBnHqBS7jCn8NV3T23g6us31zk2GPpCVJ1Yg";
+	public static final String TOKEN = "ya29.lAGkcFvnS6vUVr9BX0HypSbJ5KGx0prVAhE0uY05f5-u9lY00kWG0CKjb-_AyHmhz4_pRhzSPZhPZw";
 	
 	@SuppressWarnings("unchecked")
 	public static void prepare(GoogleCloudService service) {

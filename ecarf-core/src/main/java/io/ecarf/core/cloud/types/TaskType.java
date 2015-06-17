@@ -29,6 +29,7 @@ public enum TaskType {
 	REASON_HYBRID_DIRECT, // direct upload into big data
 	REASON_STREAM, // stream into big data
 	REASON_HYBRID_CLOUD_STORAGE, // upload via cloud storage
+	REASON_SINGLE_QUERY,
 	COUNT, 
 	UPLOAD_LOGS;
 	
@@ -51,6 +52,9 @@ public enum TaskType {
 		case HYBRID:
 			task = TaskType.REASON_HYBRID_DIRECT;
 			break;
+			
+		case CLOUD_STORAGE_SQ:
+			task = TaskType.REASON_SINGLE_QUERY;
 
 		case DIRECT:
 		default:

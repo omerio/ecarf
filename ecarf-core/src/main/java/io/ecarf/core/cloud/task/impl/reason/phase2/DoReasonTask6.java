@@ -149,22 +149,9 @@ public class DoReasonTask6 extends CommonTask {
 			int interimInferredTriples = 0;
 
 			// First of all run all the queries asynchronously and remember the jobId and filename for each term
-			//List<Callable<Void>> queryTasks = new ArrayList<>();
-			//List<Callable<Void>> saveTasks = new ArrayList<>();
+
 			List<QueryResult> queryResults = new ArrayList<QueryResult>();
 			generator.setDecoratedTable(decoratedTable);
-			
-			/*for(Entry<Term, Set<Triple>> entry: schemaTerms.entrySet()) {
-
-				Term term = entry.getKey();
-				Set<Triple> triples = entry.getValue();
-
-				QuerySubTask queryTask = new QuerySubTask(term, triples, decoratedTable, cloud);
-				queryTasks.add(queryTask);
-				
-				SaveResultsSubTask saveTask = new SaveResultsSubTask(term, cloud);
-				saveTasks.add(saveTask);
-			}*/
 			
 			List<String> queries = generator.getQueries();
 			log.debug("Generated Queries: " + queries);
@@ -218,16 +205,7 @@ public class DoReasonTask6 extends CommonTask {
 						
 						stopwatch1.start();
 						
-						//log.info("Reasoning for Term: " + term);
-
-						//Set<Triple> schemaTriples = entry.getValue();
-						//log.info("Schema Triples: " + Joiner.on('\n').join(schemaTriples));
-
-						//List<String> select = GenericRule.getSelect(schemaTriples);
-			
 						int inferredTriplesCount = this.inferAndSaveTriplesToFile(queryResult, productiveTerms, decoratedTable, writer);
-						
-						//productiveTerms.add(term.getTerm());
 
 						interimInferredTriples += inferredTriplesCount;
 						
@@ -312,24 +290,6 @@ public class DoReasonTask6 extends CommonTask {
 		log.info("Total time spent in empty inference cycles = " + stopwatch2);
 	}
 	
-	/**
-	 * Invoke all the provided tasks in parallel
-	 * @param tasks
-	 * @throws IOException
-	 */
-	/*private void invokeAll(List<Callable<Void>> tasks) throws IOException {
-		try {
-			executor.invokeAll(tasks);
-			
-		} catch (InterruptedException e) {
-			
-			log.error("executor service interrupted", e);
-			executor.shutdown();
-			throw new IOException(e);
-			
-		}
-		
-	}*/
 
 	/**
 	 * 
@@ -359,7 +319,9 @@ public class DoReasonTask6 extends CommonTask {
 			//Set<String> inferredAlready = new HashSet<String>();
 
 			try {
-
+				
+				String term;
+				
 				for (CSVRecord record : records) {
 
 					//String values = ((select.size() == 1) ? record.get(0): StringUtils.join(record.values(), ','));
@@ -372,8 +334,6 @@ public class DoReasonTask6 extends CommonTask {
 					instanceTriple.setPredicate(record.get(1));
 					instanceTriple.setObject(record.get(2));
 					
-					String term;
-
 					// TODO review for OWL ruleset
 					if(SchemaURIType.RDF_TYPE.getUri().equals(instanceTriple.getPredicate())) {
 						term = instanceTriple.getObject(); // object
@@ -393,14 +353,6 @@ public class DoReasonTask6 extends CommonTask {
 							inferredTriples++;
 						}
 					}
-
-					//					if(select.size() == 1) {
-					//						instanceTriple.set(select.get(0), record.get(0));
-					//					} else {
-					//
-					//						instanceTriple.set(select, record.values());
-					//					}
-
 
 					// this is just to avoid any memory issues
 					//if(inferredAlready.size() > MAX_CACHE) {
@@ -422,8 +374,7 @@ public class DoReasonTask6 extends CommonTask {
 		log.info("\nTotal Rows: " + queryResult.getStats().getTotalRows() + 
 				"Total Processed Bytes: " + queryResult.getStats().getTotalProcessedBytes() + 
 				", Inferred: " + inferredTriples);
-		//log.info("\nSelect Triples: " + rows + ", Inferred: " + inferredTriples + 
-		//	", Triples for term: " + term + ", Failed Triples: " + failedTriples);
+
 		log.info("********************** Completed Inference Round **********************");
 		
 		return inferredTriples;
