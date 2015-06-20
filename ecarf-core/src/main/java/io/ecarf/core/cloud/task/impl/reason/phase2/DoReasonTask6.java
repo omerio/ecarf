@@ -23,7 +23,6 @@ import io.ecarf.core.cloud.VMMetaData;
 import io.ecarf.core.cloud.entities.QueryStats;
 import io.ecarf.core.cloud.entities.StorageObject;
 import io.ecarf.core.cloud.task.CommonTask;
-import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
@@ -73,7 +72,7 @@ public class DoReasonTask6 extends CommonTask {
 	
 	private Long totalBytes = 0L;
 	
-	private Map<Term, Set<Triple>> schemaTerms;
+	private Map<String, Set<Triple>> schemaTerms;
 	
 	//private ExecutorService executor;
 	
@@ -130,7 +129,7 @@ public class DoReasonTask6 extends CommonTask {
 
 		for(String term: terms) {
 			if(allSchemaTriples.containsKey(term)) {
-				schemaTerms.put(new Term(term), allSchemaTriples.get(term));
+				schemaTerms.put(term, allSchemaTriples.get(term));
 			}
 		}
 		
@@ -371,8 +370,8 @@ public class DoReasonTask6 extends CommonTask {
 			}
 		}
 
-		log.info("\nTotal Rows: " + queryResult.getStats().getTotalRows() + 
-				"Total Processed Bytes: " + queryResult.getStats().getTotalProcessedBytes() + 
+		log.info("Total Rows: " + queryResult.getStats().getTotalRows() + 
+				", Total Processed Bytes: " + queryResult.getStats().getTotalProcessedGBytes() + " GB" + 
 				", Inferred: " + inferredTriples);
 
 		log.info("********************** Completed Inference Round **********************");

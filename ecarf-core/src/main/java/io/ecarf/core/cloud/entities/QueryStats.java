@@ -20,6 +20,8 @@ package io.ecarf.core.cloud.entities;
 
 import java.math.BigInteger;
 
+import org.apache.commons.io.FileUtils;
+
 /**
  * Represent a big data query stats such as number of rows and total bytes processes
  * @author Omer Dawelbeit (omerio)
@@ -73,6 +75,17 @@ public class QueryStats {
 		this.totalProcessedBytes = totalProcessedBytes;
 	}
 	
+	/**
+	 * Get the processed GBytes
+	 * @return
+	 */
+	public double getTotalProcessedGBytes() {
+		double gb = 0d;
+		if(this.totalProcessedBytes != null) {
+			gb = ((double) this.totalProcessedBytes / FileUtils.ONE_GB);
+		}
+		return gb;
+	}
 	
 	
 

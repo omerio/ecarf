@@ -18,7 +18,6 @@
  */
 package io.ecarf.core.reason.rulebased.query;
 
-import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Utils;
@@ -49,12 +48,12 @@ public class QueryGenerator {
 	private static final String SELECT_FROM = "select subject, predicate, object from ";
 	
 	private String decoratedTable;
-	private Map<Term, Set<Triple>> schemaTerms; 
+	private Map<String, Set<Triple>> schemaTerms; 
 
 	/**
 	 * 
 	 */
-	public QueryGenerator(Map<Term, Set<Triple>> schemaTerms, String decoratedTable) {
+	public QueryGenerator(Map<String, Set<Triple>> schemaTerms, String decoratedTable) {
 		this.decoratedTable = decoratedTable;
 		this.schemaTerms = schemaTerms;
 	}
@@ -64,7 +63,7 @@ public class QueryGenerator {
 		
 		Map<Integer, Map<String, Set<String>>> parts = new HashMap<Integer, Map<String, Set<String>>>();
 				
-		for(Term term: schemaTerms.keySet()) {
+		for(String term: schemaTerms.keySet()) {
 			Set<Triple> triples = schemaTerms.get(term);
 			Triple schemaTriple = triples.iterator().next();
 			

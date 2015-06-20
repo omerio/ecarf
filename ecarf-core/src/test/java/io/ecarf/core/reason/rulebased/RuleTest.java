@@ -18,7 +18,6 @@
  */
 package io.ecarf.core.reason.rulebased;
 
-import io.ecarf.core.cloud.task.impl.reason.Term;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.Triple;
@@ -89,9 +88,9 @@ public class RuleTest {
 						//"/Users/omerio/Ontologies/opus_august2007_closure.nt", 
 						TermUtils.RDFS_TBOX);
 		
-		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
+		Map<String, Set<Triple>> schemaTerms = new HashMap<>();
 		for(String term: schemaTriples.keySet()) {
-			schemaTerms.put(new Term(term), schemaTriples.get(term));
+			schemaTerms.put(term, schemaTriples.get(term));
 		}
 		
 		QueryGenerator generator = new QueryGenerator(schemaTerms, "table");
