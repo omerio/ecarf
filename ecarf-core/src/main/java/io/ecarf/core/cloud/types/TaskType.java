@@ -55,6 +55,7 @@ public enum TaskType {
 			
 		case CLOUD_STORAGE_SQ:
 			task = TaskType.REASON_SINGLE_QUERY;
+			break;
 
 		case DIRECT:
 		default:
