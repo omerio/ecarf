@@ -47,6 +47,8 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.repackaged.com.google.common.base.Joiner;
 
@@ -56,6 +58,8 @@ import com.google.api.client.repackaged.com.google.common.base.Joiner;
  * @deprecated
  */
 public class DoReasonTask1 extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DoReasonTask1.class);
 	
 	private static final int MAX_CACHE = 1000000;
 	

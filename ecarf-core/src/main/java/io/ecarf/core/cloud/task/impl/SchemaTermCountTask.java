@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Given a Schema file on cloud storage, download it locally then count the relevant
@@ -39,6 +41,8 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
  *
  */
 public class SchemaTermCountTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(SchemaTermCountTask.class);
 
 	public SchemaTermCountTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);

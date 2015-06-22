@@ -39,6 +39,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Read a list of files from cloud storage and based on their size split them
@@ -48,6 +50,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public class DistributeLoadTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DistributeLoadTask.class);
 	
 
 	public DistributeLoadTask(VMMetaData metadata, CloudService cloud) {

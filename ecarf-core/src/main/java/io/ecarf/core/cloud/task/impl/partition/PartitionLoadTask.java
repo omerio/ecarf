@@ -33,6 +33,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Read a list of files from cloud storage and based on their size split them
  * using a bin packing algorithm
@@ -41,6 +44,8 @@ import java.util.List;
  *
  */
 public class PartitionLoadTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(PartitionLoadTask.class);
 	
 
 	public PartitionLoadTask(VMMetaData metadata, CloudService cloud) {

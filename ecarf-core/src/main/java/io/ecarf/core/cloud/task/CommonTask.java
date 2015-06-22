@@ -21,9 +21,6 @@ package io.ecarf.core.cloud.task;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMMetaData;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 
 
 /**
@@ -32,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class CommonTask implements Task {
 	
-	protected final static Log log = LogFactory.getLog(CommonTask.class);
+	//protected final static Log log = LogFactory.getLog(CommonTask.class);
 	
 	protected VMMetaData metadata;
 	

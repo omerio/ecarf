@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.api.client.util.Lists;
 import com.google.common.collect.Sets;
@@ -47,6 +49,8 @@ import com.google.common.collect.Sets;
  *
  */
 public class DistributeReasonTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DistributeReasonTask.class);
 	
 
 	public DistributeReasonTask(VMMetaData metadata, CloudService cloud) {

@@ -52,6 +52,8 @@ import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -63,6 +65,8 @@ import com.google.common.collect.Lists;
  *
  */
 public class DoReasonTask6 extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DoReasonTask6.class);
 	
 	//private static final int MAX_CACHE = 40000000;
 	

@@ -27,6 +27,9 @@ import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Given a Schema file on cloud storage, download it locally then count the relevant
  * terms then save the terms count in a schema_terms.json to cloud storage for use by 
@@ -36,6 +39,8 @@ import java.io.IOException;
  *
  */
 public class DoUploadOutputLogTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DoUploadOutputLogTask.class);
 
 	public DoUploadOutputLogTask(VMMetaData metadata, CloudService cloud) {
 		super(metadata, cloud);

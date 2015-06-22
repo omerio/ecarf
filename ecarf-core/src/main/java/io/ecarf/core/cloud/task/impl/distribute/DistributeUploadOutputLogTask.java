@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.api.client.util.Lists;
 
 /**
@@ -39,6 +42,8 @@ import com.google.api.client.util.Lists;
  *
  */
 public class DistributeUploadOutputLogTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DistributeUploadOutputLogTask.class);
 
 
 	public DistributeUploadOutputLogTask(VMMetaData metadata, CloudService cloud) {

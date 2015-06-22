@@ -76,6 +76,7 @@ public class TaskFactory {
 				
 			case REASON_SINGLE_QUERY:
 				task = new DoReasonTask6(metadata, cloud);
+				break;
 
 			case COUNT:
 				task = new SchemaTermCountTask(metadata, cloud);

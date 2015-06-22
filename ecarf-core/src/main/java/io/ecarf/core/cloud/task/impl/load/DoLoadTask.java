@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Read a list of files from cloud storage and import them into big data table
  * 
@@ -35,6 +38,8 @@ import java.util.List;
  *
  */
 public class DoLoadTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(DoLoadTask.class);
 	
 
 	public DoLoadTask(VMMetaData metadata, CloudService cloud) {

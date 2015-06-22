@@ -36,6 +36,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * EVM Task to load the provided cloud files into the big data cloud storage
@@ -50,6 +52,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public class ProcessLoadTask1 extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(ProcessLoadTask1.class);
 
 
 	public ProcessLoadTask1(VMMetaData metadata, CloudService cloud) {

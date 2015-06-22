@@ -30,6 +30,9 @@ import io.ecarf.core.partition.PartitionFunctionFactory;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Read a list of weighted Triple terms and based on their occurrences split them
  * using a bin packing algorithm
@@ -38,6 +41,8 @@ import java.util.List;
  *
  */
 public class PartitionReasonTask extends CommonTask {
+	
+	private final static Log log = LogFactory.getLog(PartitionReasonTask.class);
 
 
 	public PartitionReasonTask(VMMetaData metadata, CloudService cloud) {
