@@ -40,6 +40,7 @@ public class VMMetaData {
 	
 	private final static Log log = LogFactory.getLog(VMMetaData.class);
 	
+	// TODO this is the Google Compute Engine settings, needs to cater for other providers
 	public static final int MAX_METADATA_SIZE = 32768;
 	
 	// the prefix of the vm name

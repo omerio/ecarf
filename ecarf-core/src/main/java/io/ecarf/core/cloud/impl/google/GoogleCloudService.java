@@ -782,6 +782,8 @@ public class GoogleCloudService implements CloudService {
 	 * @param config
 	 * @param block
 	 * @throws IOException
+	 * 
+	 * TODO rename to startInstances
 	 */
 	@Override
 	public boolean startInstance(List<VMConfig> configs, boolean block) throws IOException {
@@ -906,6 +908,8 @@ public class GoogleCloudService implements CloudService {
 	 * Delete the VMs provided in this config
 	 * @param configs
 	 * @throws IOException 
+	 * 
+	 * TODO rename to shutdownInstances
 	 */
 	@Override
 	public void shutdownInstance(List<VMConfig> configs) throws IOException {
