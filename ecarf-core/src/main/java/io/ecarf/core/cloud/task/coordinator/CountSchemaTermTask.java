@@ -39,9 +39,9 @@ import org.apache.commons.logging.LogFactory;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class SchemaTermCountTask extends CommonTask {
+public class CountSchemaTermTask extends CommonTask {
 	
-	private final static Log log = LogFactory.getLog(SchemaTermCountTask.class);
+	private final static Log log = LogFactory.getLog(CountSchemaTermTask.class);
 	
 	private String bucket;
 	

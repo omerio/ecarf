@@ -18,14 +18,11 @@
  */
 package io.ecarf.core.cloud.task;
 
-import static org.junit.Assert.*;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
+import io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask;
+import io.ecarf.core.utils.TestUtils;
 
 import java.io.IOException;
-
-import io.ecarf.core.cloud.EcarfMetaData;
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask;
-import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,16 +34,17 @@ import org.junit.Test;
  */
 public class SchemaTermCountTaskTest {
 	
-	private GoogleCloudService service;
+    private EcarfGoogleCloudServiceImpl service;
+    
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        this.service = new EcarfGoogleCloudServiceImpl();
+        TestUtils.prepare(service);
+    }
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		this.service = new GoogleCloudService();
-		TestUtils.prepare(service);
-	}
 
 	/**
 	 * @throws java.lang.Exception
@@ -56,15 +54,17 @@ public class SchemaTermCountTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test
 	public void testRun() throws IOException {
-		EcarfMetaData metadata = new EcarfMetaData();
-		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "ecarf");
-		metadata.addValue(EcarfMetaData.ECARF_SCHEMA, "dbpedia_3.9_gen_closure.nt");
-		SchemaTermCountTask task = new SchemaTermCountTask(metadata, service);
+		
+
+		CountSchemaTermTask task = new CountSchemaTermTask();
+		task.setCloudService(service);
+		task.setBucket("ecarf");
+		task.setSchemaFile("dbpedia_3.9_gen_closure.nt");
 		task.run();
 	}
 

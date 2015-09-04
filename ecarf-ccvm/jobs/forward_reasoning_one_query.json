@@ -23,7 +23,7 @@
         {
             "id":"schema-term-count-task",
             "description": "Load the schema and do a count of the relevant terms",
-            "className":"io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask"
+            "className":"io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask"
             "target":"COORDINATOR",
             "input":{
                 "bucket":"#bucket",
@@ -37,7 +37,7 @@
         {
             "id":"partition-load-task",
             "description": "Find all the files in the cloud bucket and add them to a list of items",
-            "className":"io.ecarf.core.cloud.task.coordinator.PartitionLoadTask",
+            "className":"io.ecarf.core.cloud.task.coordinator.CreateFileItemsTask",
             "target":"COORDINATOR",
             "input":{
                 "bucket":"#bucket"
@@ -85,7 +85,7 @@
         {
             "id":"big-data-load-task",
             "description": "Load all the files processed by the processors into BigQuery",
-            "className":"io.ecarf.core.cloud.task.coordinator.BigDataLoadTask",
+            "className":"io.ecarf.core.cloud.task.coordinator.LoadBigDataFilesTask",
             "target":"COORDINATOR",
             "input":{
                 "table":"#table",

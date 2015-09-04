@@ -21,18 +21,18 @@ package io.ecarf.core.cloud.impl.google;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import io.cloudex.cloud.impl.google.GoogleCloudService;
 import io.cloudex.framework.cloud.api.Callback;
-import io.ecarf.core.cloud.EcarfMetaData;
+import io.cloudex.framework.cloud.entities.StorageObject;
+import io.cloudex.framework.cloud.entities.VmMetaData;
+import io.cloudex.framework.config.VmConfig;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.TableUtils;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -41,9 +41,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -52,12 +50,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import com.google.api.services.bigquery.model.GetQueryResultsResponse;
-import com.google.api.services.bigquery.model.Job;
-import com.google.api.services.bigquery.model.JobConfiguration;
-import com.google.api.services.bigquery.model.JobStatistics;
-import com.google.api.services.bigquery.model.JobStatistics2;
-import com.google.api.services.bigquery.model.JobStatistics3;
 import com.google.common.collect.Lists;
 
 /**
@@ -67,7 +59,7 @@ import com.google.common.collect.Lists;
 @RunWith(JUnit4.class)
 public class GoogleCloudServiceTest {
 	
-	private GoogleCloudService service;
+	private EcarfGoogleCloudServiceImpl service;
 
 	/**
 	 * @throws java.lang.Exception
@@ -97,12 +89,12 @@ public class GoogleCloudServiceTest {
 		URL url = this.getClass().getResource("/gutenberg_links.nt.gz");
 		File inputFile = new File(url.toURI());
 		System.out.println(inputFile.getAbsolutePath());
-		String outFile = this.service.prepareForCloudDatabaseImport(inputFile.getAbsolutePath());
+		String outFile = this.service.prepareForBigQueryImport(inputFile.getAbsolutePath());
 		assertNotNull(outFile);
 		assertTrue(outFile.endsWith("_out.gz")); //
 	}
 	
-	@Test
+	/*@Test
 	public void testGetCompletedBigQueryJob() throws IOException, URISyntaxException {
 		
 		URL url = this.getClass().getResource("/bigquery_jobIds.txt");
@@ -183,7 +175,7 @@ public class GoogleCloudServiceTest {
 		if(!skipRowQuery) {
 			System.out.println("Total rows for the all queries: " + totalRows);
 		}
-	}
+	}*/
 	
 	/**
 	 * Test method for {@link io.ecarf.core.cloud.impl.google.GoogleCloudService#
@@ -197,7 +189,7 @@ public class GoogleCloudServiceTest {
 		/*URL url = this.getClass().getResource("/linkedgeodata_links.nt.gz");
 		File inputFile = new File(url.toURI());
 		System.out.println(inputFile.getAbsolutePath());*/
-		String outFile = this.service.prepareForCloudDatabaseImport("/Users/omerio/Ontologies/dbpedia/tbox/ntriples.nt.gz");
+		String outFile = this.service.prepareForBigQueryImport("/Users/omerio/Ontologies/dbpedia/tbox/ntriples.nt.gz");
 		assertNotNull(outFile);
 		assertTrue(outFile.endsWith("_out.gz")); //
 	}
@@ -205,7 +197,7 @@ public class GoogleCloudServiceTest {
 	@Test
 	@Ignore
 	public void testDownloadFileFromCloudStorage() throws IOException {
-		this.service.inti();
+		this.service.init();
 		
 		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
 				Utils.TEMP_FOLDER + "linkedgeodata_links.nt.gz", "ecarf", new Callback() {
@@ -221,7 +213,7 @@ public class GoogleCloudServiceTest {
 	@Ignore
 	public void testUploadFileToCloudStorage() throws IOException {
 
-		io.ecarf.core.cloud.entities.StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
+		StorageObject file = this.service.uploadFileToCloudStorage("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt", "ecarf",  new Callback() {
 			
 			@Override
 			public void execute() {
@@ -232,20 +224,10 @@ public class GoogleCloudServiceTest {
 		System.out.println(file);
 	}
 	
-	@Test
-	@Ignore
-	public void testRunBigDataQuery() throws IOException {
-		 String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
-			        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
-				 "select subject from ontologies.swetodblp where " +
-				 "object = \"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>\";";
-		 
-		this.service.runBigDataQuery(query, System.out);
-	}
-	
-	@Test
-	@Ignore
-	public void testStartBigDataQuery() throws IOException {
+
+	//@Test
+	//@Ignore
+	/*public void testStartBigDataQuery() throws IOException {
 		String query = //"SELECT TOP( title, 10) as title, COUNT(*) as revision_count "
 		        //+ "FROM [publicdata:samples.wikipedia] WHERE wp_namespace = 0;";
 			 "select subject from swetodlp.swetodlp_triple where " +
@@ -254,7 +236,7 @@ public class GoogleCloudServiceTest {
 		String jobId = this.service.startBigDataQuery(query);
 		String completedJob = this.service.checkBigQueryJobResults(jobId, false, true);
 		this.service.displayQueryResults(completedJob);
-	}
+	}*/
 	
 	@Test
 	@Ignore
@@ -266,7 +248,7 @@ public class GoogleCloudServiceTest {
 		
 		String jobId = this.service.startBigDataQuery(query);
 		String filename = Utils.TEMP_FOLDER + 
-				Utils.encodeFilename("<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>") + 
+				io.cloudex.framework.utils.FileUtils.encodeFilename("<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings>") + 
 				Constants.DOT_TERMS;
 		
 		BigInteger rows = this.service.saveBigQueryResultsToFile(jobId, filename).getTotalRows();
@@ -286,14 +268,14 @@ public class GoogleCloudServiceTest {
 		// load the triples from a file
 		Set<Triple> triples = TripleUtils.loadNTriples("/Users/omerio/Ontologies/dbpedia/yago_taxonomy.nt");
 		System.out.println("Number of triples: " + triples.size());
-		this.service.streamTriplesIntoBigData(triples, "ontologies.test");
+		this.service.streamObjectsIntoBigData(triples, TableUtils.getBigQueryTripleTable("ontologies.test"));
 	}
 	
 	@Test
 	@Ignore
 	public void testLoadCloudStorageFilesIntoBigData() throws IOException {
 		String jobId = this.service.loadCloudStorageFilesIntoBigData(Arrays.asList("gs://ecarf/umbel_links.nt_out.gz", 
-				"gs://ecarf/yago_links.nt_out.gz"), "swetodlp.test", false);
+				"gs://ecarf/yago_links.nt_out.gz"), TableUtils.getBigQueryTripleTable("swetodlp.test"), false);
 		assertNotNull(jobId);
 		System.out.println(jobId);
 	}
@@ -303,7 +285,8 @@ public class GoogleCloudServiceTest {
 	public void testLoadLocalFilesIntoBigData() throws IOException {
 		List<String> jobIds = this.service.loadLocalFilesIntoBigData(
 				Arrays.asList("/Users/omerio/Downloads/umbel_links.nt_out.gz", 
-						"/Users/omerio/Downloads/linkedgeodata_links.nt_out.gz"), "swetodlp.test", false);
+						"/Users/omerio/Downloads/linkedgeodata_links.nt_out.gz"), 
+						TableUtils.getBigQueryTripleTable("swetodlp.test"), false);
 		assertNotNull(jobIds);
 		System.out.println(jobIds);
 	}
@@ -331,18 +314,16 @@ public class GoogleCloudServiceTest {
 	@Ignore
 	public void testCreateInstance() throws IOException {
 		
-		
-		EcarfMetaData metaData = new EcarfMetaData();
 		//metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
 			//.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
 		
-		VMConfig conf = new VMConfig();
-		conf.setImageId("centos-cloud/global/images/centos-6-v20140718")
-			.setInstanceId("ecarf-test-vm")
-			.setMetaData(metaData)
-			.setNetworkId("default")
-			.setVmType("n1-standard-1")
-			.setDiskType("pd-ssd");
+		VmConfig conf = new VmConfig();
+		conf.setImageId("centos-cloud/global/images/centos-6-v20140718");
+		conf.setInstanceId("ecarf-test-vm");
+		conf.setMetaData(new VmMetaData());
+		conf.setNetworkId("default");
+		conf.setVmType("n1-standard-1");
+		conf.setDiskType("pd-ssd");
 		
 		boolean success = this.service.startInstance(Lists.newArrayList(conf), true);
 		
@@ -354,7 +335,7 @@ public class GoogleCloudServiceTest {
 	@Ignore
 	public void testShutdownInstance() throws IOException {
 		
-		VMConfig conf = new VMConfig();
+		VmConfig conf = new VmConfig();
 		conf.setInstanceId("ecarf-evm-2");
 		
 		this.service.shutdownInstance(Lists.newArrayList(conf));
@@ -365,17 +346,15 @@ public class GoogleCloudServiceTest {
 	public void testInstanceMetadata() throws IOException {
 		
 		// read the current metadata
-		EcarfMetaData metadata = this.service.getEcarfMetaData(null, null);
+		VmMetaData metadata = this.service.getMetaData(null, null);
 		assertNotNull(metadata);
 		assertNotNull(metadata.getFingerprint());
-		assertEquals(TaskType.LOAD, metadata.getTaskType());
 		assertEquals(4, metadata.getAttributes().size());
 		
 		// now update the task type
 		metadata.clearValues();
-		metadata.addValue(EcarfMetaData.ECARF_TASK, TaskType.REASON_DIRECT.toString());
-		this.service.updateInstanceMetadata(metadata);
-		assertEquals(TaskType.REASON_DIRECT, metadata.getTaskType());
+		metadata.addValue(VmMetaData.CLOUDEX_TASK_CLASS, "blah.blah.BlahClass");
+		this.service.updateMetadata(metadata);
 		assertEquals(1, metadata.getAttributes().size());
 	}
 	

@@ -19,9 +19,9 @@
 package io.ecarf.core.cloud.task.coordinator;
 
 import io.cloudex.framework.cloud.entities.StorageObject;
-import io.cloudex.framework.partition.entities.Item;
 import io.cloudex.framework.task.CommonTask;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.TableUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,18 +31,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Read a list of files from cloud storage and based on their size split them
- * using a bin packing algorithm
+ * Read a list of files from cloud storage and import them into big data table
  * 
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class PartitionLoadTask extends CommonTask {
+public class LoadBigDataFilesTask extends CommonTask {
 	
-	private final static Log log = LogFactory.getLog(PartitionLoadTask.class);
+	private final static Log log = LogFactory.getLog(LoadBigDataFilesTask.class);
 	
 	private String bucket;
 	
+	private String table;
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.CommonTask#run()
@@ -50,46 +50,30 @@ public class PartitionLoadTask extends CommonTask {
 	@Override
 	public void run() throws IOException {
 		
-		log.info("Processing partition load");
+		log.info("Processing import into big data table: " + table);
 		
 		//String bucket = this.input.getBucket();
 		
+		//String table = this.input.getTable();
+		
 		List<StorageObject> objects = this.getCloudService().listCloudStorageObjects(bucket);
 		
-		List<Item> items = new ArrayList<>();
+		List<String> files = new ArrayList<>();
 		
 		for(StorageObject object: objects) {
 			String filename = object.getName();
-			if(filename.endsWith(Constants.COMPRESSED_N_TRIPLES)) {
-				items.add(new Item(filename, object.getSize().longValue()));
+			if(filename.endsWith(Constants.PROCESSED_FILES)) {
+				files.add(object.getUri());
 			} else {
 				log.warn("Skipping file: " + filename);
 			}
 		}
 		
-		// add the items to the output
-		this.addOutput("fileItems", items);
+		String jobId = this.getCloudService().loadCloudStorageFilesIntoBigData(files, 
+		        TableUtils.getBigQueryTripleTable(table), true);
 		
-		// each node should handle a gigbyte of data
-		// read it the configurations
-		/*PartitionFunction function;
-		
-		if(this.input.getNumberOfNodes() == null) {
-			function = PartitionFunctionFactory.createBinPacking(items, 
-					this.input.getNewBinPercentage(), 
-					this.input.getWeightPerNode());
-		} else {
-			function = PartitionFunctionFactory.createBinPacking(items, this.input.getNumberOfNodes());
-		}
-		
-		List<Partition> bins = function.partition();
-		
-		this.results = new Results();
-		results.setBins(bins);*/
-		
-		log.info("Successfully processed partition load");
+		log.info("Successfully imported data into big table, completed jodId: " + jobId);
 	}
-
 
     /**
      * @return the bucket
@@ -98,12 +82,25 @@ public class PartitionLoadTask extends CommonTask {
         return bucket;
     }
 
-
     /**
      * @param bucket the bucket to set
      */
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+    /**
+     * @return the table
+     */
+    public String getTable() {
+        return table;
+    }
+
+    /**
+     * @param table the table to set
+     */
+    public void setTable(String table) {
+        this.table = table;
     }
 	
 

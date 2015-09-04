@@ -21,7 +21,7 @@ package io.ecarf.core.utils;
 import static io.ecarf.core.utils.Constants.ACCESS_SCOPES_KEY;
 import static io.ecarf.core.utils.Constants.PROJECT_ID_KEY;
 import static io.ecarf.core.utils.Constants.ZONE_KEY;
-import io.cloudex.cloud.impl.google.GoogleCloudServiceImpl;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 
 import java.util.Date;
 
@@ -37,7 +37,7 @@ public class TestUtils {
 	public static final String TOKEN = "ya29.mAHnKvDvi-OOVB6tc87eAA6hA2H__cRTcaKUwPdgALpd3j3lZgkUTZK2OM3OezLesW84RR1_hoaYjA";
 	
 	@SuppressWarnings("unchecked")
-	public static void prepare(GoogleCloudServiceImpl service) {
+	public static void prepare(EcarfGoogleCloudServiceImpl service) {
 		service.setAccessToken(TOKEN);
 		service.setTokenExpire(DateUtils.addHours(new Date(), 1));
 		service.setProjectId(Config.getProperty(PROJECT_ID_KEY));

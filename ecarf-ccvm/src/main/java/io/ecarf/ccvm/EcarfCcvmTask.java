@@ -30,9 +30,9 @@ import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
-import io.ecarf.core.cloud.task.coordinator.BigDataLoadTask;
-import io.ecarf.core.cloud.task.coordinator.PartitionLoadTask;
-import io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask;
+import io.ecarf.core.cloud.task.coordinator.LoadBigDataFilesTask;
+import io.ecarf.core.cloud.task.coordinator.CreateFileItemsTask;
+import io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeReasonTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeUploadOutputLogTask;
@@ -99,14 +99,14 @@ public class EcarfCcvmTask {
 				metadata = new EcarfMetaData();
 				metadata.addValue(EcarfMetaData.ECARF_BUCKET, bucket);
 				metadata.addValue(EcarfMetaData.ECARF_SCHEMA, schema);
-				task = new SchemaTermCountTask(metadata, service);
+				task = new CountSchemaTermTask(metadata, service);
 				task.run();
 
 				// 2- partition the instance files into bins
 				input = (new Input()).setBucket(bucket).setWeightPerNode(this.job.getMaxFileSizePerNode())
 						.setNewBinPercentage(0.0).setNumberOfNodes(this.job.getNumberOfNodes());
 
-				task = new PartitionLoadTask(null, service);
+				task = new CreateFileItemsTask(null, service);
 				task.setInput(input);
 				task.run();
 
@@ -186,7 +186,7 @@ public class EcarfCcvmTask {
 
 				// 5- Load the generated files into Big Data table
 				input = (new Input()).setBucket(bucket).setTable(table);	
-				task = new BigDataLoadTask(null, service);
+				task = new LoadBigDataFilesTask(null, service);
 				task.setInput(input);
 				task.run();
 				

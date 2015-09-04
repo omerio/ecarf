@@ -105,8 +105,8 @@ public class DoReasonTask6 extends CommonTask {
 		//Set<String> terms = metadata.getTerms();
 		//String schemaFile = metadata.getValue(EcarfMetaData.ECARF_SCHEMA);
 		//String bucket = metadata.getBucket();
-		Stopwatch stopwatch1 = new Stopwatch();
-		Stopwatch stopwatch2 = new Stopwatch();
+		Stopwatch stopwatch1 = Stopwatch.createStarted();
+		Stopwatch stopwatch2 = Stopwatch.createStarted();
 		Set<String> termsSet;
 		
 		if(terms == null) {
@@ -455,6 +455,22 @@ public class DoReasonTask6 extends CommonTask {
      */
     public void setTermsFile(String termsFile) {
         this.termsFile = termsFile;
+    }
+
+
+    /**
+     * @return the bucket
+     */
+    public String getBucket() {
+        return bucket;
+    }
+
+
+    /**
+     * @param bucket the bucket to set
+     */
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
     }
 	
 }

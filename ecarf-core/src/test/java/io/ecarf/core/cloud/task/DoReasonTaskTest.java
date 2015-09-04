@@ -18,10 +18,8 @@
  */
 package io.ecarf.core.cloud.task;
 
-import io.ecarf.core.cloud.EcarfMetaData;
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 import io.ecarf.core.cloud.task.processor.reason.phase2.DoReasonTask6;
-import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.utils.TestUtils;
 
 import java.io.IOException;
@@ -36,14 +34,14 @@ import org.junit.Test;
  */
 public class DoReasonTaskTest {
 
-	private GoogleCloudService service;
+	private EcarfGoogleCloudServiceImpl service;
 	
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.service = new GoogleCloudService();
+		this.service = new EcarfGoogleCloudServiceImpl();
 		TestUtils.prepare(service);
 	}
 
@@ -66,12 +64,8 @@ public class DoReasonTaskTest {
 	 */
 	@Test
 	public void testRun() throws IOException {
-		EcarfMetaData metadata = new EcarfMetaData();
-		metadata.addValue(EcarfMetaData.ECARF_TASK, TaskType.REASON_SINGLE_QUERY.toString());
-		metadata.addValue(EcarfMetaData.ECARF_TABLE, "ontologies.swetodblp");
-		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "swetodblp");
-		metadata.addValue(EcarfMetaData.ECARF_SCHEMA, "opus_august2007_closure.nt"); //Webpage, ee, cdrom, Proceedings, isbn
-		metadata.addValue(EcarfMetaData.ECARF_TERMS, "<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,"
+
+		String terms = "<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#author>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#ee>,"
@@ -85,8 +79,14 @@ public class DoReasonTaskTest {
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization>,"
 				+ "<http://xmlns.com/foaf/0.1/Document>,"
-				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>");//"<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date>,<http://lsdis.cs.uga.edu/projects/semdis/opus#author>,<http://lsdis.cs.uga.edu/projects/semdis/opus#ee>,<http://xmlns.com/foaf/0.1/Person>,<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn>,<http://lsdis.cs.uga.edu/projects/semdis/opus#cites>,<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage>,<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn>,<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series>,<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of>,<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth>,<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization>,<http://xmlns.com/foaf/0.1/Document>,<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>");
-		DoReasonTask6 task = new DoReasonTask6(metadata, service);
+				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>";//"<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date>,<http://lsdis.cs.uga.edu/projects/semdis/opus#author>,<http://lsdis.cs.uga.edu/projects/semdis/opus#ee>,<http://xmlns.com/foaf/0.1/Person>,<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn>,<http://lsdis.cs.uga.edu/projects/semdis/opus#cites>,<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage>,<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn>,<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series>,<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of>,<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth>,<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization>,<http://xmlns.com/foaf/0.1/Document>,<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>");
+		DoReasonTask6 task = new DoReasonTask6();
+		task.setCloudService(service);
+		task.setSchemaFile("swetodblp");
+		task.setTable("ontologies.swetodblp");
+		task.setTerms(terms);
+		task.setBucket("swetodblp");
+		//task.setTermsFile(termsFile);
 		task.run();
 	}
 

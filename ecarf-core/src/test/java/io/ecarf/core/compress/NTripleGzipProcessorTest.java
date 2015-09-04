@@ -18,7 +18,8 @@
  */
 package io.ecarf.core.compress;
 
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 import io.ecarf.core.term.TermCounter;
 
 import java.io.IOException;
@@ -51,10 +52,10 @@ public class NTripleGzipProcessorTest {
 		TermCounter counter = new TermCounter();
 		counter.setTermsToCount(new HashSet<String>());
 		
-		GoogleCloudService service = new GoogleCloudService();
+		EcarfGoogleCloudService service = new EcarfGoogleCloudServiceImpl();
 		
 		long startTime = System.nanoTime();
-		String outFile = service.prepareForCloudDatabaseImport(IN_FILE, counter);
+		String outFile = service.prepareForBigQueryImport(IN_FILE, counter);
 		long estimatedTime = System.nanoTime() - startTime;
 		
 		double seconds = (double)estimatedTime / 1000000000.0;

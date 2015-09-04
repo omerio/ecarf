@@ -18,14 +18,11 @@
  */
 package io.ecarf.core.cloud.task;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-
-import io.ecarf.core.cloud.EcarfMetaData;
-import io.ecarf.core.cloud.impl.google.GoogleCloudService;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
 import io.ecarf.core.utils.TestUtils;
+
+import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,18 +32,19 @@ import org.junit.Test;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class LoadTaskTest {
+public class ProcessLoadTaskTest {
 
-	private GoogleCloudService service;
-	
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		this.service = new GoogleCloudService();
-		TestUtils.prepare(service);
-	}
+    private EcarfGoogleCloudServiceImpl service;
+    
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        this.service = new EcarfGoogleCloudServiceImpl();
+        TestUtils.prepare(service);
+    }
+
 
 	/**
 	 * @throws java.lang.Exception
@@ -61,11 +59,12 @@ public class LoadTaskTest {
 	 */
 	@Test
 	public void testRun() throws IOException {
-		EcarfMetaData metadata = new EcarfMetaData();
-		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "ecarf");
-		metadata.addValue(EcarfMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
-		metadata.addValue(EcarfMetaData.ECARF_FILES, "redirects_transitive_en.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
-		ProcessLoadTask task = new ProcessLoadTask(metadata, service);
+		
+		ProcessLoadTask task = new ProcessLoadTask();
+		task.setCloudService(service);
+		task.setBucket("ecarf");
+		task.setFiles("redirects_transitive_en.nt.gz");
+		task.setSchemaTermsFile("schema_terms.json");
 		task.run();
 	}
 
