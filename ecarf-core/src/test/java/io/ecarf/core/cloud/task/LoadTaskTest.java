@@ -22,9 +22,9 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.impl.ProcessLoadTask;
+import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
 import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
@@ -56,15 +56,15 @@ public class LoadTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.impl.ProcessLoadTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.processor.ProcessLoadTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test
 	public void testRun() throws IOException {
-		VMMetaData metadata = new VMMetaData();
-		metadata.addValue(VMMetaData.ECARF_BUCKET, "ecarf");
-		metadata.addValue(VMMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
-		metadata.addValue(VMMetaData.ECARF_FILES, "redirects_transitive_en.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
+		EcarfMetaData metadata = new EcarfMetaData();
+		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "ecarf");
+		metadata.addValue(EcarfMetaData.ECARF_SCHEMA_TERMS, "schema_terms.json");
+		metadata.addValue(EcarfMetaData.ECARF_FILES, "redirects_transitive_en.nt.gz");//"yago_links.nt.gz,umbel_links.nt.gz");
 		ProcessLoadTask task = new ProcessLoadTask(metadata, service);
 		task.run();
 	}

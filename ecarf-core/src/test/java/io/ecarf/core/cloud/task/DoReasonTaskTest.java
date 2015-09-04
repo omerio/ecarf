@@ -18,9 +18,9 @@
  */
 package io.ecarf.core.cloud.task;
 
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.impl.reason.phase2.DoReasonTask6;
+import io.ecarf.core.cloud.task.processor.reason.phase2.DoReasonTask6;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.utils.TestUtils;
 
@@ -66,12 +66,12 @@ public class DoReasonTaskTest {
 	 */
 	@Test
 	public void testRun() throws IOException {
-		VMMetaData metadata = new VMMetaData();
-		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON_SINGLE_QUERY.toString());
-		metadata.addValue(VMMetaData.ECARF_TABLE, "ontologies.swetodblp");
-		metadata.addValue(VMMetaData.ECARF_BUCKET, "swetodblp");
-		metadata.addValue(VMMetaData.ECARF_SCHEMA, "opus_august2007_closure.nt"); //Webpage, ee, cdrom, Proceedings, isbn
-		metadata.addValue(VMMetaData.ECARF_TERMS, "<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,"
+		EcarfMetaData metadata = new EcarfMetaData();
+		metadata.addValue(EcarfMetaData.ECARF_TASK, TaskType.REASON_SINGLE_QUERY.toString());
+		metadata.addValue(EcarfMetaData.ECARF_TABLE, "ontologies.swetodblp");
+		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "swetodblp");
+		metadata.addValue(EcarfMetaData.ECARF_SCHEMA, "opus_august2007_closure.nt"); //Webpage, ee, cdrom, Proceedings, isbn
+		metadata.addValue(EcarfMetaData.ECARF_TERMS, "<http://lsdis.cs.uga.edu/projects/semdis/opus#year>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#author>,"
 				+ "<http://lsdis.cs.uga.edu/projects/semdis/opus#ee>,"

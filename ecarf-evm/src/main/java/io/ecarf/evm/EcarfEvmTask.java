@@ -21,7 +21,7 @@ package io.ecarf.evm;
 import static io.ecarf.core.utils.Constants.AMAZON;
 import static io.ecarf.core.utils.Constants.GOOGLE;
 import io.ecarf.core.cloud.CloudService;
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
@@ -53,7 +53,7 @@ public class EcarfEvmTask {
 	
 	private CloudService service;
 	
-	private VMMetaData metadata;
+	private EcarfMetaData metadata;
 	
 	
 	/**
@@ -76,7 +76,7 @@ public class EcarfEvmTask {
 					stopwatch.start();
 					
 					// set status to BUSY
-					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
+					metadata.addValue(EcarfMetaData.ECARF_STATUS, VMStatus.BUSY.toString());
 					this.service.updateInstanceMetadata(metadata);
 
 					// run the task
@@ -92,7 +92,7 @@ public class EcarfEvmTask {
 					// finished processing
 					// blank the task type and set the status to READY
 					metadata.clearValues();
-					metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.READY.toString());
+					metadata.addValue(EcarfMetaData.ECARF_STATUS, VMStatus.READY.toString());
 
 					this.service.updateInstanceMetadata(metadata);
 					
@@ -189,7 +189,7 @@ public class EcarfEvmTask {
 	/**
 	 * @param metadata the metadata to set
 	 */
-	public void setMetadata(VMMetaData metadata) {
+	public void setMetadata(EcarfMetaData metadata) {
 		this.metadata = metadata;
 	}
 
@@ -208,7 +208,7 @@ public class EcarfEvmTask {
 		}
 		
 		EcarfEvmTask task = new EcarfEvmTask();
-		VMMetaData metadata = null;
+		EcarfMetaData metadata = null;
 		
 		switch(platform) {
 		case GOOGLE:

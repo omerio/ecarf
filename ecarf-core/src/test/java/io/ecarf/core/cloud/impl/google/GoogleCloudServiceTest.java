@@ -21,12 +21,11 @@ package io.ecarf.core.cloud.impl.google;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import io.ecarf.core.cloud.VMConfig;
-import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.types.TaskType;
+import io.cloudex.cloud.impl.google.GoogleCloudService;
+import io.cloudex.framework.cloud.api.Callback;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
-import io.ecarf.core.utils.Callback;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
@@ -75,7 +74,7 @@ public class GoogleCloudServiceTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.service = new GoogleCloudService();
+		this.service = new EcarfGoogleCloudServiceImpl();
 		TestUtils.prepare(service);
 	}
 
@@ -333,7 +332,7 @@ public class GoogleCloudServiceTest {
 	public void testCreateInstance() throws IOException {
 		
 		
-		VMMetaData metaData = new VMMetaData();
+		EcarfMetaData metaData = new EcarfMetaData();
 		//metaData.addValue(VMMetaData.ECARF_TASK, TaskType.LOAD.toString())
 			//.addValue(VMMetaData.ECARF_FILES, "file1.txt, file2.txt");
 		
@@ -366,7 +365,7 @@ public class GoogleCloudServiceTest {
 	public void testInstanceMetadata() throws IOException {
 		
 		// read the current metadata
-		VMMetaData metadata = this.service.getEcarfMetaData(null, null);
+		EcarfMetaData metadata = this.service.getEcarfMetaData(null, null);
 		assertNotNull(metadata);
 		assertNotNull(metadata.getFingerprint());
 		assertEquals(TaskType.LOAD, metadata.getTaskType());
@@ -374,7 +373,7 @@ public class GoogleCloudServiceTest {
 		
 		// now update the task type
 		metadata.clearValues();
-		metadata.addValue(VMMetaData.ECARF_TASK, TaskType.REASON_DIRECT.toString());
+		metadata.addValue(EcarfMetaData.ECARF_TASK, TaskType.REASON_DIRECT.toString());
 		this.service.updateInstanceMetadata(metadata);
 		assertEquals(TaskType.REASON_DIRECT, metadata.getTaskType());
 		assertEquals(1, metadata.getAttributes().size());

@@ -119,6 +119,16 @@
 			<artifactId>google-oauth-client-jetty</artifactId>
 			<version>${google.client.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>io.cloudex</groupId>
+            <artifactId>cloudex-core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>io.cloudex</groupId>
+            <artifactId>cloudex-google</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 		<!-- Commandline dependencies only -->
 		<dependency>
 			<groupId>junit</groupId>

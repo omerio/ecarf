@@ -24,18 +24,18 @@ import static io.ecarf.core.utils.Constants.ZONE_KEY;
 import io.ecarf.ccvm.entities.Job;
 import io.ecarf.core.cloud.CloudService;
 import io.ecarf.core.cloud.VMConfig;
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
 import io.ecarf.core.cloud.task.Input;
 import io.ecarf.core.cloud.task.Results;
 import io.ecarf.core.cloud.task.Task;
 import io.ecarf.core.cloud.task.TaskFactory;
-import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
+import io.ecarf.core.cloud.task.coordinator.BigDataLoadTask;
+import io.ecarf.core.cloud.task.coordinator.PartitionLoadTask;
+import io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeLoadTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeReasonTask;
 import io.ecarf.core.cloud.task.impl.distribute.DistributeUploadOutputLogTask;
-import io.ecarf.core.cloud.task.impl.load.DoLoadTask;
-import io.ecarf.core.cloud.task.impl.partition.PartitionLoadTask;
 import io.ecarf.core.cloud.task.impl.partition.PartitionReasonTask;
 import io.ecarf.core.cloud.types.TaskType;
 import io.ecarf.core.exceptions.NodeException;
@@ -72,7 +72,7 @@ public class EcarfCcvmTask {
 
 	private CloudService service;
 
-	private VMMetaData metadata;
+	private EcarfMetaData metadata;
 
 	private Job job;
 
@@ -96,9 +96,9 @@ public class EcarfCcvmTask {
 			if(!this.job.isSkipLoad()) {
 
 				// 1- load the schema and do a count of the relevant terms
-				metadata = new VMMetaData();
-				metadata.addValue(VMMetaData.ECARF_BUCKET, bucket);
-				metadata.addValue(VMMetaData.ECARF_SCHEMA, schema);
+				metadata = new EcarfMetaData();
+				metadata.addValue(EcarfMetaData.ECARF_BUCKET, bucket);
+				metadata.addValue(EcarfMetaData.ECARF_SCHEMA, schema);
 				task = new SchemaTermCountTask(metadata, service);
 				task.run();
 
@@ -186,7 +186,7 @@ public class EcarfCcvmTask {
 
 				// 5- Load the generated files into Big Data table
 				input = (new Input()).setBucket(bucket).setTable(table);	
-				task = new DoLoadTask(null, service);
+				task = new BigDataLoadTask(null, service);
 				task.setInput(input);
 				task.run();
 				
@@ -254,9 +254,9 @@ public class EcarfCcvmTask {
 		
 		// upload the logs
 		log.info("Uploading coordinator output log");
-		VMMetaData data = new VMMetaData();
-		data.addValue(VMMetaData.ECARF_BUCKET, bucket)
-			.addValue(VMMetaData.ECARF_TASK, TaskType.UPLOAD_LOGS.toString());
+		EcarfMetaData data = new EcarfMetaData();
+		data.addValue(EcarfMetaData.ECARF_BUCKET, bucket)
+			.addValue(EcarfMetaData.ECARF_TASK, TaskType.UPLOAD_LOGS.toString());
 		task = TaskFactory.getTask(data, this.service);
 		task.run();
 		
@@ -327,7 +327,7 @@ public class EcarfCcvmTask {
 	/**
 	 * @param metadata the metadata to set
 	 */
-	public void setMetadata(VMMetaData metadata) {
+	public void setMetadata(EcarfMetaData metadata) {
 		this.metadata = metadata;
 	}
 
@@ -352,7 +352,7 @@ public class EcarfCcvmTask {
 		}
 
 		EcarfCcvmTask task = new EcarfCcvmTask();
-		VMMetaData metadata = null;
+		EcarfMetaData metadata = null;
 		Job job = Job.fromJson(args[0]);
 		String platform = job.getPlatform();
 

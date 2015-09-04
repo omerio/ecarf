@@ -20,9 +20,9 @@ package io.ecarf.core.cloud.task;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.impl.partition.PartitionLoadTask;
+import io.ecarf.core.cloud.task.coordinator.PartitionLoadTask;
 import io.ecarf.core.utils.TestUtils;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class PartitionLoadTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.impl.partition.PartitionLoadTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.coordinator.PartitionLoadTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test

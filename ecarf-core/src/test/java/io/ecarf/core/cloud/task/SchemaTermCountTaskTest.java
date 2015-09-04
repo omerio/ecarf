@@ -22,9 +22,9 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import io.ecarf.core.cloud.VMMetaData;
+import io.ecarf.core.cloud.EcarfMetaData;
 import io.ecarf.core.cloud.impl.google.GoogleCloudService;
-import io.ecarf.core.cloud.task.impl.SchemaTermCountTask;
+import io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask;
 import io.ecarf.core.utils.TestUtils;
 
 import org.junit.After;
@@ -56,14 +56,14 @@ public class SchemaTermCountTaskTest {
 	}
 
 	/**
-	 * Test method for {@link io.ecarf.core.cloud.task.impl.SchemaTermCountTask#run()}.
+	 * Test method for {@link io.ecarf.core.cloud.task.coordinator.SchemaTermCountTask#run()}.
 	 * @throws IOException 
 	 */
 	@Test
 	public void testRun() throws IOException {
-		VMMetaData metadata = new VMMetaData();
-		metadata.addValue(VMMetaData.ECARF_BUCKET, "ecarf");
-		metadata.addValue(VMMetaData.ECARF_SCHEMA, "dbpedia_3.9_gen_closure.nt");
+		EcarfMetaData metadata = new EcarfMetaData();
+		metadata.addValue(EcarfMetaData.ECARF_BUCKET, "ecarf");
+		metadata.addValue(EcarfMetaData.ECARF_SCHEMA, "dbpedia_3.9_gen_closure.nt");
 		SchemaTermCountTask task = new SchemaTermCountTask(metadata, service);
 		task.run();
 	}

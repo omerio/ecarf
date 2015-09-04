@@ -18,45 +18,25 @@
  */
 package io.ecarf.core.utils;
 
-import io.ecarf.core.cloud.VMMetaData;
-import io.ecarf.core.cloud.types.VMStatus;
-import io.ecarf.core.exceptions.NodeException;
-import io.ecarf.core.partition.Item;
+import io.cloudex.framework.cloud.api.ApiUtils;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -78,11 +58,7 @@ public class Utils {
 	public static final byte [] SEPARATOR = System.getProperty("line.separator").getBytes();
 	
 	public static Gson GSON = new Gson();
-	
-	private static final int BUFFER = (int) FileUtils.ONE_KB * 8;
-	
-	//public static final CSVParser CSV_PARSER1 = new CSVParser();
-	
+
 	/**
 	 * Copy a url to a local file
 	 * @param url
@@ -99,282 +75,20 @@ public class Utils {
 	}
 	
 	/**
-	 * Convert a json string to map
-	 * @param json
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static Map<String, Object> jsonToMap(String json) {
-		return GSON.fromJson(json, HashMap.class);
-	}
-	
-	/**
-	 * comma separated string to set
-	 * @param csv
-	 * @return
-	 */
-	public static Set<String> csvToSet(String csv) {
-		Set<String> tokens = new HashSet<>();
-		if(StringUtils.isNotBlank(csv)) {	
-			String [] tokensArr = StringUtils.split(csv, ',');
-			// clean up the tokens
-			//tokens = Sets.newHashSet(tokensArr);
-			for(String token: tokensArr) {
-				tokens.add(token.trim());
-			}
-		} 
-		return tokens; 
-	}
-	
-	/**
-	 * retrive the value of a json property
-	 * @param json
-	 * @param key
-	 * @return
-	 */
-	public static String getStringPropertyFromJson(String json, String key) {
-		Map<String, Object> map = jsonToMap(json);
-		
-		return (String) map.get(key);
-	}
-	
-	/**
-	 * Delete the file with the provided string
-	 * @param filename
-	 * @return
-	 */
-	public static boolean deleteFile(String filename) {
-		File file = new File(filename);
-		return file.delete();
-	}
-	
-	/**
-	 * copy the file with the provided string
-	 * @param filename
-	 * @return
-	 * @throws IOException 
-	 */
-	public static void copyFile(String filename, String newName) throws IOException {
-		File file = new File(filename);
-		Files.copy(file, new File(newName));
-	}
-	
-	/**
-	 * Block for the number of provided seconds
-	 * @param seconds
-	 */
-	public static void block(int seconds) {
-		try {
-			TimeUnit.SECONDS.sleep(seconds);
-			//Thread.sleep(DateUtils.MILLIS_PER_SECOND * seconds);
-		} catch (InterruptedException e1) {
-			log.warn("wait interrupted", e1);
-		}
-	}
-	
-	/**
 	 * Wait until two values become equal
 	 * @param value1
 	 * @param value2
 	 */
 	public static void waitForEquality(Object value1, Object value2, int seconds) {
 		while(!value1.equals(value2)) {
-			block(seconds);
+			ApiUtils.block(seconds);
 		}
-	}
-		
-	/**
-	 * Convert a json file to set
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 */
-	public static Set<String> jsonFileToSet(String filename) throws IOException {
-		
-		try(FileReader reader = new FileReader(filename)) {
-			
-			return GSON.fromJson(new JsonReader(reader),  
-					new TypeToken<Set<String>>(){}.getType());
-			
-		} catch (Exception e) {
-			log.error("failed to prase json into set", e);
-			throw new IOException(e);
-		}
-	}
-	
-	/**
-	 * Convert a json file to map
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 */
-	public static Map<String, Long> jsonFileToMap(String filename) throws IOException {
-		
-		try(FileReader reader = new FileReader(filename)) {
-			
-			return GSON.fromJson(new JsonReader(reader),  
-					new TypeToken<Map<String, Long>>(){}.getType());
-			
-		} catch (Exception e) {
-			log.error("failed to prase json into map", e);
-			throw new IOException(e);
-		}
-	}
-	
-	
-	
-	/**
-	 * 
-	 * @param filename
-	 * @param object
-	 * @throws IOException
-	 */
-	public static void objectToJsonFile(String filename, Object object) throws IOException {
-		try(FileWriter writer = new FileWriter(filename)) {
-			GSON.toJson(object, writer);
-		}
-	}
-	
-	/**
-	 * Encode the provided text as filename
-	 * @param text
-	 * @return
-	 */
-	public static String encodeFilename(String text) {
-		String filename = text;
-		try {
-			filename = URLEncoder.encode(text, Constants.UTF8);
-		} catch (UnsupportedEncodingException e) {
-			log.warn("Failed to encode text as filename: " + text, e);
-		}
-		return filename;
-	}
-	
-	
-	/**
-	 * (Gzip) Uncompress a compressed file
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 */
-	public String unCompressFile(String filename) throws IOException {
-		FileInputStream fin = new FileInputStream(filename);
-		BufferedInputStream in = new BufferedInputStream(fin);
-		String outFile = GzipUtils.getUncompressedFilename(filename);
-		try(FileOutputStream out = new FileOutputStream(outFile);
-				GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in)) {
-			final byte[] buffer = new byte[BUFFER];
-			int n = 0;
-			while (-1 != (n = gzIn.read(buffer))) {
-				out.write(buffer, 0, n);
-			}
-		}
-		return outFile;
 	}
 	
 	public static void main(String[] args) throws JsonIOException, JsonSyntaxException, FileNotFoundException {
 		Set<String> schemaTerms = Utils.GSON.fromJson(new JsonReader(new FileReader(Utils.TEMP_FOLDER + "test.json")),  
 				new TypeToken<Set<String>>(){}.getType());
 		System.out.println(schemaTerms);
-	}
-	
-	/**
-	 * Sums a list of numbers
-	 * @param items
-	 * @return
-	 */
-	public static Long sum(List<Item> items) {
-		long sum = 0;
-		for(Item item: items) {
-			sum += item.getWeight();
-		}
-		return sum;
-	}
-	
-	/**
-	 * Sums a list of numbers, if a number is greater than max only max will be summed
-	 * @param items
-	 * @return
-	 */
-	public static Long sum(List<Item> items, long max) {
-		long sum = 0;
-		for(Item item: items) {
-			Long weight = item.getWeight();
-			if(weight > max) {
-				weight = max;
-			}
-			sum += weight;
-		}
-		return sum;
-	}
-	
-	/**
-	 * Set the scale of items based on the max provided
-	 * 1/2, 1, 2, 3, 4, 5, ..., n
-	 * @param max
-	 */
-	public static List<Item> setScale(List<Item> items, long max) {
-		for(Item item: items) {
-			long weight = item.getWeight();
-			Double scale = (double) weight / (double) max;
-			if(scale >= 1d) {
-				scale = (new BigDecimal(scale)).setScale(0, RoundingMode.HALF_UP).doubleValue();
-			} else if(scale < 1d && scale > 0.5d) {
-				scale = 1d;
-			} else if(scale <= 0.5d) {
-				scale = 0.5d;
-			}
-			
-			item.setScale(scale);
-		}
-		return items;
-	}
-	
-	/**
-	 * Helper to get the api delay from the configurations
-	 * @return
-	 */
-	public static int getApiRecheckDelay() {
-		return Config.getIntegerProperty(Constants.API_DELAY_KEY, Constants.API_RECHECK_DELAY);
-	}
-	
-	/**
-	 * From an exception populate an ecarf metadata error
-	 * @param metadata
-	 * @param e
-	 */
-	public static void exceptionToEcarfError(VMMetaData metadata, Exception e) {
-		metadata.addValue(VMMetaData.ECARF_STATUS, VMStatus.ERROR.toString());
-		metadata.addValue(VMMetaData.ECARF_EXCEPTION, e.getClass().getName());
-		metadata.addValue(VMMetaData.ECARF_MESSAGE, e.getMessage());
-	}
-	
-	/**
-	 * Return an IOException from the metaData error
-	 * @param metaData
-	 * @return
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static IOException exceptionFromEcarfError(VMMetaData metaData, String instanceId) {
-		Class clazz = IOException.class;
-		String message = metaData.getMessage();
-		if(StringUtils.isNoneBlank(metaData.getException())) {
-			try {
-				clazz = Class.forName(metaData.getException());
-			} catch (ClassNotFoundException e) {
-				log.warn("failed to load exception class from evm");
-			}
-		}
-		Exception cause;
-		try {
-			Constructor ctor = clazz.getDeclaredConstructor(String.class);
-			ctor.setAccessible(true);
-			cause = (Exception) ctor.newInstance(message);
-		} catch (Exception e) {
-			log.warn("failed to load exception class from evm");
-			cause = new IOException(message);
-		}
-		return new NodeException(Constants.EVM_EXCEPTION + instanceId, cause, instanceId);
 	}
 	
 	/**

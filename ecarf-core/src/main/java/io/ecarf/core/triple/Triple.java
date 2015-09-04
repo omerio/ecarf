@@ -3,6 +3,8 @@
  */
 package io.ecarf.core.triple;
 
+import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +20,7 @@ import com.google.common.base.Preconditions;
  * @author omerio
  *
  */
-public class Triple {
+public class Triple implements BigQueryStreamable {
 	
 	private static final Map<String, SchemaURIType> MAPPINGS = SchemaURIType.mappings();
 	
