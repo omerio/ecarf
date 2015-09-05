@@ -53,7 +53,9 @@ public class EcarfCcvmTask {
 		Coordinator coordinator = null;
 	
 		try {
+		    
 		    Job job = Job.fromJsonFile(args[0]);
+		    log.info("Running job from json file: " + args[0] + ", job id: " + job.getId());
             coordinator = new Coordinator.Builder(job, new EcarfGoogleCloudServiceImpl())
                 .setShutdownProcessors(true).build();
 
