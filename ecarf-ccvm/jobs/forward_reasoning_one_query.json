@@ -6,18 +6,18 @@
         "bucket": "swetodblp1",
         "schema": "opus_august2007_closure.nt",
         "table": "ontologies.swetodblp",
-        "numberOfProcessors": 5,
+        "numberOfProcessors": 2,
         "maxTriplesPerNode": 200000,
         "maxFileSizePerNode": 120000,
         "newNodePercentage": 0.0
     },
     "vmConfig": {
         "zoneId": "us-central1-a",
-        "imageId": "ecarf-1000/global/images/ecarf-centos-6-v20150603",
+        "imageId": "ecarf-1000/global/images/ecarf-centos-6-v20150818-0",
         "vmType": "n1-standard-2",
         "networkId": "default",
         "diskType": "pd-standard",
-        "startupScript": "su - omerio -c 'cd /home/omerio/ecarf && git pull && /home/omerio/apache-maven-3.2.5/bin/mvn -q clean compile install -Dmaven.test.skip=true && cd /home/omerio/ecarf/ecarf-evm && export VM_XMS=\"-Xms512m\" VM_XMX=\"-Xmx1g\" && mvn -q exec:exec 2>&1 & exit 0' exit 0"  
+        "startupScript": "su - omerio -c 'cd /home/omerio/ecarf && git pull && /home/omerio/apache-maven-3.2.5/bin/mvn -q clean compile install -Dmaven.test.skip=true && cd /home/omerio/ecarf/ecarf-evm && export VM_XMS=\"-Xms512m\" VM_XMX=\"-Xmx6g\" && mvn -q exec:exec 2>&1 & exit 0' exit 0"  
     },
     "tasks":[
         {
