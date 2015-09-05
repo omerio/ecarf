@@ -117,4 +117,36 @@ public class CombineTermStatsTask extends CommonTask {
 
     }
 
+
+    /**
+     * @return the bucket
+     */
+    public String getBucket() {
+        return bucket;
+    }
+
+
+    /**
+     * @param bucket the bucket to set
+     */
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
+    }
+
+
+    /**
+     * @return the processors
+     */
+    public Collection<String> getProcessors() {
+        return processors;
+    }
+
+
+    /**
+     * @param processors the processors to set
+     */
+    public void setProcessors(Collection<String> processors) {
+        this.processors = processors;
+    }
+
 }
