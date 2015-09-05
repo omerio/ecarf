@@ -47,8 +47,8 @@
 				<configuration>
 					<executable>java</executable>
 					<arguments>
-						<argument>-Xms2g</argument>
-                        <argument>-Xmx2g</argument>
+						<argument>${env.VM_XMS}</argument>
+                        <argument>${env.VM_XMX}</argument>
                         <argument>-Djava.util.logging.config.file=${basedir}/src/main/resources/logging.properties</argument>
 						<argument>-classpath</argument>
 						<!-- automatically creates the classpath using all project dependencies, 
