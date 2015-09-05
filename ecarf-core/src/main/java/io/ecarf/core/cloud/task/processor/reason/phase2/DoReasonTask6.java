@@ -105,8 +105,8 @@ public class DoReasonTask6 extends CommonTask {
 		//Set<String> terms = metadata.getTerms();
 		//String schemaFile = metadata.getValue(EcarfMetaData.ECARF_SCHEMA);
 		//String bucket = metadata.getBucket();
-		Stopwatch stopwatch1 = Stopwatch.createStarted();
-		Stopwatch stopwatch2 = Stopwatch.createStarted();
+		Stopwatch stopwatch1 = Stopwatch.createUnstarted();
+		Stopwatch stopwatch2 = Stopwatch.createUnstarted();
 		Set<String> termsSet;
 		
 		if(terms == null) {
