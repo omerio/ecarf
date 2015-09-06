@@ -195,12 +195,11 @@ public class GoogleCloudServiceTest {
 	}
 
 	@Test
-	@Ignore
 	public void testDownloadFileFromCloudStorage() throws IOException {
 		this.service.init();
 		
-		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
-				Utils.TEMP_FOLDER + "linkedgeodata_links.nt.gz", "ecarf", new Callback() {
+		this.service.downloadObjectFromCloudStorage("swetodblp_06012015000000000011", 
+				Utils.TEMP_FOLDER + "swetodblp_06012015000000000011", "ecarf", new Callback() {
 			@Override
 			public void execute() {
 				System.out.println("Download complete");
@@ -297,8 +296,8 @@ public class GoogleCloudServiceTest {
 	@Test
 	@Ignore
 	public void testDownloadFileFromCloudStorage1() throws IOException {
-		this.service.setAccessToken(TestUtils.TOKEN);
-		this.service.setTokenExpire(DateUtils.addHours(new Date(), 1));
+		//this.service.setAccessToken(TestUtils.TOKEN);
+		//this.service.setTokenExpire(DateUtils.addHours(new Date(), 1));
 		
 		this.service.downloadObjectFromCloudStorage("linkedgeodata_links.nt.gz", 
 				Utils.TEMP_FOLDER + "/linkedgeodata_links.nt.gz", "ecarf", new Callback() {

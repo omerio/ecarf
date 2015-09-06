@@ -18,6 +18,8 @@
  */
 package io.ecarf.ccvm;
 
+import io.cloudex.cloud.impl.google.auth.InstanceAuthenticationProvider;
+import io.cloudex.framework.cloud.api.CloudService;
 import io.cloudex.framework.components.Coordinator;
 import io.cloudex.framework.config.Job;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
@@ -56,8 +58,9 @@ public class EcarfCcvmTask {
 		    
 		    Job job = Job.fromJsonFile(args[0]);
 		    log.info("Running job from json file: " + args[0] + ", job id: " + job.getId());
-            coordinator = new Coordinator.Builder(job, new EcarfGoogleCloudServiceImpl())
-                .setShutdownProcessors(true).build();
+		    CloudService cloudService = new EcarfGoogleCloudServiceImpl();
+		    cloudService.setAuthenticationProvider(new InstanceAuthenticationProvider());
+            coordinator = new Coordinator.Builder(job, cloudService).setShutdownProcessors(true).build();
 
         } catch(IOException e) {
             log.error("Failed to start the coordinator program", e);

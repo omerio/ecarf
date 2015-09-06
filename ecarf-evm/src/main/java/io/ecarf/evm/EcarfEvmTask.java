@@ -18,6 +18,8 @@
  */
 package io.ecarf.evm;
 
+import io.cloudex.cloud.impl.google.auth.InstanceAuthenticationProvider;
+import io.cloudex.framework.cloud.api.CloudService;
 import io.cloudex.framework.components.Processor;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 
@@ -52,7 +54,10 @@ public class EcarfEvmTask {
 
 	    try {
 	        
-	        processor = new Processor.Builder(new EcarfGoogleCloudServiceImpl()).build();
+	        CloudService cloudService = new EcarfGoogleCloudServiceImpl();
+            cloudService.setAuthenticationProvider(new InstanceAuthenticationProvider());
+            
+	        processor = new Processor.Builder(cloudService).build();
 
 	    } catch(IOException e) {
 	        log.error("Failed to start the processor program", e);

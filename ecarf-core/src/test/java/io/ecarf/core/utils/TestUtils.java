@@ -21,11 +21,12 @@ package io.ecarf.core.utils;
 import static io.ecarf.core.utils.Constants.ACCESS_SCOPES_KEY;
 import static io.ecarf.core.utils.Constants.PROJECT_ID_KEY;
 import static io.ecarf.core.utils.Constants.ZONE_KEY;
+import io.cloudex.cloud.impl.google.auth.CmdLineAuthenticationProvider;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 
-import java.util.Date;
+import java.util.List;
 
-import org.apache.commons.lang3.time.DateUtils;
+import com.google.common.collect.Sets;
 
 
 /**
@@ -34,17 +35,28 @@ import org.apache.commons.lang3.time.DateUtils;
  */
 public class TestUtils {
 	
-	public static final String TOKEN = "ya29.mAHnKvDvi-OOVB6tc87eAA6hA2H__cRTcaKUwPdgALpd3j3lZgkUTZK2OM3OezLesW84RR1_hoaYjA";
+	//public static final String TOKEN = "ya29.mAHnKvDvi-OOVB6tc87eAA6hA2H__cRTcaKUwPdgALpd3j3lZgkUTZK2OM3OezLesW84RR1_hoaYjA";
 	
+    /**
+     * This uses the CmdLineAuthenticationProvider so there is no need to start a new
+     * Compute Engine instance for the Coordinator
+     * @param service
+     */
 	@SuppressWarnings("unchecked")
 	public static void prepare(EcarfGoogleCloudServiceImpl service) {
-		service.setAccessToken(TOKEN);
-		service.setTokenExpire(DateUtils.addHours(new Date(), 1));
+		//service.setAccessToken(TOKEN);
+		//service.setTokenExpire(DateUtils.addHours(new Date(), 1));
 		service.setProjectId(Config.getProperty(PROJECT_ID_KEY));
 		service.setZone(Config.getProperty(ZONE_KEY));
 		service.setInstanceId("ecarf-evm-1");
 		service.setServiceAccount("default");
-		service.setScopes(Config.getList(ACCESS_SCOPES_KEY));
+		service.setRemote(true);
+		List<String> scopes = Config.getList(ACCESS_SCOPES_KEY);
+		service.setScopes(scopes);
+		CmdLineAuthenticationProvider provider = new CmdLineAuthenticationProvider();
+		provider.setClientSecretsFile("/client_secret.json");
+		provider.setScopes(Sets.newHashSet(scopes));
+		service.setAuthenticationProvider(provider);
 	}
 
 }
