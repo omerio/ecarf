@@ -28,13 +28,15 @@ import java.util.Map.Entry;
 /**
  * A CSV record parsed from a CSV file.
  *
- * @version $Id: CSVRecord.java 1589281 2014-04-22 20:20:17Z ggregory $
+ * @version $Id: CSVRecord.java 1695167 2015-08-10 21:08:58Z ggregory $
  */
 public final class CSVRecord implements Serializable, Iterable<String> {
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     private static final long serialVersionUID = 1L;
+
+    private final long characterPosition;
 
     /** The accumulated comments (if any) */
     private final String comment;
@@ -48,12 +50,13 @@ public final class CSVRecord implements Serializable, Iterable<String> {
     /** The values of the record */
     private final String[] values;
 
-    CSVRecord(final String[] values, final Map<String, Integer> mapping,
-            final String comment, final long recordNumber) {
+    CSVRecord(final String[] values, final Map<String, Integer> mapping, final String comment, final long recordNumber,
+            final long characterPosition) {
         this.recordNumber = recordNumber;
         this.values = values != null ? values : EMPTY_STRING_ARRAY;
         this.mapping = mapping;
         this.comment = comment;
+        this.characterPosition = characterPosition;
     }
 
     /**
@@ -94,27 +97,36 @@ public final class CSVRecord implements Serializable, Iterable<String> {
     public String get(final String name) {
         if (mapping == null) {
             throw new IllegalStateException(
-                    "No header mapping was specified, the record values can't be accessed by name");
+                "No header mapping was specified, the record values can't be accessed by name");
         }
         final Integer index = mapping.get(name);
         if (index == null) {
             throw new IllegalArgumentException(String.format("Mapping for %s not found, expected one of %s", name,
-                    mapping.keySet()));
+                mapping.keySet()));
         }
         try {
             return values[index.intValue()];
         } catch (final ArrayIndexOutOfBoundsException e) {
             throw new IllegalArgumentException(String.format(
-                    "Index for header '%s' is %d but CSVRecord only has %d values!", name, index,
-                    Integer.valueOf(values.length)));
+                "Index for header '%s' is %d but CSVRecord only has %d values!", name, index,
+                Integer.valueOf(values.length)));
         }
+    }
+
+    /**
+     * Returns the start position of this record as a character position in the source stream. This may or may not
+     * correspond to the byte position depending on the character set.
+     *
+     * @return the position of this record in the source stream.
+     */
+    public long getCharacterPosition() {
+        return characterPosition;
     }
 
     /**
      * Returns the comment for this record, if any.
      *
-     * @return the comment for this record, or null if no comment for this
-     *         record is available.
+     * @return the comment for this record, or null if no comment for this record is available.
      */
     public String getComment() {
         return comment;
@@ -123,20 +135,30 @@ public final class CSVRecord implements Serializable, Iterable<String> {
     /**
      * Returns the number of this record in the parsed CSV file.
      *
+     * <p>
+     * <strong>ATTENTION:</strong> If your CSV input has multi-line values, the returned number does not correspond to
+     * the current line number of the parser that created this record.
+     * </p>
+     *
      * @return the number of this record.
+     * @see CSVParser#getCurrentLineNumber()
      */
     public long getRecordNumber() {
         return recordNumber;
     }
 
     /**
-     * Returns true if this record is consistent, false if not. Currently, the only check is matching the record size to
-     * the header size. Some programs can export files that fails this test but still produce parsable files.
+     * Tells whether the record size matches the header size.
+     *
+     * <p>
+     * Returns true if the sizes for this record match and false if not. Some programs can export files that fail this
+     * test but still produce parsable files.
+     * </p>
      *
      * @return true of this record is valid, false if not
      */
     public boolean isConsistent() {
-        return mapping == null ? true : mapping.size() == values.length;
+        return mapping == null || mapping.size() == values.length;
     }
 
     /**
@@ -147,7 +169,7 @@ public final class CSVRecord implements Serializable, Iterable<String> {
      * @return whether a given column is mapped.
      */
     public boolean isMapped(final String name) {
-        return mapping != null ? mapping.containsKey(name) : false;
+        return mapping != null && mapping.containsKey(name);
     }
 
     /**
@@ -166,6 +188,7 @@ public final class CSVRecord implements Serializable, Iterable<String> {
      *
      * @return an iterator over the values of this record.
      */
+    @Override
     public Iterator<String> iterator() {
         return toList().iterator();
     }
@@ -173,10 +196,14 @@ public final class CSVRecord implements Serializable, Iterable<String> {
     /**
      * Puts all values of this record into the given Map.
      *
-     * @param map The Map to populate.
+     * @param map
+     *            The Map to populate.
      * @return the given map.
      */
     <M extends Map<String, String>> M putIn(final M map) {
+        if (mapping == null) {
+            return map;
+        }
         for (final Entry<String, Integer> entry : mapping.entrySet()) {
             final int col = entry.getValue().intValue();
             if (col < values.length) {
@@ -199,6 +226,7 @@ public final class CSVRecord implements Serializable, Iterable<String> {
      * Converts the values to a List.
      *
      * TODO: Maybe make this public?
+     *
      * @return a new List
      */
     private List<String> toList() {
@@ -214,18 +242,21 @@ public final class CSVRecord implements Serializable, Iterable<String> {
         return putIn(new HashMap<String, String>(values.length));
     }
 
+    /**
+     * Returns a string representation of the contents of this record. The result is constructed by comment, mapping,
+     * recordNumber and by passing the internal values array to {@link Arrays#toString(Object[])}.
+     *
+     * @return a String representation of this record.
+     */
     @Override
     public String toString() {
-        return Arrays.toString(values);
+        return "CSVRecord [comment=" + comment + ", mapping=" + mapping +
+                ", recordNumber=" + recordNumber + ", values=" +
+                Arrays.toString(values) + "]";
     }
 
-    /**
-     * Made public by Omer
-     * @return
-     */
     public String[] values() {
         return values;
     }
-
 
 }

@@ -18,15 +18,24 @@
  */
 package io.ecarf.core.cloud.task;
 
+import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
+import io.ecarf.core.compress.CommonsCsvCallback;
+import io.ecarf.core.compress.NTripleGzipCallback;
+import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.StringEscapeCallback;
+import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.TestUtils;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.base.Stopwatch;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -66,6 +75,52 @@ public class ProcessLoadTaskTest {
 		task.setFiles("redirects_transitive_en.nt.gz");
 		task.setSchemaTermsFile("schema_terms.json");
 		task.run();
+	}
+	
+	/**
+	 * 
+	 * @param args
+	 * @throws IOException 
+	 */
+	public static void main(String[] args) throws IOException {
+	    
+	    Stopwatch stopwatch = Stopwatch.createStarted();
+	    String filename = "/Users/omerio/Ontologies/swetodblp_2008_8.nt.gz";
+	    String termsFile = "/Users/omerio/SkyDrive/PhD/Experiments/phase2/05_09_2015_SwetoDblp_2n/schema_terms.txt";
+	    
+	    Set<String> schemaTerms = FileUtils.jsonFileToSet(termsFile);
+	    TermCounter counter = new TermCounter();
+        counter.setTermsToCount(schemaTerms);
+        
+        NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
+        
+        NTripleGzipCallback callback = new CommonsCsvCallback();
+
+        callback.setCounter(counter);
+
+        String outFilename = processor.process(callback);
+        
+        System.out.println("Created out file: " + outFilename + ", in: " + stopwatch);
+        
+        System.out.println("\n" + counter.getCount());
+        
+        stopwatch.reset();
+        stopwatch.start();
+        
+        counter = new TermCounter();
+        counter.setTermsToCount(schemaTerms);
+        
+        processor = new NTripleGzipProcessor(filename);
+        
+        callback = new StringEscapeCallback();
+
+        callback.setCounter(counter);
+
+        outFilename = processor.process(callback);
+        
+        System.out.println("Created out file: " + outFilename + ", in: " + stopwatch);
+        
+        System.out.println("\n" + counter.getCount());
 	}
 
 }

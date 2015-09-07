@@ -25,15 +25,13 @@ import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
 import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.StringEscapeCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -66,25 +64,12 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
         /*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
               .append(File.separator).append("out_").append(filename).toString();*/
         NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
+        
+        NTripleGzipCallback callback = new StringEscapeCallback();
 
-        String outFilename = processor.process(new NTripleGzipCallback() {
-
-            @Override
-            public String process(String [] terms) {
-
-                if(counter != null) {
-                    counter.count(terms);
-                }
-
-                for(int i = 0; i < terms.length; i++) {
-                    // bigquery requires data to be properly escaped
-                    terms[i] = StringEscapeUtils.escapeCsv(terms[i]);
-                }
-
-                return StringUtils.join(terms, ',');
-            }
-
-        });
+        callback.setCounter(counter);
+        
+        String outFilename = processor.process(callback);
 
         return outFilename;
     }

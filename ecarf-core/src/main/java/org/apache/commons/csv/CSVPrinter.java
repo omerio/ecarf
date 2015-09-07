@@ -31,7 +31,7 @@ import java.sql.SQLException;
 /**
  * Prints values in a CSV format.
  *
- * @version $Id: CSVPrinter.java 1582822 2014-03-28 16:52:17Z sebb $
+ * @version $Id: CSVPrinter.java 1695167 2015-08-10 21:08:58Z ggregory $
  */
 public final class CSVPrinter implements Flushable, Closeable {
 
@@ -44,30 +44,45 @@ public final class CSVPrinter implements Flushable, Closeable {
 
     /**
      * Creates a printer that will print values to the given stream following the CSVFormat.
-     * <p/>
-     * Currently, only a pure encapsulation format or a pure escaping format is supported. Hybrid formats
-     * (encapsulation and escaping with a different character) are not supported.
+     * <p>
+     * Currently, only a pure encapsulation format or a pure escaping format is supported. Hybrid formats (encapsulation
+     * and escaping with a different character) are not supported.
+     * </p>
      *
      * @param out
      *            stream to which to print. Must not be null.
      * @param format
      *            the CSV format. Must not be null.
+     * @throws IOException
+     *             thrown if the optional header cannot be printed.
      * @throws IllegalArgumentException
      *             thrown if the parameters of the format are inconsistent or if either out or format are null.
      */
-    public CSVPrinter(final Appendable out, final CSVFormat format) {
+    public CSVPrinter(final Appendable out, final CSVFormat format) throws IOException {
         Assertions.notNull(out, "out");
         Assertions.notNull(format, "format");
 
         this.out = out;
         this.format = format;
-        this.format.validate();
+        // TODO: Is it a good idea to do this here instead of on the first call to a print method?
+        // It seems a pain to have to track whether the header has already been printed or not.
+        if (format.getHeaderComments() != null) {
+            for (final String line : format.getHeaderComments()) {
+                if (line != null) {
+                    this.printComment(line);
+                }
+            }
+        }
+        if (format.getHeader() != null) {
+            this.printRecord((Object[]) format.getHeader());
+        }
     }
 
     // ======================================================
     // printing implementation
     // ======================================================
 
+    @Override
     public void close() throws IOException {
         if (out instanceof Closeable) {
             ((Closeable) out).close();
@@ -80,10 +95,20 @@ public final class CSVPrinter implements Flushable, Closeable {
      * @throws IOException
      *             If an I/O error occurs
      */
+    @Override
     public void flush() throws IOException {
         if (out instanceof Flushable) {
             ((Flushable) out).flush();
         }
+    }
+
+    /**
+     * Gets the target Appendable.
+     *
+     * @return the target Appendable.
+     */
+    public Appendable getOut() {
+        return this.out;
     }
 
     /**
@@ -106,15 +131,15 @@ public final class CSVPrinter implements Flushable, Closeable {
         this.print(value, strValue, 0, strValue.length());
     }
 
-    private void print(final Object object, final CharSequence value,
-            final int offset, final int len) throws IOException {
+    private void print(final Object object, final CharSequence value, final int offset, final int len)
+            throws IOException {
         if (!newRecord) {
             out.append(format.getDelimiter());
         }
-        if (format.isQuoting()) {
+        if (format.isQuoteCharacterSet()) {
             // the original object is needed so can check for Number
             printAndQuote(object, value, offset, len);
-        } else if (format.isEscaping()) {
+        } else if (format.isEscapeCharacterSet()) {
             printAndEscape(value, offset, len);
         } else {
             out.append(value, offset, offset + len);
@@ -131,7 +156,7 @@ public final class CSVPrinter implements Flushable, Closeable {
         final int end = offset + len;
 
         final char delim = format.getDelimiter();
-        final char escape = format.getEscape().charValue();
+        final char escape = format.getEscapeCharacter().charValue();
 
         while (pos < end) {
             char c = value.charAt(pos);
@@ -165,21 +190,21 @@ public final class CSVPrinter implements Flushable, Closeable {
      * Note: must only be called if quoting is enabled, otherwise will generate NPE
      */
     // the original object is needed so can check for Number
-    private void printAndQuote(final Object object, final CharSequence value,
-            final int offset, final int len) throws IOException {
+    private void printAndQuote(final Object object, final CharSequence value, final int offset, final int len)
+            throws IOException {
         boolean quote = false;
         int start = offset;
         int pos = offset;
         final int end = offset + len;
 
         final char delimChar = format.getDelimiter();
-        final char quoteChar = format.getQuoteChar().charValue();
+        final char quoteChar = format.getQuoteCharacter().charValue();
 
-        Quote quotePolicy = format.getQuotePolicy();
-        if (quotePolicy == null) {
-            quotePolicy = Quote.MINIMAL;
+        QuoteMode quoteModePolicy = format.getQuoteMode();
+        if (quoteModePolicy == null) {
+            quoteModePolicy = QuoteMode.MINIMAL;
         }
-        switch (quotePolicy) {
+        switch (quoteModePolicy) {
         case ALL:
             quote = true;
             break;
@@ -202,10 +227,9 @@ public final class CSVPrinter implements Flushable, Closeable {
             } else {
                 char c = value.charAt(pos);
 
-                // Hmmm, where did this rule come from?
+                // TODO where did this rule come from?
                 if (newRecord && (c < '0' || (c > '9' && c < 'A') || (c > 'Z' && c < 'a') || (c > 'z'))) {
                     quote = true;
-                    // } else if (c == ' ' || c == '\f' || c == '\t') {
                 } else if (c <= COMMENT) {
                     // Some other chars at the start of a value caused the parser to fail, so for now
                     // encapsulate if we start in anything less than '#'. We are being conservative
@@ -224,7 +248,6 @@ public final class CSVPrinter implements Flushable, Closeable {
                     if (!quote) {
                         pos = end - 1;
                         c = value.charAt(pos);
-                        // if (c == ' ' || c == '\f' || c == '\t') {
                         // Some other chars at the end caused the parser to fail, so for now
                         // encapsulate if we end in anything less than ' '
                         if (c <= SP) {
@@ -241,7 +264,7 @@ public final class CSVPrinter implements Flushable, Closeable {
             }
             break;
         default:
-            throw new IllegalStateException("Unexpected Quote value: " + quotePolicy);
+            throw new IllegalStateException("Unexpected Quote value: " + quoteModePolicy);
         }
 
         if (!quote) {
@@ -275,10 +298,13 @@ public final class CSVPrinter implements Flushable, Closeable {
     }
 
     /**
-     * Prints a comment on a new line among the delimiter separated values. Comments will always begin on a new line
-     * and occupy a least one full line. The character specified to start comments and a space will be inserted at the
-     * beginning of each new line in the comment.
-     * <p/>
+     * Prints a comment on a new line among the delimiter separated values.
+     *
+     * <p>
+     * Comments will always begin on a new line and occupy a least one full line. The character specified to start
+     * comments and a space will be inserted at the beginning of each new line in the comment.
+     * </p>
+     *
      * If comments are disabled in the current CSV format this method does nothing.
      *
      * @param comment
@@ -287,13 +313,13 @@ public final class CSVPrinter implements Flushable, Closeable {
      *             If an I/O error occurs
      */
     public void printComment(final String comment) throws IOException {
-        if (!format.isCommentingEnabled()) {
+        if (!format.isCommentMarkerSet()) {
             return;
         }
         if (!newRecord) {
             println();
         }
-        out.append(format.getCommentStart().charValue());
+        out.append(format.getCommentMarker().charValue());
         out.append(SP);
         for (int i = 0; i < comment.length(); i++) {
             final char c = comment.charAt(i);
@@ -305,7 +331,7 @@ public final class CSVPrinter implements Flushable, Closeable {
                 //$FALL-THROUGH$ break intentionally excluded.
             case LF:
                 println();
-                out.append(format.getCommentStart().charValue());
+                out.append(format.getCommentMarker().charValue());
                 out.append(SP);
                 break;
             default:
@@ -331,8 +357,12 @@ public final class CSVPrinter implements Flushable, Closeable {
     }
 
     /**
-     * Prints a single line of delimiter separated values. The values will be quoted if needed. Quotes and newLine
-     * characters will be escaped.
+     * Prints the given values a single record of delimiter separated values followed by the record separator.
+     *
+     * <p>
+     * The values will be quoted if needed. Quotes and newLine characters will be escaped. This method adds the record
+     * separator to the output after printing the record, so there is no need to call {@link #println()}.
+     * </p>
      *
      * @param values
      *            values to output.
@@ -347,8 +377,12 @@ public final class CSVPrinter implements Flushable, Closeable {
     }
 
     /**
-     * Prints a single line of delimiter separated values. The values will be quoted if needed. Quotes and newLine
-     * characters will be escaped.
+     * Prints the given values a single record of delimiter separated values followed by the record separator.
+     *
+     * <p>
+     * The values will be quoted if needed. Quotes and newLine characters will be escaped. This method adds the record
+     * separator to the output after printing the record, so there is no need to call {@link #println()}.
+     * </p>
      *
      * @param values
      *            values to output.
@@ -363,7 +397,38 @@ public final class CSVPrinter implements Flushable, Closeable {
     }
 
     /**
-     * Prints all the objects in the given collection.
+     * Prints all the objects in the given collection handling nested collections/arrays as records.
+     *
+     * <p>
+     * If the given collection only contains simple objects, this method will print a single record like
+     * {@link #printRecord(Iterable)}. If the given collections contains nested collections/arrays those nested elements
+     * will each be printed as records using {@link #printRecord(Object...)}.
+     * </p>
+     *
+     * <p>
+     * Given the following data structure:
+     * </p>
+     *
+     * <pre>
+     * <code>
+     * List&lt;String[]&gt; data = ...
+     * data.add(new String[]{ "A", "B", "C" });
+     * data.add(new String[]{ "1", "2", "3" });
+     * data.add(new String[]{ "A1", "B2", "C3" });
+     * </code>
+     * </pre>
+     *
+     * <p>
+     * Calling this method will print:
+     * </p>
+     *
+     * <pre>
+     * <code>
+     * A, B, C
+     * 1, 2, 3
+     * A1, B2, C3
+     * </code>
+     * </pre>
      *
      * @param values
      *            the values to print.
@@ -383,14 +448,45 @@ public final class CSVPrinter implements Flushable, Closeable {
     }
 
     /**
-     * Prints all the objects in the given array.
+     * Prints all the objects in the given array handling nested collections/arrays as records.
+     *
+     * <p>
+     * If the given array only contains simple objects, this method will print a single record like
+     * {@link #printRecord(Object...)}. If the given collections contains nested collections/arrays those nested
+     * elements will each be printed as records using {@link #printRecord(Object...)}.
+     * </p>
+     *
+     * <p>
+     * Given the following data structure:
+     * </p>
+     *
+     * <pre>
+     * <code>
+     * String[][] data = new String[3][]
+     * data[0] = String[]{ "A", "B", "C" };
+     * data[1] = new String[]{ "1", "2", "3" };
+     * data[2] = new String[]{ "A1", "B2", "C3" };
+     * </code>
+     * </pre>
+     *
+     * <p>
+     * Calling this method will print:
+     * </p>
+     *
+     * <pre>
+     * <code>
+     * A, B, C
+     * 1, 2, 3
+     * A1, B2, C3
+     * </code>
+     * </pre>
      *
      * @param values
      *            the values to print.
      * @throws IOException
      *             If an I/O error occurs
      */
-    public void printRecords(final Object[] values) throws IOException {
+    public void printRecords(final Object... values) throws IOException {
         for (final Object value : values) {
             if (value instanceof Object[]) {
                 this.printRecord((Object[]) value);
@@ -405,28 +501,20 @@ public final class CSVPrinter implements Flushable, Closeable {
     /**
      * Prints all the objects in the given JDBC result set.
      *
-     * @param resultSet result set
-     *            the values to print.
+     * @param resultSet
+     *            result set the values to print.
      * @throws IOException
      *             If an I/O error occurs
-     * @throws SQLException if a database access error occurs
+     * @throws SQLException
+     *             if a database access error occurs
      */
     public void printRecords(final ResultSet resultSet) throws SQLException, IOException {
         final int columnCount = resultSet.getMetaData().getColumnCount();
         while (resultSet.next()) {
             for (int i = 1; i <= columnCount; i++) {
-                print(resultSet.getString(i));
+                print(resultSet.getObject(i));
             }
             println();
         }
-    }
-
-    /**
-     * Gets the target Appendable.
-     *
-     * @return the target Appendable.
-     */
-    public Appendable getOut() {
-        return this.out;
     }
 }

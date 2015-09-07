@@ -18,12 +18,34 @@
  */
 package io.ecarf.core.compress;
 
+import io.ecarf.core.term.TermCounter;
+
+import java.io.IOException;
+
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
 public interface NTripleGzipCallback {
+    
+    /**
+     * The output if we are directly appending to an output
+     * @param out
+     */
+    public void setOutput(Appendable out) throws IOException;
 	
-	public String process(String[] line);
+    /**
+     * Do actual processing for the provided terms array
+     * @param line
+     * @return
+     * @throws IOException
+     */
+	public String process(String[] line) throws IOException;
+	
+	/**
+	 * Set a term counter if we are counting the terms as well
+	 * @param counter
+	 */
+	public void setCounter(TermCounter counter);
 
 }

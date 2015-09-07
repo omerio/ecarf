@@ -30,9 +30,10 @@ import java.io.Reader;
  * A special buffered reader which supports sophisticated read access.
  * <p>
  * In particular the reader supports a look-ahead option, which allows you to see the next char returned by
- * {@link #read()}.
+ * {@link #read()}. This reader also tracks how many characters have been read with {@link #getPosition()}.
+ * </p>
  *
- * @version $Id: ExtendedBufferedReader.java 1512625 2013-08-10 11:07:15Z britter $
+ * @version $Id: ExtendedBufferedReader.java 1635146 2014-10-29 14:31:07Z ggregory $
  */
 final class ExtendedBufferedReader extends BufferedReader {
 
@@ -40,7 +41,10 @@ final class ExtendedBufferedReader extends BufferedReader {
     private int lastChar = UNDEFINED;
 
     /** The count of EOLs (CR/LF/CRLF) seen so far */
-    private long eolCounter = 0;
+    private long eolCounter;
+
+    /** The position, which is number of characters read so far */
+    private long position;
 
     private boolean closed;
 
@@ -58,6 +62,7 @@ final class ExtendedBufferedReader extends BufferedReader {
             eolCounter++;
         }
         lastChar = current;
+        this.position++;
         return lastChar;
     }
 
@@ -100,6 +105,7 @@ final class ExtendedBufferedReader extends BufferedReader {
             lastChar = END_OF_STREAM;
         }
 
+        position += len;
         return len;
     }
 
@@ -155,6 +161,15 @@ final class ExtendedBufferedReader extends BufferedReader {
             return eolCounter; // counter is accurate
         }
         return eolCounter + 1; // Allow for counter being incremented only at EOL
+    }
+
+    /**
+     * Gets the character position in the reader.
+     *
+     * @return the current position in the reader (counting characters, not bytes since this is a Reader)
+     */
+    long getPosition() {
+        return this.position;
     }
 
     public boolean isClosed() {

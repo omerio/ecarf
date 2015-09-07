@@ -14,23 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.commons.csv;
 
 /**
- * Utility class for input parameter validation
+ * Defines quote behavior when printing.
  *
- * @version $Id: Assertions.java 1559908 2014-01-21 02:44:30Z ggregory $
+ * @version $Id: QuoteMode.java 1694977 2015-08-10 07:05:58Z ggregory $
  */
-final class Assertions {
+public enum QuoteMode {
 
-    private Assertions() {
-        // can not be instantiated
-    }
+    /**
+     * Quotes all fields.
+     */
+    ALL,
 
-    public static void notNull(final Object parameter, final String parameterName) {
-        if (parameter == null) {
-            throw new IllegalArgumentException("Parameter '" + parameterName + "' must not be null!");
-        }
-    }
+    /**
+     * Quotes fields which contain special characters such as a delimiter, quotes character or any of the characters in
+     * line separator.
+     */
+    MINIMAL,
+
+    /**
+     * Quotes all non-numeric fields.
+     */
+    NON_NUMERIC,
+
+    /**
+     * Never quotes fields. When the delimiter occurs in data, the printer prefixes it with the current escape
+     * character. If the escape character is not set, format validation throws an exception.
+     */
+    NONE
 }

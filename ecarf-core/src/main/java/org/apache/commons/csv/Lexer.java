@@ -30,14 +30,15 @@ import static org.apache.commons.csv.Token.Type.EORECORD;
 import static org.apache.commons.csv.Token.Type.INVALID;
 import static org.apache.commons.csv.Token.Type.TOKEN;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
+ * Lexical analyzer.
  *
- *
- * @version $Id: Lexer.java 1585096 2014-04-05 14:06:43Z ggregory $
+ * @version $Id: Lexer.java 1635502 2014-10-30 14:01:43Z ggregory $
  */
-final class Lexer {
+final class Lexer implements Closeable {
 
     /**
      * Constant char to use for disabling comments, escapes and encapsulation. The value -2 is used because it
@@ -57,21 +58,21 @@ final class Lexer {
     /** The input stream */
     private final ExtendedBufferedReader reader;
 
-    /** INTERNAL API. but ctor needs to be called dynamically by PerformanceTest class */
     Lexer(final CSVFormat format, final ExtendedBufferedReader reader) {
         this.reader = reader;
         this.delimiter = format.getDelimiter();
-        this.escape = mapNullToDisabled(format.getEscape());
-        this.quoteChar = mapNullToDisabled(format.getQuoteChar());
-        this.commentStart = mapNullToDisabled(format.getCommentStart());
+        this.escape = mapNullToDisabled(format.getEscapeCharacter());
+        this.quoteChar = mapNullToDisabled(format.getQuoteCharacter());
+        this.commentStart = mapNullToDisabled(format.getCommentMarker());
         this.ignoreSurroundingSpaces = format.getIgnoreSurroundingSpaces();
         this.ignoreEmptyLines = format.getIgnoreEmptyLines();
     }
 
     /**
      * Returns the next token.
-     * <p/>
+     * <p>
      * A token corresponds to a term, a record change or an end-of-file indicator.
+     * </p>
      *
      * @param token
      *            an existing Token object to reuse. The caller is responsible to initialize the Token.
@@ -300,6 +301,15 @@ final class Lexer {
         return reader.getCurrentLineNumber();
     }
 
+    /**
+     * Returns the current character position
+     *
+     * @return the current character position
+     */
+    long getCharacterPosition() {
+        return reader.getPosition();
+    }
+
     // TODO escape handling needs more work
     /**
      * Handle an escape sequence.
@@ -425,7 +435,8 @@ final class Lexer {
      * @throws IOException
      *             If an I/O error occurs
      */
-    void close() throws IOException {
+    @Override
+    public void close() throws IOException {
         reader.close();
     }
 }

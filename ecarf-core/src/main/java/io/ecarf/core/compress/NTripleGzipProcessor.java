@@ -97,6 +97,9 @@ public class NTripleGzipProcessor {
 			try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
 					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE));) {
 				String outLine;
+			    
+			    callback.setOutput(writer);
+			    
 				String[] terms;
 				
 				NxParser nxp = new NxParser(deflated);
