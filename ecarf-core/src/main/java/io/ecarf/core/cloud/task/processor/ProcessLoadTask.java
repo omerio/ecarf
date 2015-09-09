@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  * into bigquery format (comma separated)
  * 
  * @author Omer Dawelbeit (omerio)
- *
+ * @deprecated use {@link ProcessLoadTask1}
  */
 public class ProcessLoadTask extends CommonTask {
 	
@@ -73,11 +73,9 @@ public class ProcessLoadTask extends CommonTask {
 		TermCounter counter = null;
 
 		if(StringUtils.isNoneBlank(schemaTermsFile)) {
-			String localSchemaTermsFile = Utils.TEMP_FOLDER + schemaTermsFile;
-			cloudService.downloadObjectFromCloudStorage(schemaTermsFile, localSchemaTermsFile, bucket);
 
 			// convert from JSON
-			Set<String> schemaTerms = FileUtils.jsonFileToSet(localSchemaTermsFile);
+			Set<String> schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
 			counter = new TermCounter();
 			counter.setTermsToCount(schemaTerms);
 		} 

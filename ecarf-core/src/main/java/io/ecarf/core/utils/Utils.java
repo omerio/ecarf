@@ -20,19 +20,28 @@ package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,7 +57,7 @@ import com.google.gson.stream.JsonReader;
  *
  */
 public class Utils {
-	
+    
 	private final static Log log = LogFactory.getLog(Utils.class);
 
 	public static final String PATH_SEPARATOR = File.separator;
@@ -56,6 +65,8 @@ public class Utils {
 	public static final String TEMP_FOLDER = System.getProperty("java.io.tmpdir") + PATH_SEPARATOR;
 	
 	public static final byte [] SEPARATOR = System.getProperty("line.separator").getBytes();
+	
+	public static final int BUFFER_SIZE = 8192;
 	
 	public static Gson GSON = new Gson();
 
@@ -84,6 +95,24 @@ public class Utils {
 			ApiUtils.block(seconds);
 		}
 	}
+	
+	/**
+     * Merge two count maps of type <K, Integer>
+	 * @param <K>
+     * @param base
+     * @param other
+     */
+    public static <K> void mergeCountMaps(Map<K, Integer> base, Map<K, Integer> other) {
+        for(Entry<K, Integer> entry: other.entrySet()) {
+            K key = entry.getKey();
+            Integer value = entry.getValue();
+            if(base.get(key) == null) {
+                base.put(key, value);
+            } else {
+                base.put(key, base.get(key) + value);
+            }
+        }
+    }
 	
 	public static void main(String[] args) throws JsonIOException, JsonSyntaxException, FileNotFoundException {
 		Set<String> schemaTerms = Utils.GSON.fromJson(new JsonReader(new FileReader(Utils.TEMP_FOLDER + "test.json")),  
@@ -119,6 +148,84 @@ public class Utils {
 		
 		return size;
 	}
+	
+	/**
+     * 
+     * @param filename
+     * @param object
+     * @throws IOException
+     */
+    public static void objectToJsonFile(String filename, Object object) throws IOException {
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(filename), Constants.GZIP_BUF_SIZE)) {
+            GSON.toJson(object, writer);
+        }
+    }
+	
+	/**
+	 * Compress a file
+	 * @param inFile
+	 * @param outFile
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static String compressFile(String inFile) throws FileNotFoundException, IOException {
+	    
+	    byte[] buffer = new byte[BUFFER_SIZE];
+	    
+	    String outFile = GzipUtils.getCompressedFilename(inFile);
+	    
+	    try(GZIPOutputStream gzos = 
+	            new GZIPOutputStream(new FileOutputStream(outFile), Constants.GZIP_BUF_SIZE);
+	        FileInputStream in = new FileInputStream(inFile);) {
+	 
+	        int len;
+	        while ((len = in.read(buffer)) > 0) {
+	            gzos.write(buffer, 0, len);
+	        }
+	         
+	        gzos.finish();
+	    }
+	    
+	    return outFile;
+	}
+
+	  /**
+     * (Gzip) Uncompress a compressed file
+     * @param filename
+     * @return
+     * @throws IOException
+     */
+    public static String unCompressFile(String filename) throws IOException {
+        
+        
+        byte[] buffer = new byte[BUFFER_SIZE];
+        String outFile = GzipUtils.getUncompressedFilename(filename);
+        
+        try(GZIPInputStream gzis = 
+                new GZIPInputStream(new FileInputStream(filename), Constants.GZIP_BUF_SIZE);
+                BufferedOutputStream out = 
+                        new BufferedOutputStream(new FileOutputStream(outFile), Constants.GZIP_BUF_SIZE);) {
+
+            int len;
+            while ((len = gzis.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+
+        }
+        /*
+        FileInputStream fin = new FileInputStream(filename);
+        BufferedInputStream in = new BufferedInputStream(fin);
+        
+        try(FileOutputStream out = new FileOutputStream(outFile);
+                GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in)) {
+            final byte[] buffer = new byte[BUFFER];
+            int n = 0;
+            while (-1 != (n = gzIn.read(buffer))) {
+                out.write(buffer, 0, n);
+            }
+        }*/
+        return outFile;
+    }
 	
 	
 //	/*

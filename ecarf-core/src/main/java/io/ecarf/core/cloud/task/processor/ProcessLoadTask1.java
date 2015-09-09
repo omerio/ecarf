@@ -21,6 +21,7 @@ package io.ecarf.core.cloud.task.processor;
 import io.cloudex.framework.task.CommonTask;
 import io.cloudex.framework.utils.FileUtils;
 import io.cloudex.framework.utils.ObjectUtils;
+import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
@@ -30,12 +31,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -70,20 +69,14 @@ public class ProcessLoadTask1 extends CommonTask {
 	public void run() throws IOException {
 		
 		log.info("START: processing files for bigquery import");
+		
+		EcarfGoogleCloudService cloudService = (EcarfGoogleCloudService) this.getCloudService();
 
 		//String bucket = metadata.getBucket();
 
 		// get the schema terms if provided
 		//String schemaTermsFile = metadata.getSchemaTermsFile();
-		Set<String> schemaTerms = null;
-
-		if(StringUtils.isNoneBlank(schemaTermsFile)) {
-			String localSchemaTermsFile = Utils.TEMP_FOLDER + schemaTermsFile;
-			this.getCloudService().downloadObjectFromCloudStorage(schemaTermsFile, localSchemaTermsFile, bucket);
-
-			// convert from JSON
-			schemaTerms = FileUtils.jsonFileToSet(localSchemaTermsFile);
-		} 
+		Set<String> schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
 
 		//Set<String> files = metadata.getFiles();
 		Set<String> filesSet = ObjectUtils.csvToSet(files);
@@ -119,7 +112,7 @@ public class ProcessLoadTask1 extends CommonTask {
 			for(ProcessFileSubTask task: tasks) {
 				TermCounter counter = task.call();
 				if(counter != null) {
-					this.mergeMaps(count, counter.getCount());
+					Utils.mergeCountMaps(count, counter.getCount());
 				}
 			}
 			
@@ -135,7 +128,7 @@ public class ProcessLoadTask1 extends CommonTask {
 				for (Future<TermCounter> result : results) {
 					TermCounter counter = result.get();
 					if(counter != null) {
-						this.mergeMaps(count, counter.getCount());
+						Utils.mergeCountMaps(count, counter.getCount());
 					}
 				}
 				
@@ -150,31 +143,15 @@ public class ProcessLoadTask1 extends CommonTask {
 		// write term stats to file and upload
 		if((count != null) && !count.isEmpty()) {
 			log.info("Saving terms stats");
-			String countStatsFile = Utils.TEMP_FOLDER + this.getCloudService().getInstanceId() + Constants.DOT_JSON;
+			String countStatsFile = Utils.TEMP_FOLDER + cloudService.getInstanceId() + Constants.DOT_JSON;
 			FileUtils.objectToJsonFile(countStatsFile, count);
 
-			this.getCloudService().uploadFileToCloudStorage(countStatsFile, bucket);
+			cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
 		}
 
 		log.info("FINISH: All files are processed and uploaded successfully");
 	}
 	
-	/**
-	 * 
-	 * @param base
-	 * @param other
-	 */
-	private void mergeMaps(Map<String, Integer> base, Map<String, Integer> other) {
-		for(Entry<String, Integer> entry: other.entrySet()) {
-			String key = entry.getKey();
-			Integer value = entry.getValue();
-			if(base.get(key) == null) {
-				base.put(key, value);
-			} else {
-				base.put(key, base.get(key) + value);
-			}
-		}
-	}
 
     /**
      * @return the bucket

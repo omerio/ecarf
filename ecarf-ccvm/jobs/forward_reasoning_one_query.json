@@ -13,7 +13,7 @@
     },
     "vmConfig": {
         "zoneId": "us-central1-a",
-        "imageId": "ecarf-1000/global/images/ecarf-centos-6-v20150818-1",
+        "imageId": "ecarf-1000/global/images/ecarf-centos-6-v20150818-2",
         "vmType": "n1-standard-2",
         "networkId": "default",
         "diskType": "pd-standard",

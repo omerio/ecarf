@@ -18,14 +18,18 @@
  */
 
 
-package io.ecarf.core.compress;
+package io.ecarf.core.compress.callback;
 
+import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.term.TermCounter;
 
 import java.io.IOException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.semanticweb.yars.nx.Literal;
+import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.util.NxUtil;
 
 /**
  * 
@@ -53,12 +57,29 @@ public class CommonsCsvCallback implements NTripleGzipCallback {
      * @see io.ecarf.core.compress.NTripleGzipCallback#process(java.lang.String[])
      */
     @Override
-    public String process(String[] terms) throws IOException {
+    public String process(Node[] nodes) throws IOException {
+        
+        String[] terms = new String [3];
+        
+        for (int i = 0; i < nodes.length; i++)  {
+            
+            // we are not going to unscape literals, these can contain new line and 
+            // unscaping those will slow down the bigquery load, unless offcourse we use JSON
+            // instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
+            if(nodes[i] instanceof Literal) {
+                
+                terms[i] = nodes[i].toN3();
+                
+            } else {
+                terms[i] = NxUtil.unescape(nodes[i].toN3());
+            }
+        }
+        
         if(counter != null) {
             counter.count(terms);
         }
  
-        this.printer.printRecord(terms);
+        this.printer.printRecord((Object []) terms);
         
         return null;
     }

@@ -22,6 +22,8 @@ import io.ecarf.core.term.TermCounter;
 
 import java.io.IOException;
 
+import org.semanticweb.yars.nx.Node;
+
 /**
  * @author Omer Dawelbeit (omerio)
  *
@@ -36,11 +38,11 @@ public interface NTripleGzipCallback {
 	
     /**
      * Do actual processing for the provided terms array
-     * @param line
+     * @param nodes
      * @return
      * @throws IOException
      */
-	public String process(String[] line) throws IOException;
+	public String process(Node[] nodes) throws IOException;
 	
 	/**
 	 * Set a term counter if we are counting the terms as well

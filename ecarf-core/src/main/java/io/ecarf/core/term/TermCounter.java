@@ -54,6 +54,18 @@ public class TermCounter {
 	}
 	
 	/**
+	 * Count a single term
+	 * @param term
+	 */
+	public void count(String term) {
+	    // either selective count or count everything
+	    if((this.termsToCount == null) || 
+	            ((termsToCount != null) && this.termsToCount.contains(term))) {
+	        this.countTerm(term);                   
+	    } 
+	}
+	
+	/**
 	 * count the provided term 
 	 * @param term
 	 */

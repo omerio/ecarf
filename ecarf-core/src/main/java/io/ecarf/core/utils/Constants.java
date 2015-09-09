@@ -59,6 +59,8 @@ public class Constants {
 	
 	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
 	
+	public static final String DICTIONARY_JSON = "dictionary.json";
+	
 	public static final String COMPRESSED_N_TRIPLES = ".nt.gz";
 	
 	public static final String PROCESSED_FILES = OUT_FILE_SUFFIX + "gz";

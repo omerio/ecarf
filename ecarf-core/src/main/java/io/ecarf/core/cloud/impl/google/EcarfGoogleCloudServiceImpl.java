@@ -23,15 +23,20 @@ package io.ecarf.core.cloud.impl.google;
 import io.cloudex.cloud.impl.google.GoogleCloudServiceImpl;
 import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
 import io.cloudex.framework.cloud.entities.BigDataTable;
+import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.compress.NTripleGzipProcessor;
-import io.ecarf.core.compress.StringEscapeCallback;
+import io.ecarf.core.compress.callback.StringEscapeCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -72,6 +77,28 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
         String outFilename = processor.process(callback);
 
         return outFilename;
+    }
+    
+    /**
+     * Download a json file from cloud storage which includes a JSON array and then parse it as a set
+     * @param filename
+     * @param bucket
+     * @return
+     * @throws IOException
+     */
+    @Override
+    public Set<String> getSetFromCloudStorageFile(String filename, String bucket) throws IOException {
+        Set<String> values = null;
+
+        if(StringUtils.isNoneBlank(filename)) {
+            String localFilename = Utils.TEMP_FOLDER + filename;
+            this.downloadObjectFromCloudStorage(filename, localFilename, bucket);
+
+            // convert from JSON
+            values = FileUtils.jsonFileToSet(localFilename);
+        } 
+        
+        return values;
     }
 
     /**

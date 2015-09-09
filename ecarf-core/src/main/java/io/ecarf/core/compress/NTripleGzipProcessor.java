@@ -36,10 +36,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
-import org.semanticweb.yars.nx.util.NxUtil;
 
 /**
  * Processes a normal/gzip input file and outputs
@@ -49,103 +47,130 @@ import org.semanticweb.yars.nx.util.NxUtil;
  *
  */
 public class NTripleGzipProcessor {
-		
-	private final static Log log = LogFactory.getLog(NTripleGzipProcessor.class);
-	
-	private String inputFile;
-	
-	private String outputFile;
-	
-	
-	
-	/**
-	 * @param inputFile
-	 * @param outputFile
-	 */
-	public NTripleGzipProcessor(String inputFile) {
-		super();
-		this.inputFile = inputFile;
-		// get the file name before the ext
-		String ext = FilenameUtils.getExtension(inputFile);
-		// construct an output file in the format inputfile_out.ext
-		this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
-		this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
-	}
 
-	/**
-	 * Reads the input file, gunziped if needed, calls the callback to process
-	 * each line that being read then writes the file back to a gziped output file
-	 * @param callback
-	 * @throws IOException 
-	 */
-	public String process(NTripleGzipCallback callback) throws IOException {
+    private final static Log log = LogFactory.getLog(NTripleGzipProcessor.class);
 
-		try(InputStream fileIn = new FileInputStream(this.inputFile);) {
+    private String inputFile;
 
-			InputStream deflated = fileIn;
-			
-			// gzip
-			if(GzipUtils.isCompressedFilename(this.inputFile)) {
-				deflated = new GZIPInputStream(fileIn, Constants.GZIP_BUF_SIZE);
-			
-			} 
-			// bz2
-			else if(BZip2Utils.isCompressedFilename(this.inputFile)) {
-				deflated = new BZip2CompressorInputStream(new BufferedInputStream(fileIn));
-			}
+    private String outputFile;
 
-			try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
-					PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE));) {
-				String outLine;
-			    
-			    callback.setOutput(writer);
-			    
-				String[] terms;
-				
-				NxParser nxp = new NxParser(deflated);
 
-				while (nxp.hasNext())  {
 
-					Node[] ns = nxp.next();
-					
-					//We are only interested in triples, no quads
-					if (ns.length == 3) {
-						terms = new String [3];
-						
-						for (int i = 0; i < ns.length; i++)  {
-							
-							// we are not going to unscape literals, these can contain new line and 
-							// unscaping those will slow down the bigquery load, unless offcourse we use JSON
-							// instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
-							if(ns[i] instanceof Literal) {
-								
-								terms[i] = ns[i].toN3();
-								
-							} else {
-								terms[i] = NxUtil.unescape(ns[i].toN3());
-							}
-						}
-						outLine = callback.process(terms);
-						if(outLine != null) {
-							writer.println(outLine);
-						}
-					
-					} else {
-						log.warn("Ignoring line: " + ns);
-					}
-				}
+    /**
+     * @param inputFile
+     * @param outputFile
+     */
+    public NTripleGzipProcessor(String inputFile) {
+        super();
+        this.inputFile = inputFile;
+        // get the file name before the ext
+        String ext = FilenameUtils.getExtension(inputFile);
+        // construct an output file in the format inputfile_out.ext
+        this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
+        this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
+    }
 
-			}
-			
-			return this.outputFile;
-		}
-	}
+    /**
+     * Read the input file, gunziped if needed and call the callback to process each line
+     * no output is produced
+     * @param callback
+     * @throws IOException
+     */
+    public void read(NTripleGzipCallback callback) throws IOException {
 
-	/**
-	 * @param inputFile the inputFile to set
-	 */
-	public void setInputFile(String inputFile) {
-		this.inputFile = inputFile;
-	}
+        try(InputStream fileIn = new FileInputStream(this.inputFile);) {
+            
+            InputStream deflated = this.getDeflatedStream(fileIn);
+
+            NxParser nxp = new NxParser(deflated);
+
+            while (nxp.hasNext())  {
+
+                Node[] ns = nxp.next();
+
+                //We are only interested in triples, no quads
+                if (ns.length == 3) {
+
+                    callback.process(ns);
+
+                } else {
+                    log.warn("Ignoring line: " + ns);
+                }
+            }
+        }
+    }
+
+    /**
+     * Reads the input file, gunziped if needed, calls the callback to process
+     * each line that being read then writes the file back to a gziped output file
+     * @param callback
+     * @throws IOException 
+     */
+    public String process(NTripleGzipCallback callback) throws IOException {
+
+        try(InputStream fileIn = new FileInputStream(this.inputFile);) {
+
+            InputStream deflated = this.getDeflatedStream(fileIn);
+
+            try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
+                    PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE));) {
+                String outLine;
+
+                callback.setOutput(writer);
+
+                NxParser nxp = new NxParser(deflated);
+
+                while (nxp.hasNext())  {
+
+                    Node[] ns = nxp.next();
+
+                    //We are only interested in triples, no quads
+                    if (ns.length == 3) {
+
+                        outLine = callback.process(ns);
+                        if(outLine != null) {
+                            writer.println(outLine);
+                        }
+
+                    } else {
+                        log.warn("Ignoring line: " + ns);
+                    }
+                }
+
+            }
+
+            return this.outputFile;
+        }
+    }
+
+    /**
+     * Get a deflated stream from the provided input
+     * @param input
+     * @return
+     * @throws IOException
+     */
+    private InputStream getDeflatedStream(InputStream input) throws IOException {
+
+        InputStream deflated = input;
+
+        // gzip
+        if(GzipUtils.isCompressedFilename(this.inputFile)) {
+            deflated = new GZIPInputStream(input, Constants.GZIP_BUF_SIZE);
+
+        } 
+        // bz2
+        else if(BZip2Utils.isCompressedFilename(this.inputFile)) {
+            deflated = new BZip2CompressorInputStream(new BufferedInputStream(input));
+        }
+
+        return deflated;
+    }
+
+    /**
+     * @param inputFile the inputFile to set
+     */
+    public void setInputFile(String inputFile) {
+        this.inputFile = inputFile;
+    }
 
 }

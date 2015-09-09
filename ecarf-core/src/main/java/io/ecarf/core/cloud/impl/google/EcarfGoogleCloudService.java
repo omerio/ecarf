@@ -26,6 +26,7 @@ import io.ecarf.core.term.TermCounter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -58,6 +59,15 @@ public interface EcarfGoogleCloudService extends GoogleCloudService {
      * @throws IOException
      */
     public void streamLocalFilesIntoBigData(List<String> files, BigDataTable table) throws IOException;
+
+    /**
+     * Download a json file from cloud storage which includes a JSON array and then parse it as a set
+     * @param filename
+     * @param bucket
+     * @return
+     * @throws IOException
+     */
+    public Set<String> getSetFromCloudStorageFile(String filename, String bucket) throws IOException;
     
 
 }
