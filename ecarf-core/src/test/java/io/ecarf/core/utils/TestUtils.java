@@ -24,6 +24,7 @@ import static io.ecarf.core.utils.Constants.ZONE_KEY;
 import io.cloudex.cloud.impl.google.auth.CmdLineAuthenticationProvider;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Sets;
@@ -41,9 +42,10 @@ public class TestUtils {
      * This uses the CmdLineAuthenticationProvider so there is no need to start a new
      * Compute Engine instance for the Coordinator
      * @param service
+     * @throws IOException 
      */
 	@SuppressWarnings("unchecked")
-	public static void prepare(EcarfGoogleCloudServiceImpl service) {
+	public static void prepare(EcarfGoogleCloudServiceImpl service) throws IOException {
 		//service.setAccessToken(TOKEN);
 		//service.setTokenExpire(DateUtils.addHours(new Date(), 1));
 		service.setProjectId(Config.getProperty(PROJECT_ID_KEY));
@@ -57,6 +59,7 @@ public class TestUtils {
 		provider.setClientSecretsFile("/client_secret.json");
 		provider.setScopes(Sets.newHashSet(scopes));
 		service.setAuthenticationProvider(provider);
+		service.init();
 	}
 
 }

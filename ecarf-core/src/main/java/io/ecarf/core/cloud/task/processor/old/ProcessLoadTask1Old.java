@@ -16,12 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.ecarf.core.cloud.task.processor;
+package io.ecarf.core.cloud.task.processor.old;
 
 import io.cloudex.framework.task.CommonTask;
 import io.cloudex.framework.utils.FileUtils;
 import io.cloudex.framework.utils.ObjectUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
+import io.ecarf.core.cloud.task.processor.ProcessFilesForBigQuerySubTask;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
@@ -50,9 +51,9 @@ import org.apache.commons.logging.LogFactory;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ProcessLoadTask1 extends CommonTask {
+public class ProcessLoadTask1Old extends CommonTask {
 	
-    private final static Log log = LogFactory.getLog(ProcessLoadTask1.class);
+    private final static Log log = LogFactory.getLog(ProcessLoadTask1Old.class);
 
     private String bucket;
 
@@ -82,7 +83,7 @@ public class ProcessLoadTask1 extends CommonTask {
 		Set<String> filesSet = ObjectUtils.csvToSet(files);
 		log.info("Loading files: " + filesSet);
 		Map<String, Integer> count = new HashMap<>();
-		List<ProcessFileSubTask> tasks = new ArrayList<>();
+		List<ProcessFilesForBigQuerySubTask> tasks = new ArrayList<>();
 		int processors = Runtime.getRuntime().availableProcessors();
 
 		for(final String file: filesSet) {
@@ -94,7 +95,7 @@ public class ProcessLoadTask1 extends CommonTask {
 				counter.setTermsToCount(schemaTerms);
 			}
 
-			ProcessFileSubTask task = new ProcessFileSubTask(file, bucket, counter, this.getCloudService());
+			ProcessFilesForBigQuerySubTask task = new ProcessFilesForBigQuerySubTask(file, bucket, counter, this.getCloudService());
 			tasks.add(task);
 
 		}
@@ -109,7 +110,7 @@ public class ProcessLoadTask1 extends CommonTask {
 			
 		} else if(processors == 1) {
 			// only one process then process synchronously
-			for(ProcessFileSubTask task: tasks) {
+			for(ProcessFilesForBigQuerySubTask task: tasks) {
 				TermCounter counter = task.call();
 				if(counter != null) {
 					Utils.mergeCountMaps(count, counter.getCount());

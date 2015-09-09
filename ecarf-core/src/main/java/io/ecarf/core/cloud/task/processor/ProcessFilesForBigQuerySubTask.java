@@ -17,16 +17,16 @@ import org.apache.commons.logging.LogFactory;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ProcessFileSubTask implements Callable<TermCounter> {
+public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 	
-	private final static Log log = LogFactory.getLog(ProcessFileSubTask.class);
+	private final static Log log = LogFactory.getLog(ProcessFilesForBigQuerySubTask.class);
 
 	private String file;
 	private EcarfGoogleCloudService cloud;
 	private TermCounter counter;
 	private String bucket;
 
-	public ProcessFileSubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
+	public ProcessFilesForBigQuerySubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
 		super();
 		this.file = file;
 		this.cloud = (EcarfGoogleCloudService) cloud;
@@ -37,10 +37,12 @@ public class ProcessFileSubTask implements Callable<TermCounter> {
 
 	@Override
 	public TermCounter call() throws IOException {
+	    
+	    log.info("Processing file for BigQuery import: " + file);
 
 		String localFile = Utils.TEMP_FOLDER + file;
 
-		log.info("Downloading file: " + file);
+		//log.info("Downloading file: " + file);
 
 		this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
 

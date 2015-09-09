@@ -198,6 +198,32 @@ public class TermDictionary implements Serializable {
     }
     
     /**
+     * De-serialize a TermDictionary instance from a binary file.
+     * @param jsonFile - a file path
+     * @return a TermDictionary instance
+     * @throws FileNotFoundException if the file is not found
+     * @throws IOException if the io operation fails
+     * @throws ClassNotFoundException 
+     */
+    public static TermDictionary fromFile(String file, boolean compressed) 
+            throws FileNotFoundException, IOException, ClassNotFoundException {
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        String filename = file;
+        if(compressed) {
+            filename = Utils.unCompressFile(file);
+        }
+
+        TermDictionary dictionary = Utils.objectFromFile(filename, TermDictionary.class);
+
+        log.debug("TIMER# deserialized dictionary from JSON file: " + file + ", in: " + stopwatch);
+
+        return dictionary;
+
+    }
+    
+    /**
      * Serialize this dictionary to a json file, optionally compressed
      * @param filename
      * @param compress
@@ -206,6 +232,25 @@ public class TermDictionary implements Serializable {
     public String toJsonFile(String filename, boolean compress) throws IOException {
         Stopwatch stopwatch = Stopwatch.createStarted();
         Utils.objectToJsonFile(filename, this);
+        
+        if(compress) {
+            filename = Utils.compressFile(filename);
+        }
+        
+        log.debug("TIMER# serialized dictionary to JSON file: " + filename + ", in: " + stopwatch);
+        
+        return filename;
+    }
+    
+    /**
+     * Serialize this dictionary to a binary file, optionally compressed
+     * @param filename
+     * @param compress
+     * @throws IOException
+     */
+    public String toFile(String filename, boolean compress) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        Utils.objectToFile(filename, this);
         
         if(compress) {
             filename = Utils.compressFile(filename);

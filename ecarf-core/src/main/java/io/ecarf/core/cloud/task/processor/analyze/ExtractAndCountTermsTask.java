@@ -20,78 +20,129 @@
 
 package io.ecarf.core.cloud.task.processor.analyze;
 
+import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
+import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.Utils;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import io.cloudex.framework.task.CommonTask;
-import io.ecarf.core.cloud.task.processor.ProcessLoadTask1;
+import com.google.common.base.Stopwatch;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ExtractAndCountTermsTask extends CommonTask {
-    
-    
+public class ExtractAndCountTermsTask extends ProcessLoadTask {
+
+
     private final static Log log = LogFactory.getLog(ExtractAndCountTermsTask.class);
 
-    private String bucket;
+    private Set<String> allTerms = new HashSet<String>();
 
-    private String schemaTermsFile;
-
-    private String files;
 
     /* (non-Javadoc)
      * @see io.cloudex.framework.Executable#run()
      */
     @Override
     public void run() throws IOException {
-       
         log.info("Extracting all terms and counting schema terms");
+        super.run();
+
+        // upload all the extracted terms as well
+        log.info("Saving all terms to file. Number of terms: " + allTerms.size());
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        
+        String allTermsFile = Utils.TEMP_FOLDER + Constants.NODE_TERMS + 
+                cloudService.getInstanceId() + Constants.DOT_SER;
+        
+        Utils.objectToFile(allTermsFile, allTerms);
+        
+        String compressedFile = Utils.compressFile(allTermsFile);
+        
+        cloudService.uploadFileToCloudStorage(compressedFile, this.getBucket());
+
+        log.info("TIMER# All files are processed and uploaded successfully " + stopwatch);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.processor.ProcessLoadTask1#getSubTasks(java.util.Set)
+     */
+    @Override
+    public List<Callable<TermCounter>> getSubTasks(Set<String> files) {
+        List<Callable<TermCounter>> tasks = new ArrayList<>();
+
+        String bucket = this.getBucket();
+        Set<String> schemaTerms = this.getSchemaTerms();
+
+        for(final String file: files) {
+
+            TermCounter counter = null;
+
+            if(schemaTerms != null) {
+                counter = new TermCounter();
+                counter.setTermsToCount(schemaTerms);
+            }
+
+            ExtractAndCountTermsSubTask task = 
+                    new ExtractAndCountTermsSubTask(file, bucket, counter, this.getCloudService());
+
+            tasks.add(task);
+
+        }
+
+        return tasks;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.processor.ProcessLoadTask1#processSingleOutput(io.ecarf.core.term.TermCounter)
+     */
+    @Override
+    public void processSingleOutput(TermCounter counter) {
+
+        super.processSingleOutput(counter);
+
+        // get all terms as well
+        if(counter != null) {
+            this.allTerms.addAll(counter.getAllTerms());
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.processor.ProcessLoadTask1#processMultiOutput(java.util.List)
+     */
+    @Override
+    public void processMultiOutput(List<TermCounter> counters) {
+
+        super.processMultiOutput(counters);
+
+        // get all terms as well
+        for(TermCounter counter: counters) {
+            if(counter != null) {
+                this.allTerms.addAll(counter.getAllTerms());
+            }
+        }
+
+
     }
 
     /**
-     * @return the bucket
+     * @return the allTerms
      */
-    public String getBucket() {
-        return bucket;
-    }
-
-    /**
-     * @param bucket the bucket to set
-     */
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
-    }
-
-    /**
-     * @return the schemaTermsFile
-     */
-    public String getSchemaTermsFile() {
-        return schemaTermsFile;
-    }
-
-    /**
-     * @param schemaTermsFile the schemaTermsFile to set
-     */
-    public void setSchemaTermsFile(String schemaTermsFile) {
-        this.schemaTermsFile = schemaTermsFile;
-    }
-
-    /**
-     * @return the files
-     */
-    public String getFiles() {
-        return files;
-    }
-
-    /**
-     * @param files the files to set
-     */
-    public void setFiles(String files) {
-        this.files = files;
+    public Set<String> getAllTerms() {
+        return allTerms;
     }
 
 }

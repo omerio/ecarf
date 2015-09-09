@@ -18,18 +18,21 @@
  */
 package io.ecarf.core.cloud.task.processor;
 
-import io.cloudex.framework.task.CommonTask;
 import io.cloudex.framework.utils.FileUtils;
-import io.cloudex.framework.utils.ObjectUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
+import io.ecarf.core.cloud.task.processor.files.ProcessFilesTask;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,87 +43,101 @@ import org.apache.commons.logging.LogFactory;
  * download files locally (gziped)
  * read through the files counting the relevant terms and rewriting 
  * into bigquery format (comma separated)
+ * Makes use of CPU multi-cores for parallel processing
  * 
  * @author Omer Dawelbeit (omerio)
- * @deprecated use {@link ProcessLoadTask1}
+ *
  */
-public class ProcessLoadTask extends CommonTask {
-	
-	private final static Log log = LogFactory.getLog(ProcessLoadTask.class);
+public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
 
-	private String bucket;
-	
-	private String schemaTermsFile;
-	
-	private String files;
-	
-	/* 
-	 * // TODO distinguish between files in cloud storage vs files downloaded from http or https url
-	 * (non-Javadoc)
-	 * @see io.ecarf.core.cloud.task.Task#run()
-	 */
-	@Override
-	public void run() throws IOException {
-		
-		log.info("START: processing files for bigquery import");
+    private final static Log log = LogFactory.getLog(ProcessLoadTask.class);
 
-		//String bucket = metadata.getBucket();
+    private String bucket;
 
-		// get the schema terms if provided
-		//String schemaTermsFile = metadata.getSchemaTermsFile();
-		
-		EcarfGoogleCloudService cloudService = (EcarfGoogleCloudService) this.getCloudService();
-		TermCounter counter = null;
+    private String schemaTermsFile;
 
-		if(StringUtils.isNoneBlank(schemaTermsFile)) {
+    private Set<String> schemaTerms;
+    
+    private Map<String, Integer> count = new HashMap<>();
 
-			// convert from JSON
-			Set<String> schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
-			counter = new TermCounter();
-			counter.setTermsToCount(schemaTerms);
-		} 
+    /* 
+     * // TODO distinguish between files in cloud storage vs files downloaded from http or https url
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.Task#run()
+     */
+    @Override
+    public void run() throws IOException {
 
-		//Set<String> files = metadata.getFiles();
-		Set<String> filesSet = ObjectUtils.csvToSet(files);
-		log.info("Loading files: " + filesSet);
+        log.info("START: processing files");
 
-		for(final String file: filesSet) {
+        EcarfGoogleCloudService cloudService = (EcarfGoogleCloudService) this.getCloudService();
+        
+        log.info("Downloading schema terms file: " + schemaTermsFile);
+        
+        this.schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
 
-			String localFile = Utils.TEMP_FOLDER + file;
+        super.run();
 
-			log.info("Downloading file: " + file);
+        // write term stats to file and upload
+        if(!count.isEmpty()) {
+            
+            log.info("Saving terms stats");
+            String countStatsFile = Utils.TEMP_FOLDER + cloudService.getInstanceId() + Constants.DOT_JSON;
+            FileUtils.objectToJsonFile(countStatsFile, count);
 
-			cloudService.downloadObjectFromCloudStorage(file, localFile, bucket);
+            cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
+        }
 
-			// all downloaded, carryon now, process the files
+        log.info("FINISH: All files are processed and uploaded successfully");
+    }
 
-			log.info("Processing file: " + localFile);
-			String outFile = cloudService.prepareForBigQueryImport(localFile, counter);
+    /**
+     * Return all the process tasks
+     */
+    @Override
+    public List<Callable<TermCounter>> getSubTasks(Set<String> files) {
+        List<Callable<TermCounter>> tasks = new ArrayList<>();
+        for(final String file: files) {
 
-			// once the processing is done then delete the local file
-			FileUtils.deleteFile(localFile);
+            TermCounter counter = null;
 
-			// now upload the files again
+            if(schemaTerms != null) {
+                counter = new TermCounter();
+                counter.setTermsToCount(schemaTerms);
+            }
 
-			log.info("Uploading file: " + outFile);
-			cloudService.uploadFileToCloudStorage(outFile, bucket);
+            ProcessFilesForBigQuerySubTask task = new ProcessFilesForBigQuerySubTask(file, bucket, counter, this.getCloudService());
+            tasks.add(task);
 
-			// now delete all the locally processed files
-			FileUtils.deleteFile(outFile);
+        }
 
-		}
+        return tasks;
+    }
 
-		// write term stats to file and upload
-		if(counter != null) {
-			log.info("Saving terms stats");
-			String countStatsFile = Utils.TEMP_FOLDER + cloudService.getInstanceId() + Constants.DOT_JSON;
-			FileUtils.objectToJsonFile(countStatsFile, counter.getCount());
+    /*
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.processor.files.ProcessFilesTask#processSingleOutput(java.lang.Object)
+     */
+    @Override
+    public void processSingleOutput(TermCounter counter) {
+        if(counter != null) {
+            count = counter.getCount();
+        }
 
-			cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
-		}
+    }
 
-		log.info("FINISH: All files are processed and uploaded successfully");
-	}
+    /*
+     * (non-Javadoc)
+     * @see io.ecarf.core.cloud.task.processor.files.ProcessFilesTask#processMultiOutput(java.util.List)
+     */
+    @Override
+    public void processMultiOutput(List<TermCounter> counters) {
+        for(TermCounter counter: counters) {
+            if(counter != null) {
+                Utils.mergeCountMaps(count, counter.getCount());
+            }
+        }
+    }
 
     /**
      * @return the bucket
@@ -151,17 +168,17 @@ public class ProcessLoadTask extends CommonTask {
     }
 
     /**
-     * @return the files
+     * @return the schemaTerms
      */
-    public String getFiles() {
-        return files;
+    public Set<String> getSchemaTerms() {
+        return schemaTerms;
     }
 
     /**
-     * @param files the files to set
+     * @return the count
      */
-    public void setFiles(String files) {
-        this.files = files;
+    public Map<String, Integer> getCount() {
+        return count;
     }
 
 }

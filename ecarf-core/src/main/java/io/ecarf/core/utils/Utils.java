@@ -19,7 +19,9 @@
 package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
+import io.cloudex.framework.exceptions.ClassInstantiationException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,6 +31,11 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -42,6 +49,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -159,6 +167,44 @@ public class Utils {
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(filename), Constants.GZIP_BUF_SIZE)) {
             GSON.toJson(object, writer);
         }
+    }
+    
+    /**
+     * Serialize an object to a file
+     * @param filename
+     * @param object
+     * @throws IOException
+     */
+    public static void objectToFile(String filename, Object object) throws IOException {
+        Validate.isTrue(object instanceof Serializable, "object must implement Serializable");
+        
+        try(ObjectOutput oos = 
+                new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename), Constants.GZIP_BUF_SIZE));) {
+            oos.writeObject(object);
+        }
+    }
+    
+    /**
+     * Read a serialized object from file
+     * @param filename
+     * @param classOfT
+     * @return
+     * @throws FileNotFoundEx
+     * @throws ClassNotFoundException ception
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T objectFromFile(String filename, Class<T> classOfT)
+            throws ClassNotFoundException, FileNotFoundException, IOException {
+        
+        T object = null;
+        
+        try(ObjectInput ois = 
+                new ObjectInputStream (new BufferedInputStream(new FileInputStream(filename), Constants.GZIP_BUF_SIZE));) {
+            object = (T) ois.readObject();
+        }
+        
+        return object;
     }
 	
 	/**

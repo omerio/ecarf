@@ -45,6 +45,8 @@ public class Constants {
 	
 	public static final String DOT_JSON = ".json";
 	
+	public static final String DOT_SER = ".ser";
+		
 	public static final String NODE_TERMS = "node_terms_";
 	
 	public static final String DOT_TERMS = ".terms";
@@ -60,6 +62,8 @@ public class Constants {
 	public static final String SCHEMA_TERMS_JSON = "schema_terms.json";
 	
 	public static final String DICTIONARY_JSON = "dictionary.json";
+	
+	public static final String DICTIONARY_SER = "dictionary.ser";
 	
 	public static final String COMPRESSED_N_TRIPLES = ".nt.gz";
 	

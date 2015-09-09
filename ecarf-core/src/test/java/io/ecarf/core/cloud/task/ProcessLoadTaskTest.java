@@ -20,14 +20,12 @@ package io.ecarf.core.cloud.task;
 
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
-import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
-import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.Set;
@@ -66,27 +64,28 @@ public class ProcessLoadTaskTest {
     }
 
     /**
-     * Test method for {@link io.ecarf.core.cloud.task.processor.ProcessLoadTask#run()}.
+     * Test method for {@link io.ecarf.core.cloud.task.processor.old.ProcessLoadTask#run()}.
      * @throws IOException 
      */
     @Test
     @Ignore
     public void testRun() throws IOException {
 
-        ProcessLoadTask task = new ProcessLoadTask();
+        /*ProcessLoadTask task = new ProcessLoadTask();
         task.setCloudService(service);
         task.setBucket("ecarf");
         task.setFiles("redirects_transitive_en.nt.gz");
         task.setSchemaTermsFile("schema_terms.json");
-        task.run();
+        task.run();*/
     }
 
     /**
      * 
      * @param args
      * @throws IOException 
+     * @throws ClassNotFoundException 
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
 
         /*try(Scanner reader = new Scanner(System.in);) {
 	        System.out.println("Attache profiler then presss any key to continue");
@@ -129,21 +128,30 @@ public class ProcessLoadTaskTest {
             dictionary.add(term);
         }
 
-        String dicFile = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_JSON;
-
-        String compressedFile = dictionary.toJsonFile(dicFile, true);
-
-        System.out.println("Dictionary file saved to: " + compressedFile);
-
         String term = "<http://dblp.uni-trier.de/rec/bibtex/journals/ijcsa/AndonoffBH07>";
-
+        String dicFile = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_JSON;
+        String dicFile1 = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_SER;
+        
+        // --- json
+        
+        String compressedFile = dictionary.toJsonFile(dicFile, true);
+        System.out.println("Dictionary file saved to: " + compressedFile);
         Integer id = dictionary.encode(term);
         System.out.println(id);
 
         dictionary = TermDictionary.fromJsonFile(compressedFile, true);
-
         id = dictionary.encode(term);
+        System.out.println(id);
+        
+        // ---  object serialization
+        
+        compressedFile = dictionary.toFile(dicFile1, true);
+        System.out.println("Dictionary file saved to: " + compressedFile);
+        id = dictionary.encode(term);
+        System.out.println(id);
 
+        dictionary = TermDictionary.fromFile(compressedFile, true);
+        id = dictionary.encode(term);
         System.out.println(id);
 
         System.out.println("Processed file and dictionary in: " + stopwatch);

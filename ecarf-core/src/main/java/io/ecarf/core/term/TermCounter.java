@@ -19,6 +19,7 @@
 package io.ecarf.core.term;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,6 +34,8 @@ public class TermCounter {
 	
 	// total count
 	private Map<String, Integer> count = new HashMap<>();
+	
+	private Set<String> allTerms = new HashSet<>();
 	
 	/**
 	 * Count the terms for the provided triple terms
@@ -79,6 +82,14 @@ public class TermCounter {
 	}
 
 	/**
+	 * Add a term to this counter's allTerms set
+	 * @param term
+	 */
+	public void addTerm(String term) {
+	    this.allTerms.add(term);
+	}
+	
+	/**
 	 * @return the termsToCount
 	 */
 	public Set<String> getTermsToCount() {
@@ -105,6 +116,13 @@ public class TermCounter {
 	public void setCount(Map<String, Integer> count) {
 		this.count = count;
 	}
+
+    /**
+     * @return the allTerms
+     */
+    public Set<String> getAllTerms() {
+        return allTerms;
+    }
 
 
 }
