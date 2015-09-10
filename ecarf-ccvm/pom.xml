@@ -62,6 +62,21 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.1</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>${env.VM_XMS}</argument>
+                        <argument>${env.VM_XMX}</argument>
+                        <argument>-Djava.util.logging.config.file=${basedir}/src/main/resources/logging.properties</argument>
+                        <argument>-classpath</argument>
+                        <!-- automatically creates the classpath using all project dependencies, 
+                            also adding the project build directory -->
+                        <classpath />
+                        <argument>io.ecarf.ccvm.EcarfCcvmTask</argument>
+
+                    </arguments>
+                </configuration>
+                <!-- 
                 <executions>
                     <execution>
                         <goals>
@@ -78,6 +93,7 @@
                         </systemProperty>
                     </systemProperties>
                 </configuration>
+                 -->
             </plugin>
 		</plugins>
 	</build>

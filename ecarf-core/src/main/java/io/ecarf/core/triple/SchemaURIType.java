@@ -5,7 +5,9 @@ package io.ecarf.core.triple;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An enum of all the schema URIs and their classification
@@ -99,9 +101,11 @@ public enum SchemaURIType {
 	 * Mappings of schema enum and uri
 	 */
 	private static final Map<String, SchemaURIType> MAPPINGS = new HashMap<>();
+	public static final Set<String> RDF_OWL_TERMS = new HashSet<>();
 	static {
 		for(SchemaURIType type: SchemaURIType.values()) {
 			MAPPINGS.put(type.getUri(), type);
+			RDF_OWL_TERMS.add(type.uri);
 		}
 	}
 	
