@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -282,6 +283,18 @@ public class TermDictionary implements Serializable {
      */
     public int getLargestBlankNodeId() {
         return largestBlankNodeId;
+    }
+    
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).
+                append("largestBlankNodeId", this.largestBlankNodeId).
+                append("largestResourceId", this.largestResourceId).
+                append("size", this.dictionary.size()).
+                toString();
     }
 
 }

@@ -103,6 +103,7 @@ public class CreateTermDictionaryTask extends CommonTask {
                 Set<String> nodeTerms = Utils.objectFromFile(uncompressedFile, HashSet.class);
 
                 if(nodeTerms != null) {
+                    log.info("Got: " + nodeTerms.size() + " terms for processor: " + instanceId);
                     this.allTerms.addAll(nodeTerms);
                 }
 
@@ -164,7 +165,7 @@ public class CreateTermDictionaryTask extends CommonTask {
             dictionary.add(term);
         }
         
-        log.info("Serializing dictionary, timer: " + stopwatch);
+        log.info("Serializing dictionary: " + dictionary + ", timer: " + stopwatch);
         String dictionaryFile = Utils.TEMP_FOLDER + Constants.DICTIONARY_SER;
         String savedDictionaryFile = dictionary.toFile(dictionaryFile, true);
         

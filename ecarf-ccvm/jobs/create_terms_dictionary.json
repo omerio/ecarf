@@ -7,6 +7,7 @@
         "bucket": "swetodblp1-work",
         "schema": "opus_august2007_closure.nt",
         "table": "ontologies.swetodblp",
+        "fakeItems": ["item1", "item2"],
         "numberOfProcessors": 2
     },
     "vmConfig": {
@@ -18,6 +19,22 @@
         "startupScript": "su - omerio -c 'cd /home/omerio/ecarf && git pull && /home/omerio/maven/bin/mvn -q clean compile install -Dmaven.test.skip=true && cd /home/omerio/ecarf/ecarf-evm && export VM_XMS=\"-Xms512m\" VM_XMX=\"-Xmx6g\" && mvn -q exec:exec 2>&1 & exit 0' exit 0"  
     },
     "tasks":[
+        {
+            "id":"start-processors-task",
+            "description": "A dummy task to start all the processors before hand",
+            "className":"io.ecarf.core.cloud.task.processor.DummyProcessorTask",
+            "target":"PROCESSOR",
+            "input":{
+                "item":"#fakeItems"
+            },
+            "partitioning":{
+                "type":"ITEMS",
+                "input":{
+                    "items":"#fakeItems"
+                }
+            },
+            "errorAction":"EXIT"
+        },
         {
             "id":"schema-term-count-task",
             "description": "Load the schema and do a count of the relevant terms",
