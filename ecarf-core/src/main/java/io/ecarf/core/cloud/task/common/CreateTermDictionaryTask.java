@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,6 +52,8 @@ public class CreateTermDictionaryTask extends CommonTask {
     private final static Log log = LogFactory.getLog(CreateTermDictionaryTask.class);
 
     private String bucket;
+    
+    private String sourceBucket;
 
     private Collection<String> processors;
 
@@ -67,6 +70,11 @@ public class CreateTermDictionaryTask extends CommonTask {
 
         log.info("Creating terms dictionary.");
         Stopwatch stopwatch = Stopwatch.createStarted();
+        
+        if(StringUtils.isBlank(sourceBucket)) {
+            log.warn("sourceBucket is empty, using bucket: " + bucket);
+            this.sourceBucket = bucket;
+        }
 
         // 1- Get and combine the terms from all the nodes
         // 2- Get all the terms from the schema file
@@ -86,7 +94,7 @@ public class CreateTermDictionaryTask extends CommonTask {
             log.info("Downloading processor terms file: " + termsFile + ", timer: " + stopwatch);
 
             try {
-                this.getCloudService().downloadObjectFromCloudStorage(termsFile, localTermsFile, bucket);
+                this.getCloudService().downloadObjectFromCloudStorage(termsFile, localTermsFile, sourceBucket);
 
                 log.info("Uncompressing processor terms file: " + termsFile + ", timer: " + stopwatch);
                 String uncompressedFile = Utils.unCompressFile(localTermsFile);
@@ -119,7 +127,7 @@ public class CreateTermDictionaryTask extends CommonTask {
 
         if (!Files.exists(path)) {
             // download the file from the cloud storage
-            this.getCloudService().downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);
+            this.getCloudService().downloadObjectFromCloudStorage(schemaFile, localSchemaFile, sourceBucket);
         
         } else {
             log.info("Schema file exists locally.");
@@ -210,6 +218,20 @@ public class CreateTermDictionaryTask extends CommonTask {
      */
     public void setSchemaFile(String schemaFile) {
         this.schemaFile = schemaFile;
+    }
+
+    /**
+     * @return the sourceBucket
+     */
+    public String getSourceBucket() {
+        return sourceBucket;
+    }
+
+    /**
+     * @param sourceBucket the sourceBucket to set
+     */
+    public void setSourceBucket(String sourceBucket) {
+        this.sourceBucket = sourceBucket;
     }
 
 }

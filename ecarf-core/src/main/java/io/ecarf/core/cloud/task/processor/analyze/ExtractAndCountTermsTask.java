@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,6 +48,8 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
     private final static Log log = LogFactory.getLog(ExtractAndCountTermsTask.class);
 
     private Set<String> allTerms = new HashSet<String>();
+    
+    private String sourceBucket;
 
 
     /* (non-Javadoc)
@@ -81,7 +84,11 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
     public List<Callable<TermCounter>> getSubTasks(Set<String> files) {
         List<Callable<TermCounter>> tasks = new ArrayList<>();
 
-        String bucket = this.getBucket();
+        if(StringUtils.isBlank(sourceBucket)) {
+            log.warn("sourceBucket is empty, using bucket: " + this.getBucket());
+            this.sourceBucket = this.getBucket();
+        }
+        
         Set<String> schemaTerms = this.getSchemaTerms();
 
         for(final String file: files) {
@@ -94,7 +101,7 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
             }
 
             ExtractAndCountTermsSubTask task = 
-                    new ExtractAndCountTermsSubTask(file, bucket, counter, this.getCloudService());
+                    new ExtractAndCountTermsSubTask(file, this.sourceBucket, counter, this.getCloudService());
 
             tasks.add(task);
 
@@ -143,6 +150,20 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
      */
     public Set<String> getAllTerms() {
         return allTerms;
+    }
+
+    /**
+     * @return the sourceBucket
+     */
+    public String getSourceBucket() {
+        return sourceBucket;
+    }
+
+    /**
+     * @param sourceBucket the sourceBucket to set
+     */
+    public void setSourceBucket(String sourceBucket) {
+        this.sourceBucket = sourceBucket;
     }
 
 }

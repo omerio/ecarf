@@ -3,7 +3,8 @@
     "description": "Forward reasoning using BigQuery where all the reasoning queries are combined into one",
     "mode":"Serial",
     "data":{
-        "bucket": "swetodblp1",
+        "sourceBucket": "swetodblp1",
+        "bucket": "swetodblp1-work",
         "schema": "opus_august2007_closure.nt",
         "table": "ontologies.swetodblp",
         "numberOfProcessors": 2
@@ -23,6 +24,7 @@
             "className":"io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask",
             "target":"COORDINATOR",
             "input":{
+                "sourceBucket":"#sourceBucket",
                 "bucket":"#bucket",
                 "schemaFile":"#schema"
             },
@@ -37,7 +39,7 @@
             "className":"io.ecarf.core.cloud.task.coordinator.CreateFileItemsTask",
             "target":"COORDINATOR",
             "input":{
-                "bucket":"#bucket"
+                "bucket":"#sourceBucket"
             },
             "output":[
                 "fileItems"
@@ -50,6 +52,7 @@
             "className":"io.ecarf.core.cloud.task.processor.analyze.ExtractAndCountTermsTask",
             "target":"PROCESSOR",
             "input":{
+                "sourceBucket":"#sourceBucket",
                 "bucket":"#bucket",
                 "schemaTermsFile":"#schemaTermsFile",
                 "files":"#filePartitions"
@@ -72,6 +75,7 @@
             "target":"COORDINATOR",
             "input":{
                 "processors":"#processors",
+                "sourceBucket":"#sourceBucket",
                 "bucket":"#bucket",
                 "schemaFile":"#schema"
             },

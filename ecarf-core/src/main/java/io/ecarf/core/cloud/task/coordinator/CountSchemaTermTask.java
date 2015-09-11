@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,6 +46,8 @@ public class CountSchemaTermTask extends CommonTask {
 	
 	private String bucket;
 	
+	private String sourceBucket;
+	
 	private String schemaFile;
 
 
@@ -58,10 +61,15 @@ public class CountSchemaTermTask extends CommonTask {
 		
 		//String schemaFile = metadata.getValue(EcarfMetaData.ECARF_SCHEMA);
 		//String bucket = metadata.getBucket();
+		// check if we have a source bucket for backward compatibility
+		if(StringUtils.isBlank(sourceBucket)) {
+		    log.warn("sourceBucket is empty, using bucket: " + bucket);
+		    this.sourceBucket = bucket;
+		}
 		
 		String localSchemaFile = Utils.TEMP_FOLDER + schemaFile;
 		// download the file from the cloud storage
-		this.getCloudService().downloadObjectFromCloudStorage(schemaFile, localSchemaFile, bucket);
+		this.getCloudService().downloadObjectFromCloudStorage(schemaFile, localSchemaFile, sourceBucket);
 		
 		// uncompress if compressed
 		if(GzipUtils.isCompressedFilename(schemaFile)) {
@@ -116,6 +124,22 @@ public class CountSchemaTermTask extends CommonTask {
      */
     public void setSchemaFile(String schemaFile) {
         this.schemaFile = schemaFile;
+    }
+
+
+    /**
+     * @return the sourceBucket
+     */
+    public String getSourceBucket() {
+        return sourceBucket;
+    }
+
+
+    /**
+     * @param sourceBucket the sourceBucket to set
+     */
+    public void setSourceBucket(String sourceBucket) {
+        this.sourceBucket = sourceBucket;
     }
 
 
