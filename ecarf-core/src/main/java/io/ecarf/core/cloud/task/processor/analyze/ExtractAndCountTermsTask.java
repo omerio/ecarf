@@ -65,13 +65,13 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         String allTermsFile = Utils.TEMP_FOLDER + Constants.NODE_TERMS + 
-                cloudService.getInstanceId() + Constants.DOT_SER;
+                cloudService.getInstanceId() + Constants.DOT_SER + Constants.GZIP_EXT;
         
-        Utils.objectToFile(allTermsFile, allTerms);
+        Utils.objectToFile(allTermsFile, allTerms, true);
         
-        String compressedFile = Utils.compressFile(allTermsFile);
+        //String compressedFile = Utils.compressFile(allTermsFile);
         
-        cloudService.uploadFileToCloudStorage(compressedFile, this.getBucket());
+        cloudService.uploadFileToCloudStorage(allTermsFile, this.getBucket());
 
         log.info("TIMER# All files are processed and uploaded successfully " + stopwatch);
     }

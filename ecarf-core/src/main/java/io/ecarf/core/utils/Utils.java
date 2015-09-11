@@ -19,7 +19,6 @@
 package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
-import io.cloudex.framework.exceptions.ClassInstantiationException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -31,10 +30,12 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -175,13 +176,22 @@ public class Utils {
      * @param object
      * @throws IOException
      */
-    public static void objectToFile(String filename, Object object) throws IOException {
+    public static void objectToFile(String filename, Object object, boolean compress) throws IOException {
         Validate.isTrue(object instanceof Serializable, "object must implement Serializable");
         
-        try(ObjectOutput oos = 
-                new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filename), Constants.GZIP_BUF_SIZE));) {
+        OutputStream stream = new FileOutputStream(filename);
+        
+        if(compress) {        
+            stream = new GZIPOutputStream(stream, Constants.GZIP_BUF_SIZE);
+        
+        } else {
+            stream = new BufferedOutputStream(stream, Constants.GZIP_BUF_SIZE);
+        }
+        
+        try(ObjectOutput oos = new ObjectOutputStream(stream);) {
             oos.writeObject(object);
         }
+       
     }
     
     /**
@@ -194,13 +204,21 @@ public class Utils {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public static <T> T objectFromFile(String filename, Class<T> classOfT)
+    public static <T> T objectFromFile(String filename, Class<T> classOfT, boolean compressed)
             throws ClassNotFoundException, FileNotFoundException, IOException {
         
         T object = null;
         
-        try(ObjectInput ois = 
-                new ObjectInputStream (new BufferedInputStream(new FileInputStream(filename), Constants.GZIP_BUF_SIZE));) {
+        InputStream stream = new FileInputStream(filename);
+        
+        if(compressed) {        
+            stream = new GZIPInputStream(stream, Constants.GZIP_BUF_SIZE);
+        
+        } else {
+            stream = new BufferedInputStream(stream, Constants.GZIP_BUF_SIZE);
+        }
+        
+        try(ObjectInput ois = new ObjectInputStream (stream);) {
             object = (T) ois.readObject();
         }
         

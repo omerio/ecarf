@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -211,12 +212,7 @@ public class TermDictionary implements Serializable {
         
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        String filename = file;
-        if(compressed) {
-            filename = Utils.unCompressFile(file);
-        }
-
-        TermDictionary dictionary = Utils.objectFromFile(filename, TermDictionary.class);
+        TermDictionary dictionary = Utils.objectFromFile(file, TermDictionary.class, compressed);
 
         log.debug("TIMER# deserialized dictionary from JSON file: " + file + ", in: " + stopwatch);
 
@@ -251,12 +247,13 @@ public class TermDictionary implements Serializable {
      */
     public String toFile(String filename, boolean compress) throws IOException {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        Utils.objectToFile(filename, this);
         
         if(compress) {
-            filename = Utils.compressFile(filename);
+            filename = GzipUtils.getCompressedFilename(filename);
         }
         
+        Utils.objectToFile(filename, this, compress);
+                
         log.debug("TIMER# serialized dictionary to JSON file: " + filename + ", in: " + stopwatch);
         
         return filename;
