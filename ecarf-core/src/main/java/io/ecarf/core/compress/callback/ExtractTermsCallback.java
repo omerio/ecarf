@@ -76,7 +76,9 @@ public class ExtractTermsCallback implements NTripleGzipCallback {
                     resources.add(term);
                 }
                 
-                counter.count(term);
+                if(counter != null) {
+                    counter.count(term);
+                }
 
             } else {
                 literalCount++;
