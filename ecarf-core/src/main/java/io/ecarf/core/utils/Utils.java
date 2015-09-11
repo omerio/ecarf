@@ -179,6 +179,8 @@ public class Utils {
     public static void objectToFile(String filename, Object object, boolean compress) throws IOException {
         Validate.isTrue(object instanceof Serializable, "object must implement Serializable");
         
+        log.info("Serializing object of class: " + object.getClass() + " to file: " + filename + ", with compress = " + compress);
+        
         OutputStream stream = new FileOutputStream(filename);
         
         if(compress) {        
@@ -206,6 +208,8 @@ public class Utils {
     @SuppressWarnings("unchecked")
     public static <T> T objectFromFile(String filename, Class<T> classOfT, boolean compressed)
             throws ClassNotFoundException, FileNotFoundException, IOException {
+        
+        log.info("Reading object of class: " + classOfT + " from file: " + filename + ", with compressed = " + compressed);
         
         T object = null;
         
@@ -238,6 +242,8 @@ public class Utils {
 	    
 	    String outFile = GzipUtils.getCompressedFilename(inFile);
 	    
+	    log.info("Compressing file: " + inFile + ", to file: " + outFile);
+	    
 	    try(GZIPOutputStream gzos = 
 	            new GZIPOutputStream(new FileOutputStream(outFile), Constants.GZIP_BUF_SIZE);
 	        FileInputStream in = new FileInputStream(inFile);) {
@@ -264,6 +270,8 @@ public class Utils {
         
         byte[] buffer = new byte[BUFFER_SIZE];
         String outFile = GzipUtils.getUncompressedFilename(filename);
+        
+        log.info("Uncompressing file: " + filename + ", to file: " + outFile);
         
         try(GZIPInputStream gzis = 
                 new GZIPInputStream(new FileInputStream(filename), Constants.GZIP_BUF_SIZE);
