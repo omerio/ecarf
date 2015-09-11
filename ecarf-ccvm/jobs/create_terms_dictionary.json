@@ -79,6 +79,32 @@
                 "dictionary"
             ],
             "errorAction":"EXIT"
+        },
+        {
+            "id":"processor-do-upload-logs-task",
+            "description": "Distribute the uploading of logs task between the various processors, each processor then uploads its own logs to cloud storage",
+            "className":"io.ecarf.core.cloud.task.common.DoUploadOutputLogTask",
+            "target":"PROCESSOR",
+            "input":{
+                "bucket":"#bucket"
+            },
+            "partitioning":{
+                "type":"ITEMS",
+                "input":{
+                    "items":"#processors"
+                }
+            },
+            "errorAction":"EXIT"
+        },
+        {
+            "id":"coordinator-do-upload-logs-task",
+            "description": "The coordinator to upload its own logs to cloud storage",
+            "className":"io.ecarf.core.cloud.task.common.DoUploadOutputLogTask",
+            "target":"COORDINATOR",
+            "input":{
+                "bucket":"#bucket"
+            },
+            "errorAction":"EXIT"
         }
     ]
 }
