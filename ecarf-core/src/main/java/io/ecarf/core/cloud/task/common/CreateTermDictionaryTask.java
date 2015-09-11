@@ -94,7 +94,7 @@ public class CreateTermDictionaryTask extends CommonTask {
             log.info("Downloading processor terms file: " + termsFile + ", timer: " + stopwatch);
 
             try {
-                this.getCloudService().downloadObjectFromCloudStorage(termsFile, localTermsFile, sourceBucket);
+                this.getCloudService().downloadObjectFromCloudStorage(termsFile, localTermsFile, bucket);
 
                 log.info("Uncompressing processor terms file: " + termsFile + ", timer: " + stopwatch);
                 String uncompressedFile = Utils.unCompressFile(localTermsFile);
