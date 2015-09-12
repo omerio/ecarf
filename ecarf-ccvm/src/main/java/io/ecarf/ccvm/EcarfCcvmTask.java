@@ -29,6 +29,9 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 /**
  * Run using maven:
  * mvn -q exec:java -Dexec.args="/home/omerio/job.json" > /home/omerio/output.log 2>&1 & exit 0
@@ -51,13 +54,16 @@ public class EcarfCcvmTask {
 			System.out.println("usage EcarfEvmTask <jobConfigJsonFile>");
 			System.exit(1);
 		}
-
+		
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		
 		Coordinator coordinator = null;
 	
 		try {
 		    
 		    Job job = Job.fromJsonFile(args[0]);
 		    log.info("Running job from json file: " + args[0] + ", job id: " + job.getId());
+		    log.info("Job json: " + gson.toJson(job));
 		    CloudService cloudService = new EcarfGoogleCloudServiceImpl();
 		    cloudService.setAuthenticationProvider(new InstanceAuthenticationProvider());
             coordinator = new Coordinator.Builder(job, cloudService).setShutdownProcessors(true).build();
