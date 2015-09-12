@@ -29,7 +29,6 @@ import java.util.Set;
 import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
-import org.semanticweb.yars.nx.util.NxUtil;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -65,9 +64,15 @@ public class ExtractTermsCallback implements NTripleGzipCallback {
             // we are not going to unscape literals, these can contain new line and 
             // unscaping those will slow down the bigquery load, unless offcourse we use JSON
             // instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
-            if(!(nodes[i] instanceof Literal)) {
+            if((nodes[i] instanceof Literal)) {
 
-                term = NxUtil.unescape(nodes[i].toN3());
+                literalCount++;
+
+            } else {
+                
+                //TODO if we are creating a dictionary why unscape this term anyway?
+                //term = NxUtil.unescape(nodes[i].toN3());
+                term = nodes[i].toN3();
 
                 if(nodes[i] instanceof BNode) {
                     blankNodes.add(term);
@@ -79,9 +84,6 @@ public class ExtractTermsCallback implements NTripleGzipCallback {
                 if(counter != null) {
                     counter.count(term);
                 }
-
-            } else {
-                literalCount++;
             }
         }
 

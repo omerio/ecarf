@@ -19,6 +19,7 @@
 package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
+import io.cloudex.framework.utils.FileUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -38,9 +39,17 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -298,6 +307,55 @@ public class Utils {
         }*/
         return outFile;
     }
+    
+    /**
+     * Log the CPU stats
+     */
+    public static void logCpuStats() {
+        OperatingSystemMXBean operatingSystemMXBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        int availableProcessors = operatingSystemMXBean.getAvailableProcessors();
+        long upTime = runtimeMXBean.getUptime();
+        double loadAverage = operatingSystemMXBean.getSystemLoadAverage();
+        log.info("Available processors: " + availableProcessors);
+        log.info("JVM upTime (ms): " + upTime);
+        log.info("CPU load average: " + loadAverage);
+    }
+    
+    /**
+     * Log memory usage
+     * @return
+     */
+    public static long getMemoryUsage() {
+        List<MemoryPoolMXBean> memoryPools = new ArrayList<MemoryPoolMXBean>(ManagementFactory.getMemoryPoolMXBeans());
+        long usedHeapMemoryAfterLastGC = 0;
+        for (MemoryPoolMXBean memoryPool : memoryPools) {
+            if (memoryPool.getType().equals(MemoryType.HEAP)) {
+                MemoryUsage poolCollectionMemoryUsage = memoryPool.getCollectionUsage();
+                usedHeapMemoryAfterLastGC += poolCollectionMemoryUsage.getUsed();
+            }
+        }
+        return usedHeapMemoryAfterLastGC;
+    }
+    
+    /**
+     * Get the memory usage in GB
+     * @return
+     */
+    public static double getMemoryUsageInGB() {
+        double gb = ((double) getMemoryUsage() / FileUtils.ONE_GB);
+        return gb;
+    }
+           
+    /**
+     * Log the memory usage in Gigabytes
+     */
+    public static void logMemoryUsageInGB() {
+        double gb = getMemoryUsageInGB();
+        
+        log.info("JVM Memory usage: " + gb + "GB");
+    }
+
 	
 	
 //	/*

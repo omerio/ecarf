@@ -21,59 +21,73 @@ import com.google.common.base.Stopwatch;
  *
  */
 public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
-	
-	private final static Log log = LogFactory.getLog(ExtractAndCountTermsSubTask.class);
 
-	private String file;
-	private EcarfGoogleCloudService cloud;
-	private TermCounter counter;
-	private String bucket;
+    private final static Log log = LogFactory.getLog(ExtractAndCountTermsSubTask.class);
 
-	public ExtractAndCountTermsSubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
-		super();
-		this.file = file;
-		this.cloud = (EcarfGoogleCloudService) cloud;
-		this.counter = counter;
-		this.bucket = bucket;
+    private String file;
+    private EcarfGoogleCloudService cloud;
+    private TermCounter counter;
+    private String bucket;
 
-	}
+    public ExtractAndCountTermsSubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
+        super();
+        this.file = file;
+        this.cloud = (EcarfGoogleCloudService) cloud;
+        this.counter = counter;
+        this.bucket = bucket;
 
-	@Override
-	public TermCounter call() throws IOException {
+    }
 
-		String localFile = Utils.TEMP_FOLDER + file;
+    @Override
+    public TermCounter call() throws IOException {
 
-		log.info("START: Downloading file: " + file);
-		Stopwatch stopwatch = Stopwatch.createStarted();
+        String localFile = Utils.TEMP_FOLDER + file;
 
-		this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
+        log.info("START: Downloading file: " + file + ", memory usage: " + Utils.getMemoryUsage() + "GB");
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
-		// all downloaded, carryon now, process the files
+        try {
 
-		log.info("Processing file: " + localFile);
-		//String outFile = this.cloud.prepareForBigQueryImport(localFile, counter);
-		
-        NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
+            this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
 
-        ExtractTermsCallback callback = new ExtractTermsCallback();
+            // all downloaded, carryon now, process the files
 
-        callback.setCounter(counter);
+            log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsage() + "GB");
+            //String outFile = this.cloud.prepareForBigQueryImport(localFile, counter);
 
-        processor.read(callback);
-        
-        //Set<String> resources = callback.getResources();
-        counter.getAllTerms().addAll(callback.getResources());
-        counter.getAllTerms().addAll(callback.getBlankNodes());
+            NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
 
-		// once the processing is done then delete the local file
-		//FileUtils.deleteFile(localFile);
+            ExtractTermsCallback callback = new ExtractTermsCallback();
 
-		log.info("TIMER# Finished processing file: " + localFile + ", in: " + stopwatch);
-		log.info("Number of unique URIs: " + callback.getResources().size());
-        log.info("Number of blank nodes: " + callback.getBlankNodes().size());
-        log.info("Number of literals: " + callback.getLiteralCount());
+            callback.setCounter(counter);
 
-		return counter;
-	}
+            processor.read(callback);
+
+            //Set<String> resources = callback.getResources();
+            counter.getAllTerms().addAll(callback.getResources());
+            counter.getAllTerms().addAll(callback.getBlankNodes());
+
+            // once the processing is done then delete the local file
+            //FileUtils.deleteFile(localFile);
+
+            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsage() + "GB" + ", in: " + stopwatch);
+            log.info("Number of unique URIs: " + callback.getResources().size());
+            log.info("Number of blank nodes: " + callback.getBlankNodes().size());
+            log.info("Number of literals: " + callback.getLiteralCount());
+
+        } catch(Exception e) {
+            // because this sub task is run in an executor the exception will be stored and thrown in the
+            // future, but we want to know about it now, so log it
+            log.error("Failed to download or process file: " + file, e);
+
+            if(e instanceof IOException) {
+                throw e;
+            } else {
+                throw new IOException(e);
+            }
+        }
+
+        return counter;
+    }
 
 }
