@@ -5,6 +5,7 @@ import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -55,35 +56,37 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
 
             // all downloaded, carryon now, process the files
 
-            log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
-            //String outFile = this.cloud.prepareForBigQueryImport(localFile, counter);
+            log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
 
             NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
-
             ExtractTermsCallback callback = new ExtractTermsCallback();
-
             callback.setCounter(counter);
-
             processor.read(callback);
             
-            // aid garbage collection?
-            processor = null;
-
-            //Set<String> resources = callback.getResources();
-
-            counter.setAllTerms(callback.getResources());
-            counter.getAllTerms().addAll(callback.getBlankNodes());
+            Set<String> terms = callback.getResources();
+            terms.addAll(callback.getBlankNodes());
 
             // once the processing is done then delete the local file
             //FileUtils.deleteFile(localFile);
 
-            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", in: " + stopwatch);
+            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
             log.info("Number of unique URIs: " + callback.getResources().size());
             log.info("Number of blank nodes: " + callback.getBlankNodes().size());
             log.info("Number of literals: " + callback.getLiteralCount());
             
-            // aid garbage collection?
             callback = null;
+            processor = null;
+            
+            String termsFile = Utils.TEMP_FOLDER + file + Constants.DOT_SER + Constants.GZIP_EXT;
+
+            Utils.objectToFile(termsFile, terms, true);
+            
+            log.info("Serialized terms file: " + termsFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
+
+            this.cloud.uploadFileToCloudStorage(termsFile, bucket);
+
+            log.info("Uploaded terms file: " + termsFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
+            
 
         } catch(Exception e) {
             // because this sub task is run in an executor the exception will be stored and thrown in the
@@ -95,6 +98,11 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
             } else {
                 throw new IOException(e);
             }
+            
+        } catch(Error e) {
+            
+            log.fatal("JVM Died: ", e);
+            throw e;
         }
 
         return counter;

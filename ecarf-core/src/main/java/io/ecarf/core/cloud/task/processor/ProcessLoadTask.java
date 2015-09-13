@@ -36,6 +36,8 @@ import java.util.concurrent.Callable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.base.Stopwatch;
+
 /**
  * EVM Task to load the provided cloud files into the big data cloud storage
  * Does also analyse the terms as they are being processed
@@ -68,7 +70,8 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     @Override
     public void run() throws IOException {
 
-        log.info("START: processing files");
+        log.info("START: processing files, timer: 0s");
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
         EcarfGoogleCloudService cloudService = (EcarfGoogleCloudService) this.getCloudService();
         
@@ -88,7 +91,7 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
         }
 
-        log.info("FINISH: All files are processed and uploaded successfully");
+        log.info("FINISH: All files are processed and uploaded successfully, timer: " + stopwatch);
     }
 
     /**

@@ -22,12 +22,9 @@ package io.ecarf.core.cloud.task.processor.analyze;
 
 import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
 import io.ecarf.core.term.TermCounter;
-import io.ecarf.core.utils.Constants;
-import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -35,8 +32,6 @@ import java.util.concurrent.Callable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -47,7 +42,7 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
 
     private final static Log log = LogFactory.getLog(ExtractAndCountTermsTaskOld.class);
 
-    private Set<String> allTerms = new HashSet<String>();
+    //private Set<String> allTerms = new HashSet<String>();
     
     private String sourceBucket;
 
@@ -61,7 +56,7 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
         super.run();
 
         // upload all the extracted terms as well
-        log.info("Saving all terms to file. Number of terms: " + allTerms.size());
+        /*log.info("Saving all terms to file. Number of terms: " + allTerms.size());
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         String allTermsFile = Utils.TEMP_FOLDER + Constants.NODE_TERMS + 
@@ -73,7 +68,7 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
         
         cloudService.uploadFileToCloudStorage(allTermsFile, this.getBucket());
 
-        log.info("TIMER# Serialized and uploaded terms file in: " + stopwatch);
+        log.info("TIMER# Serialized and uploaded terms file in: " + stopwatch);*/
     }
 
     /*
@@ -114,7 +109,7 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
      * (non-Javadoc)
      * @see io.ecarf.core.cloud.task.processor.ProcessLoadTask1#processSingleOutput(io.ecarf.core.term.TermCounter)
      */
-    @Override
+    /*@Override
     public void processSingleOutput(TermCounter counter) {
 
         super.processSingleOutput(counter);
@@ -125,13 +120,13 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
             counter.setAllTerms(null);
         }
 
-    }
+    }*/
 
     /*
      * (non-Javadoc)
      * @see io.ecarf.core.cloud.task.processor.ProcessLoadTask1#processMultiOutput(java.util.List)
      */
-    @Override
+    /*@Override
     public void processMultiOutput(List<TermCounter> counters) {
 
         super.processMultiOutput(counters);
@@ -154,14 +149,14 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
         }
 
 
-    }
+    }*/
 
     /**
      * @return the allTerms
      */
-    public Set<String> getAllTerms() {
+    /*public Set<String> getAllTerms() {
         return allTerms;
-    }
+    }*/
 
     /**
      * @return the sourceBucket
