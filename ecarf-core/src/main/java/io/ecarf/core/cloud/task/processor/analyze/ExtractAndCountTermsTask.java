@@ -86,7 +86,7 @@ public class ExtractAndCountTermsTask extends CommonTask {
 
             log.info("Downloading file: " + file + ", timer: 0s");
             String localFile = Utils.TEMP_FOLDER + file;
-            cloudService.downloadObjectFromCloudStorage(file, localFile, bucket);
+            cloudService.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
 
             log.info("Processing file: " + localFile + ", timer: " + stopwatch1);
             NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
