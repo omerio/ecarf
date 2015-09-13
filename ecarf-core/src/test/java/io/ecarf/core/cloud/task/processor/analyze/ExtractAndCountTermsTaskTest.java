@@ -49,7 +49,7 @@ public class ExtractAndCountTermsTaskTest {
      */
     //@Test
     public void testRun() throws IOException {
-        ExtractAndCountTermsTask task = new ExtractAndCountTermsTask();
+        ExtractAndCountTermsTaskOld task = new ExtractAndCountTermsTaskOld();
         task.setCloudService(service);
         task.setBucket("dbpedia1-work");
         task.setSourceBucket("dbpedia");
