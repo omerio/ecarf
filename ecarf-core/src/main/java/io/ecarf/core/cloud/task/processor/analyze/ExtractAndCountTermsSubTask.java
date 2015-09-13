@@ -8,6 +8,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -40,10 +41,12 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
 
     @Override
     public TermCounter call() throws IOException {
+        
+        //"/Users/omerio/Ontologies/dbpedia/"
 
         String localFile = Utils.TEMP_FOLDER + file;
 
-        log.info("START: Downloading file: " + file + ", memory usage: " + Utils.getMemoryUsage() + "GB");
+        log.info("START: Downloading file: " + file + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         try {
@@ -52,7 +55,7 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
 
             // all downloaded, carryon now, process the files
 
-            log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsage() + "GB");
+            log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
             //String outFile = this.cloud.prepareForBigQueryImport(localFile, counter);
 
             NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
@@ -62,18 +65,25 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
             callback.setCounter(counter);
 
             processor.read(callback);
+            
+            // aid garbage collection?
+            processor = null;
 
             //Set<String> resources = callback.getResources();
-            counter.getAllTerms().addAll(callback.getResources());
+
+            counter.setAllTerms(callback.getResources());
             counter.getAllTerms().addAll(callback.getBlankNodes());
 
             // once the processing is done then delete the local file
             //FileUtils.deleteFile(localFile);
 
-            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsage() + "GB" + ", in: " + stopwatch);
+            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", in: " + stopwatch);
             log.info("Number of unique URIs: " + callback.getResources().size());
             log.info("Number of blank nodes: " + callback.getBlankNodes().size());
             log.info("Number of literals: " + callback.getLiteralCount());
+            
+            // aid garbage collection?
+            callback = null;
 
         } catch(Exception e) {
             // because this sub task is run in an executor the exception will be stored and thrown in the

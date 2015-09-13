@@ -51,15 +51,12 @@ public class ExtractAndCountTermsTaskTest {
     public void testRun() throws IOException {
         ExtractAndCountTermsTask task = new ExtractAndCountTermsTask();
         task.setCloudService(service);
-        task.setBucket("swetodblp1");
-        task.setFiles("swetodblp_2008_1.nt.gz,"
-                + "swetodblp_2008_2.nt.gz,"
-                + "swetodblp_2008_3.nt.gz,"
-                + "swetodblp_2008_4.nt.gz,"
-                + "swetodblp_2008_5.nt.gz,"
-                + "swetodblp_2008_6.nt.gz,"
-                + "swetodblp_2008_7.nt.gz,"
-                + "swetodblp_2008_8.nt.gz");
+        task.setBucket("dbpedia1-work");
+        task.setSourceBucket("dbpedia");
+        task.setFiles("page_ids_en.nt.gz");
+        /*task.setFiles("yago_types1.nt.gz,"
+                + "page_ids_en.nt.gz,"
+                + "instance_types_en.nt.gz");*/
         task.setSchemaTermsFile("schema_terms.json");
         
         task.run();

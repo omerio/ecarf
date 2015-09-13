@@ -124,5 +124,12 @@ public class TermCounter {
         return allTerms;
     }
 
+    /**
+     * @param allTerms the allTerms to set
+     */
+    public void setAllTerms(Set<String> allTerms) {
+        this.allTerms = allTerms;
+    }
+
 
 }

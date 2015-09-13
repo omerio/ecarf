@@ -21,10 +21,14 @@ package io.ecarf.core.compress;
 import io.ecarf.core.utils.Constants;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -78,10 +82,9 @@ public class NTripleGzipProcessor {
      */
     public void read(NTripleGzipCallback callback) throws IOException {
 
-        try(InputStream fileIn = new FileInputStream(this.inputFile);) {
+        try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
+                this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
             
-            InputStream deflated = this.getDeflatedStream(fileIn);
-
             NxParser nxp = new NxParser(deflated);
 
             while (nxp.hasNext())  {
@@ -108,12 +111,15 @@ public class NTripleGzipProcessor {
      */
     public String process(NTripleGzipCallback callback) throws IOException {
 
-        try(InputStream fileIn = new FileInputStream(this.inputFile);) {
+        try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
+                this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
 
-            InputStream deflated = this.getDeflatedStream(fileIn);
 
             try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
-                    PrintWriter writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE));) {
+                    PrintWriter writer = new PrintWriter(new BufferedOutputStream(
+                            new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE), 
+                            Constants.GZIP_BUF_SIZE));) {
+                
                 String outLine;
 
                 callback.setOutput(writer);

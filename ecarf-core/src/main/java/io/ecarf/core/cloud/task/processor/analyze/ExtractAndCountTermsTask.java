@@ -73,7 +73,7 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
         
         cloudService.uploadFileToCloudStorage(allTermsFile, this.getBucket());
 
-        log.info("TIMER# All files are processed and uploaded successfully " + stopwatch);
+        log.info("TIMER# Serialized and uploaded terms file in: " + stopwatch);
     }
 
     /*
@@ -121,7 +121,8 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
 
         // get all terms as well
         if(counter != null) {
-            this.allTerms.addAll(counter.getAllTerms());
+            this.allTerms = counter.getAllTerms();
+            counter.setAllTerms(null);
         }
 
     }
@@ -134,11 +135,21 @@ public class ExtractAndCountTermsTask extends ProcessLoadTask {
     public void processMultiOutput(List<TermCounter> counters) {
 
         super.processMultiOutput(counters);
-
+        boolean first = true;
         // get all terms as well
         for(TermCounter counter: counters) {
             if(counter != null) {
-                this.allTerms.addAll(counter.getAllTerms());
+                
+                if(first) {
+                    this.allTerms = counter.getAllTerms();
+                    first = false;
+                    
+                } else {
+                    this.allTerms.addAll(counter.getAllTerms());                    
+                }
+                
+                // aid garbage collection?
+                counter.setAllTerms(null);
             }
         }
 

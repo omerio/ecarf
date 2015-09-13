@@ -195,9 +195,10 @@ public class Utils {
         if(compress) {        
             stream = new GZIPOutputStream(stream, Constants.GZIP_BUF_SIZE);
         
-        } else {
-            stream = new BufferedOutputStream(stream, Constants.GZIP_BUF_SIZE);
-        }
+        } //else {
+        
+        stream = new BufferedOutputStream(stream, Constants.GZIP_BUF_SIZE);
+        //}
         
         try(ObjectOutput oos = new ObjectOutputStream(stream);) {
             oos.writeObject(object);
@@ -227,9 +228,9 @@ public class Utils {
         if(compressed) {        
             stream = new GZIPInputStream(stream, Constants.GZIP_BUF_SIZE);
         
-        } else {
-            stream = new BufferedInputStream(stream, Constants.GZIP_BUF_SIZE);
-        }
+        } //else {
+        stream = new BufferedInputStream(stream, Constants.GZIP_BUF_SIZE);
+        //}
         
         try(ObjectInput ois = new ObjectInputStream (stream);) {
             object = (T) ois.readObject();
