@@ -96,7 +96,7 @@ public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
             }
 
             ExtractAndCountTermsSubTask task = 
-                    new ExtractAndCountTermsSubTask(file, this.sourceBucket, counter, this.getCloudService());
+                    new ExtractAndCountTermsSubTask(file, this.getBucket(), this.sourceBucket, counter, this.getCloudService());
 
             tasks.add(task);
 

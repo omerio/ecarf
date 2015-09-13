@@ -30,13 +30,15 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
     private EcarfGoogleCloudService cloud;
     private TermCounter counter;
     private String bucket;
+    private String sourceBucket;
 
-    public ExtractAndCountTermsSubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
+    public ExtractAndCountTermsSubTask(String file, String bucket, String sourceBucket, TermCounter counter, CloudService cloud) {
         super();
         this.file = file;
         this.cloud = (EcarfGoogleCloudService) cloud;
         this.counter = counter;
         this.bucket = bucket;
+        this.sourceBucket = sourceBucket;
 
     }
 
@@ -52,7 +54,7 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
 
         try {
 
-            this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
+            this.cloud.downloadObjectFromCloudStorage(file, localFile, this.sourceBucket);
 
             // all downloaded, carryon now, process the files
 
