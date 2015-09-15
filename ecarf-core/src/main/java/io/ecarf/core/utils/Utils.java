@@ -20,6 +20,7 @@ package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
 import io.cloudex.framework.utils.FileUtils;
+import io.ecarf.core.term.TermDictionary;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -37,6 +38,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
@@ -46,7 +48,12 @@ import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +71,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.pool.KryoFactory;
+import com.esotericsoftware.kryo.pool.KryoPool;
+import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.google.common.collect.HashBiMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -87,6 +101,69 @@ public class Utils {
 	public static final int BUFFER_SIZE = 8192;
 	
 	public static Gson GSON = new Gson();
+	
+	public static final KryoPool POOL;
+	
+	static {
+	    KryoFactory factory = new KryoFactory() {
+	        public Kryo create () {
+	            Kryo kryo = new Kryo();
+	            // configure kryo instance, customize settings
+	            //MapSerializer serializer = new MapSerializer();
+	            kryo.register(TermDictionary.class);
+	            //kryo.register(HashBiMap.class, serializer);
+	            kryo.register(HashBiMap.class, new MapSerializer() {
+	                public Map create (Kryo kryo, Input input, Class<Map> type) {
+	                    return HashBiMap.create();
+	                }
+	            });
+	            kryo.setRegistrationRequired(true);
+
+	            return kryo;
+	        }
+	    };
+	    // Build pool with SoftReferences enabled (optional)
+	    POOL = new KryoPool.Builder(factory).softReferences().build();
+	}
+	
+	/**
+	 * Get the likely uncompressed size of a Gziped file
+	 * @param filename
+	 * @return
+	 * @throws IOException 
+	 * @see http://stackoverflow.com/questions/27825927/get-gzipped-file-attributes-like-gzip-l-basically-compression-ratio
+	 * @throws FileNotFoundException 
+	 */
+	public static long getUncompressedFileSize(String filename) throws FileNotFoundException, IOException {
+
+	    File f = new File(filename);
+	    try(RandomAccessFile ra = new RandomAccessFile(f, "r");
+	            FileChannel channel = ra.getChannel()){
+
+	        MappedByteBuffer fileBuffer = channel.map(MapMode.READ_ONLY, f.length()-4, 4);
+	        fileBuffer.load();
+
+	        ByteBuffer buf = ByteBuffer.allocate(4);
+	        buf.order(ByteOrder.LITTLE_ENDIAN);
+
+
+	        buf.put(fileBuffer);
+	        buf.flip();
+	        //will print the uncompressed size
+	        //getInt() reads the 4 bytes as a int
+	        // if the file is between 2GB and 4GB
+	        // then this will return a negative value
+	        //and you'll have to do your own converting to an unsigned int
+	        int size = buf.getInt();
+	        
+
+	        if(size < 0) {
+	            return FileUtils.ONE_GB + size;
+	        } else {
+	            return size;
+	        }
+	    }
+	}
 
 	/**
 	 * Copy a url to a local file
@@ -180,12 +257,23 @@ public class Utils {
     }
     
     /**
+     * 
+     * @param filename
+     * @param object
+     * @param compress
+     * @throws IOException
+     */
+    public static void objectToFile(String filename, Object object, boolean compress) throws IOException {
+        objectToFile(filename, object, compress, true);
+    }
+    
+    /**
      * Serialize an object to a file
      * @param filename
      * @param object
      * @throws IOException
      */
-    public static void objectToFile(String filename, Object object, boolean compress) throws IOException {
+    public static void objectToFile(String filename, Object object, boolean compress, boolean java) throws IOException {
         Validate.isTrue(object instanceof Serializable, "object must implement Serializable");
         
         log.info("Serializing object of class: " + object.getClass() + " to file: " + filename + ", with compress = " + compress);
@@ -199,11 +287,38 @@ public class Utils {
         
         stream = new BufferedOutputStream(stream, Constants.GZIP_BUF_SIZE);
         //}
-        
-        try(ObjectOutput oos = new ObjectOutputStream(stream);) {
-            oos.writeObject(object);
+        if(java) {
+            
+            try(ObjectOutput oos = new ObjectOutputStream(stream);) {
+                oos.writeObject(object);
+            }
+            
+        } else {
+            Kryo kryo = POOL.borrow();
+            // do s.th. with kryo here, and afterwards release it
+            try(Output output = new Output(stream)) {
+                kryo.writeObject(output, object);
+            }
+            
+            POOL.release(kryo);
+
         }
        
+    }
+    
+    /**
+     * Use java serialization into file
+     * @param filename
+     * @param classOfT
+     * @param compressed
+     * @return
+     * @throws ClassNotFoundException
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public static <T> T objectFromFile(String filename, Class<T> classOfT, boolean compressed)
+            throws ClassNotFoundException, FileNotFoundException, IOException {
+        return objectFromFile(filename, classOfT, compressed, true);
     }
     
     /**
@@ -216,7 +331,7 @@ public class Utils {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public static <T> T objectFromFile(String filename, Class<T> classOfT, boolean compressed)
+    public static <T> T objectFromFile(String filename, Class<T> classOfT, boolean compressed, boolean java)
             throws ClassNotFoundException, FileNotFoundException, IOException {
         
         log.info("Reading object of class: " + classOfT + " from file: " + filename + ", with compressed = " + compressed);
@@ -232,9 +347,22 @@ public class Utils {
         stream = new BufferedInputStream(stream, Constants.GZIP_BUF_SIZE);
         //}
         
-        try(ObjectInput ois = new ObjectInputStream (stream);) {
-            object = (T) ois.readObject();
+        if(java) {
+            try(ObjectInput ois = new ObjectInputStream (stream);) {
+                object = (T) ois.readObject();
+            }
+            
+        } else {
+            Kryo kryo = POOL.borrow();
+            // do s.th. with kryo here, and afterwards release it
+            try(Input input = new Input(stream)) {
+              object  = kryo.readObject(input, classOfT);
+            }
+
+            POOL.release(kryo);
+
         }
+        // SomeClass someObject = kryo.readObject(input, SomeClass.class);
         
         return object;
     }

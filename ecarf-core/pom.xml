@@ -127,6 +127,11 @@
 			<version>${google.client.version}</version>
 		</dependency>
         <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
             <groupId>io.cloudex</groupId>
             <artifactId>cloudex-core</artifactId>
             <version>0.0.1-SNAPSHOT</version>

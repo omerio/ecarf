@@ -81,7 +81,7 @@ public class ExtractAndCountTermsSubTask implements Callable<TermCounter> {
             
             String termsFile = Utils.TEMP_FOLDER + file + Constants.DOT_SER + Constants.GZIP_EXT;
 
-            Utils.objectToFile(termsFile, terms, true);
+            Utils.objectToFile(termsFile, terms, true, false);
             
             log.info("Serialized terms file: " + termsFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
 

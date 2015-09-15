@@ -214,7 +214,7 @@ public class TermDictionary implements Serializable {
 
         TermDictionary dictionary = Utils.objectFromFile(file, TermDictionary.class, compressed);
 
-        log.debug("TIMER# deserialized dictionary from JSON file: " + file + ", in: " + stopwatch);
+        log.debug("TIMER# deserialized dictionary from file: " + file + ", in: " + stopwatch);
 
         return dictionary;
 
@@ -254,7 +254,7 @@ public class TermDictionary implements Serializable {
         
         Utils.objectToFile(filename, this, compress);
                 
-        log.debug("TIMER# serialized dictionary to JSON file: " + filename + ", in: " + stopwatch);
+        log.debug("TIMER# serialized dictionary to file: " + filename + ", in: " + stopwatch);
         
         return filename;
     }

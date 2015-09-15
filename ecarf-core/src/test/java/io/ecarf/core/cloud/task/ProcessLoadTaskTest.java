@@ -26,6 +26,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.Set;
@@ -92,7 +93,7 @@ public class ProcessLoadTaskTest {
 	        reader.next();
 	    }
 	    System.out.println("Processing Data");*/
-        System.out.println(GzipUtils.getUncompressedFilename("/blah/blah/myfile.json.gz"));
+        //System.out.println(GzipUtils.getUncompressedFilename("/blah/blah/myfile.json.gz"));
         Stopwatch stopwatch = Stopwatch.createStarted();
         String filename = "/Users/omerio/Ontologies/swetodblp_2008_8.nt.gz";
         String termsFile = "/Users/omerio/SkyDrive/PhD/Experiments/phase2/05_09_2015_SwetoDblp_2n/schema_terms.txt";
@@ -129,50 +130,47 @@ public class ProcessLoadTaskTest {
         }
 
         String term = "<http://dblp.uni-trier.de/rec/bibtex/journals/ijcsa/AndonoffBH07>";
-        String dicFile = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_JSON;
         String dicFile1 = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_SER;
         
         // --- json
         
-        String compressedFile = dictionary.toJsonFile(dicFile, true);
-        System.out.println("Dictionary file saved to: " + compressedFile);
+        // ---  object serialization
+        Stopwatch stopwatch1 = Stopwatch.createStarted();
+        String compressedFile = dictionary.toFile(dicFile1, true);
+        System.out.println("(Java) Dictionary file saved to: " + compressedFile + ", timer: " + stopwatch1);
         Integer id = dictionary.encode(term);
         System.out.println(id);
-
-        dictionary = TermDictionary.fromJsonFile(compressedFile, true);
-        id = dictionary.encode(term);
-        System.out.println(id);
         
-        // ---  object serialization
-        
-        compressedFile = dictionary.toFile(dicFile1, true);
-        System.out.println("Dictionary file saved to: " + compressedFile);
-        id = dictionary.encode(term);
-        System.out.println(id);
+        stopwatch1.reset();
+        stopwatch1.start();
 
         dictionary = TermDictionary.fromFile(compressedFile, true);
+        System.out.println("(Java)Dictionary loaded from file, timer: " + stopwatch1);
         id = dictionary.encode(term);
         System.out.println(id);
+        
+        // ------ kryo serialization
+        stopwatch1.reset();
+        stopwatch1.start();
+        dicFile1 = FileUtils.TEMP_FOLDER + "dictionary.kryo" + Constants.GZIP_EXT;
+        
+        Utils.objectToFile(dicFile1, dictionary, true, false);
+        System.out.println("(Kryo) Dictionary file saved to: " + dicFile1 + ", timer: " + stopwatch1);
+        id = dictionary.encode(term);
+        System.out.println(id);
+        
+        stopwatch1.reset();
+        stopwatch1.start();
 
-        System.out.println("Processed file and dictionary in: " + stopwatch);
+        dictionary = Utils.objectFromFile(dicFile1, TermDictionary.class, true, false);
+        System.out.println("(Kryo) Dictionary loaded from file, timer: " + stopwatch1);
+        id = dictionary.encode(term);
+        System.out.println(id);
+        
+        //System.out.println("Processed file and dictionary in: " + stopwatch);
+        
+        
 
-        /*stopwatch.reset();
-        stopwatch.start();
-
-        counter = new TermCounter();
-        counter.setTermsToCount(schemaTerms);
-
-        processor = new NTripleGzipProcessor(filename);
-
-        callback = new StringEscapeCallback();
-
-        callback.setCounter(counter);
-
-        outFilename = processor.process(callback);
-
-        System.out.println("Created out file: " + outFilename + ", in: " + stopwatch);
-
-        System.out.println("\n" + counter.getCount());*/
     }
 
 }
