@@ -56,6 +56,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -111,6 +112,7 @@ public class Utils {
 	            // configure kryo instance, customize settings
 	            //MapSerializer serializer = new MapSerializer();
 	            kryo.register(TermDictionary.class);
+	            kryo.register(HashSet.class);
 	            //kryo.register(HashBiMap.class, serializer);
 	            kryo.register(HashBiMap.class, new MapSerializer() {
 	                public Map create (Kryo kryo, Input input, Class<Map> type) {
