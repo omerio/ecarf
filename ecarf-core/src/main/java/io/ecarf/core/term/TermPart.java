@@ -121,7 +121,7 @@ public class TermPart implements Serializable {
      * @see java.util.Map#size()
      */
     public int size() {
-        return children.size();
+        return children != null ? children.size() : 0;
     }
 
     /**

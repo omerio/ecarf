@@ -71,6 +71,11 @@ public class TermRoot implements Serializable {
                 pos = end + 1;
             }
             
+            if(parts.isEmpty()) {
+                // we don't have a separator, just add the whole path
+                parts.add(path);
+            }
+            
             String domain = parts.remove(0);
 
             if(!(TermUtils.equals(domain, SchemaURIType.W3_DOMAIN) && term.contains(SchemaURIType.LIST_EXPANSION_URI))) {

@@ -98,7 +98,8 @@ public class ProcessLoadTaskTest {
     
     private static void testExtratCommonURIs() throws IOException {
         //String filename = "/Users/omerio/Ontologies/swetodblp_2008_1.nt.gz";
-        String filename = "/Users/omerio/Ontologies/dbpedia/page_ids_en.nt.gz";
+        //String filename = "/Users/omerio/Ontologies/dbpedia/page_ids_en.nt.gz";
+        String filename = "/Users/omerio/Ontologies/dbpedia/external_links_en.nt.gz";
         String termsFile = "/Users/omerio/SkyDrive/PhD/Experiments/phase2/05_09_2015_SwetoDblp_2n/schema_terms.txt";
 
         Set<String> schemaTerms = FileUtils.jsonFileToSet(termsFile);
@@ -152,8 +153,12 @@ public class ProcessLoadTaskTest {
                             blankNodes.add(term);
 
                         } else {
-                                                        
+                            try {                            
                             root.addTerm(term);
+                            } catch(IndexOutOfBoundsException e) {
+                                System.out.println(term);
+                                throw e;
+                            }
                             //resources.add(term);
 
                         }
