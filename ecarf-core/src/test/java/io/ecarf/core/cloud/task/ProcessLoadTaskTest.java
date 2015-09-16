@@ -153,12 +153,12 @@ public class ProcessLoadTaskTest {
                             blankNodes.add(term);
 
                         } else {
-                            try {                            
+                           // try {                            
                             root.addTerm(term);
-                            } catch(IndexOutOfBoundsException e) {
+                           /* } catch(IndexOutOfBoundsException e) {
                                 System.out.println(term);
                                 throw e;
-                            }
+                            }*/
                             //resources.add(term);
 
                         }
@@ -324,8 +324,22 @@ public class ProcessLoadTaskTest {
 
         //testDictionary();
         //"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
-        System.out.println("Starting");
+        /*System.out.println("Starting");
+        
+        
+        String treeFile = Utils.TEMP_FOLDER + "term_root1.kryo.gz";
+        TermRoot root = Utils.objectFromFile(treeFile, TermRoot.class, true, false);
+        
+        System.out.println(root.getTerms().get("www.eurohandball.com"));
+        System.out.println(root.size());
+        */
+        
         testExtratCommonURIs();
+        
+        /*TermRoot root = new TermRoot();
+        root.addTerm("<http://www.eurohandball.com/ech/men/2014/match/2/052/Netherlands+-+Sweden>");
+        System.out.println(root.getTerms().get("www.eurohandball.com").get("ech").get("men").get("2014").get("match").get("2").get("052"));*/
+        
         //String term = "<http://en.wikisource.org/>";
         //String term = "<http://en.wikisource.org/w/index.php?title=User:Tim_Starling/ScanSet_TIFF_demo&vol=02&page=EB2A196>";
         /*String term = "<http://a/d>";
@@ -339,18 +353,18 @@ public class ProcessLoadTaskTest {
             System.out.println(StringUtils.remove(path, uri + "/"));
         }*/
         
-        /*
-        StringBuilder sb = new StringBuilder();
+        
+        /*StringBuilder sb = new StringBuilder();
         for (int i = 100000; i < 100000 + 60; i++)
-            sb.append(i).append(' ');
-        String sample = sb.toString();
+            sb.append(i).append(' ');*/
+        /*String sample = "www.eurohandball.com/ech/men/2014/match/2/052/Netherlands+-+Sweden";//sb.toString();
 
         int runs = 100000;
         for (int i = 0; i < 5; i++) {
             {
                 long start = System.nanoTime();
                 for (int r = 0; r < runs; r++) {
-                    StringTokenizer st = new StringTokenizer(sample);
+                    StringTokenizer st = new StringTokenizer(sample, "/");
                     List<String> list = new ArrayList<String>();
                     while (st.hasMoreTokens())
                         list.add(st.nextToken());
@@ -360,9 +374,9 @@ public class ProcessLoadTaskTest {
             }
             {
                 long start = System.nanoTime();
-                Pattern spacePattern = Pattern.compile(" ");
+               
                 for (int r = 0; r < runs; r++) {
-                    List<String> list = Arrays.asList(sample.split(" "));
+                    List<String> list = Arrays.asList(sample.split("/"));
                 }
                 long time = System.nanoTime() - start;
                 System.out.printf("String.split took an average of %.1f us%n", time / runs / 1000.0);
@@ -370,12 +384,7 @@ public class ProcessLoadTaskTest {
             {
                 long start = System.nanoTime();
                 for (int r = 0; r < runs; r++) {
-                    List<String> list = new ArrayList<String>();
-                    int pos = 0, end;
-                    while ((end = sample.indexOf(' ', pos)) >= 0) {
-                        list.add(sample.substring(pos, end));
-                        pos = end + 1;
-                    }
+                    List<String> list = Utils.split(sample, '/');
                 }
                 long time = System.nanoTime() - start;
                 System.out.printf("indexOf loop took an average of %.1f us%n", time / runs / 1000.0);
@@ -385,7 +394,7 @@ public class ProcessLoadTaskTest {
                 long start = System.nanoTime();
                 
                 for (int r = 0; r < runs; r++) {
-                    List<String> list = Arrays.asList(StringUtils.split(sample, " "));
+                    List<String> list = Arrays.asList(StringUtils.split(sample, "/"));
                 }
                 long time = System.nanoTime() - start;
                 System.out.printf("StringUtils.split took an average of %.1f us%n", time / runs / 1000.0);

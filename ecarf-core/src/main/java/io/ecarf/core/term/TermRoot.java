@@ -21,9 +21,9 @@
 package io.ecarf.core.term;
 
 import io.ecarf.core.triple.SchemaURIType;
+import io.ecarf.core.utils.Utils;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -64,33 +64,27 @@ public class TermRoot implements Serializable {
             
             //String [] parts = StringUtils.split(path, URI_SEP);
             // this is alot faster than String.split or StringUtils.split
-            List<String> parts = new ArrayList<String>();
-            int pos = 0, end;
-            while ((end = path.indexOf(URI_SEP, pos)) >= 0) {
-                parts.add(path.substring(pos, end));
-                pos = end + 1;
-            }
+            List<String> parts = Utils.split(path, URI_SEP);
             
-            if(parts.isEmpty()) {
-                // we don't have a separator, just add the whole path
-                parts.add(path);
+            // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
+            if(!parts.isEmpty()) {
+                
+                String domain = parts.remove(0);
+
+                if(!(TermUtils.equals(domain, SchemaURIType.W3_DOMAIN) && term.contains(SchemaURIType.LIST_EXPANSION_URI))) {
+                    TermPart termPart = this.terms.get(domain);
+
+                    if(termPart == null) {
+                        termPart = new TermPart(domain);
+                        this.terms.put(domain, termPart);
+                    }
+
+                    // do we have children
+                    if(parts.size() > 1) {
+                        termPart.addChildren(parts);
+                    }
+                } // else RDF list expansion e.g. <http://www.w3.org/1999/02/22-rdf-syntax-ns#_15>
             }
-            
-            String domain = parts.remove(0);
-
-            if(!(TermUtils.equals(domain, SchemaURIType.W3_DOMAIN) && term.contains(SchemaURIType.LIST_EXPANSION_URI))) {
-                TermPart termPart = this.terms.get(domain);
-
-                if(termPart == null) {
-                    termPart = new TermPart(domain);
-                    this.terms.put(domain, termPart);
-                }
-
-                // do we have children
-                if(parts.size() > 1) {
-                    termPart.addChildren(parts);
-                }
-            } // else RDF list expansion e.g. <http://www.w3.org/1999/02/22-rdf-syntax-ns#_15>
 
         } // else a schema URI
     }
@@ -124,6 +118,15 @@ public class TermRoot implements Serializable {
     public Collection<TermPart> values() {
         return terms.values();
     }
+    
+    /**
+     * @param key
+     * @return
+     * @see java.util.Map#get(java.lang.Object)
+     */
+    public TermPart get(String key) {
+        return terms.get(key);
+    }
 
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
@@ -131,7 +134,7 @@ public class TermRoot implements Serializable {
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-        .append("terms", terms)
+        .append("Size of terms", terms != null ? terms.size() : 0)
         .toString();
     }
 

@@ -74,7 +74,7 @@ public class TermPart implements Serializable {
         }
         
         // do we have children
-        if(parts.size() > 1) {
+        if(!parts.isEmpty()) {
             termPart.addChildren(parts);
         }
     }
@@ -129,7 +129,16 @@ public class TermPart implements Serializable {
      * @see java.util.Map#values()
      */
     public Collection<TermPart> values() {
-        return children.values();
+        return children != null ? children.values() : null;
+    }
+    
+    /**
+     * @param key
+     * @return
+     * @see java.util.Map#get(java.lang.Object)
+     */
+    public TermPart get(String key) {
+        return children != null ? children.get(key) : null;
     }
     
     /* (non-Javadoc)

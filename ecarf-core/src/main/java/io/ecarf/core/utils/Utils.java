@@ -113,13 +113,15 @@ public class Utils {
 	        public Kryo create () {
 	            Kryo kryo = new Kryo();
 	            // configure kryo instance, customize settings
-	            //MapSerializer serializer = new MapSerializer();
+	            MapSerializer serializer = new MapSerializer();
+	            serializer.setKeysCanBeNull(false);
 	            kryo.register(TermDictionary.class);
 	            kryo.register(HashSet.class);
-	            kryo.register(HashMap.class);
+	            kryo.register(HashMap.class, serializer);
 	            //kryo.register(HashBiMap.class, serializer);
 	            kryo.register(HashBiMap.class, new MapSerializer() {
-	                public Map create (Kryo kryo, Input input, Class<Map> type) {
+	                @SuppressWarnings("rawtypes")
+                    public Map create (Kryo kryo, Input input, Class<Map> type) {
 	                    return HashBiMap.create();
 	                }
 	            });
@@ -132,6 +134,33 @@ public class Utils {
 	    };
 	    // Build pool with SoftReferences enabled (optional)
 	    POOL = new KryoPool.Builder(factory).softReferences().build();
+	}
+	
+	/**
+	 * Split a string using indexOf and subsString, this is proved to be 
+	 * faster than String.split and StringUtils.split
+	 * @param strToSplit
+	 * @param delimiter
+	 * @return
+	 */
+	public static List<String> split(String strToSplit, char delimiter) {
+	    
+	    List<String> parts = new ArrayList<>();
+	    int foundPosition;
+	    int startIndex = 0;
+	    String part;
+	    while ((foundPosition = strToSplit.indexOf(delimiter, startIndex)) > -1) {
+	        part = strToSplit.substring(startIndex, foundPosition);
+	        if(part.length() > 0) {
+	            parts.add(part);
+	        }
+	        startIndex = foundPosition + 1;
+	    }
+	    if(startIndex  < strToSplit.length()) {
+	        parts.add(strToSplit.substring(startIndex));
+	    }
+	    return parts;
+
 	}
 	
 	/**
