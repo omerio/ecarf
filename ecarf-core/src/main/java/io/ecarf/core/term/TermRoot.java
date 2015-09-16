@@ -42,9 +42,9 @@ public class TermRoot implements Serializable {
     
     private Map<String, TermPart> terms = new HashMap<>();
     
-    private static final String HTTP = "http://";
-    private static final String HTTPS = "https://";
-    private static final char URI_SEP = '/';
+    public static final String HTTP = "http://";
+    public static final String HTTPS = "https://";
+    public static final char URI_SEP = '/';
     
     /**
      * Break down and add a term to this TermRoot

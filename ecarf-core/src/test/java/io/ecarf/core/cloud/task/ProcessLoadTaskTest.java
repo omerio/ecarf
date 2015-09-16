@@ -27,6 +27,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.term.TermPart;
 import io.ecarf.core.term.TermRoot;
+import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -154,12 +156,35 @@ public class ProcessLoadTaskTest {
 
                         } else {
                            // try {                            
-                            root.addTerm(term);
+                            //root.addTerm(term);
                            /* } catch(IndexOutOfBoundsException e) {
                                 System.out.println(term);
                                 throw e;
                             }*/
                             //resources.add(term);
+                            
+                            if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
+                                
+                                String url = term.substring(1, term.length() - 1);
+                                String path = StringUtils.removeStart(url, TermRoot.HTTP);
+                                
+                                if(path.length() == url.length()) {
+                                    path = StringUtils.removeStart(path, TermRoot.HTTPS);
+                                }
+                                
+                                //String [] parts = StringUtils.split(path, URI_SEP);
+                                // this is alot faster than String.split or StringUtils.split
+                               Set<String> parts = Utils.splitNoDuplicates(path, TermRoot.URI_SEP);
+                               // String [] parts = StringUtils.split(path, TermRoot.URI_SEP);
+                                
+                                // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
+                                /*if(parts.length > 0) {
+                                   Collections.addAll(resources, parts); 
+                                }*/
+                                if(!parts.isEmpty()) {
+                                    resources.addAll(parts);
+                                }
+                            }
 
                         }
                         
@@ -189,31 +214,32 @@ public class ProcessLoadTaskTest {
             }
         }*/
         
-        try(PrintWriter writer = new PrintWriter(new FileOutputStream(Utils.TEMP_FOLDER + "term_root1.txt"))) {
+        try(PrintWriter writer = new PrintWriter(new FileOutputStream(Utils.TEMP_FOLDER + "term_root2.txt"))) {
             System.out.println("Unique hostnames found in the datasets = " + root.size());
             for(TermPart part: root.values()) {
                 writer.println("+ " + part.getTerm() + " ------- " + part.size());
                 print(part, false, new StringBuilder("  "), writer);
             }
-            System.out.println("Number of blank nodes found: " + blankNodes.size());
-            System.out.println("Number resources found: " + resources.size());
+        }
+        
+        System.out.println("Number of blank nodes found: " + blankNodes.size());
+        System.out.println("Number of unique resources parts found: " + resources.size());
 
-            System.out.println("First 10 shortened resources: ");
-            int i = 0;
+        System.out.println("First 10 shortened resources: ");
+        int i = 0;
 
-            for(String resource: resources) {
+        for(String resource: resources) {
 
-                i++;
-                System.out.println(resource);
-                if(i == 10) {
-                    break;
-                }
+            i++;
+            System.out.println(resource);
+            if(i == 10) {
+                break;
             }
         }
         
         //System.out.println("TermRoot: " + root);
         
-        Utils.objectToFile(Utils.TEMP_FOLDER + "term_root1.kryo.gz", root, true, false);
+        Utils.objectToFile(Utils.TEMP_FOLDER + "term_root2.kryo.gz", resources, true, false);
         
         
     }

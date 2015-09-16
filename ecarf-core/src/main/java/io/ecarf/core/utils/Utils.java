@@ -113,11 +113,16 @@ public class Utils {
 	        public Kryo create () {
 	            Kryo kryo = new Kryo();
 	            // configure kryo instance, customize settings
-	            MapSerializer serializer = new MapSerializer();
-	            serializer.setKeysCanBeNull(false);
+	            MapSerializer mapSerializer = new MapSerializer();
+	            mapSerializer.setKeysCanBeNull(false);
+	            
+	            /*CollectionSerializer colSerializer = new CollectionSerializer();
+	            colSerializer.setImmutable(true);
+	            colSerializer.setElementsCanBeNull(false);*/
+	            
 	            kryo.register(TermDictionary.class);
 	            kryo.register(HashSet.class);
-	            kryo.register(HashMap.class, serializer);
+	            kryo.register(HashMap.class, mapSerializer);
 	            //kryo.register(HashBiMap.class, serializer);
 	            kryo.register(HashBiMap.class, new MapSerializer() {
 	                @SuppressWarnings("rawtypes")
@@ -162,6 +167,33 @@ public class Utils {
 	    return parts;
 
 	}
+	
+	/**
+     * Split a string using indexOf and subsString, this is proved to be 
+     * faster than String.split and StringUtils.split
+     * @param strToSplit
+     * @param delimiter
+     * @return
+     */
+    public static Set<String> splitNoDuplicates(String strToSplit, char delimiter) {
+        
+        Set<String> parts = new HashSet<>();
+        int foundPosition;
+        int startIndex = 0;
+        String part;
+        while ((foundPosition = strToSplit.indexOf(delimiter, startIndex)) > -1) {
+            part = strToSplit.substring(startIndex, foundPosition);
+            if(part.length() > 0) {
+                parts.add(part);
+            }
+            startIndex = foundPosition + 1;
+        }
+        if(startIndex  < strToSplit.length()) {
+            parts.add(strToSplit.substring(startIndex));
+        }
+        return parts;
+
+    }
 	
 	/**
 	 * Get the likely uncompressed size of a Gziped file
