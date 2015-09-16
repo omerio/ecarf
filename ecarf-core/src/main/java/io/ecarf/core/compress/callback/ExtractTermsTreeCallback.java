@@ -48,6 +48,16 @@ public class ExtractTermsTreeCallback implements NTripleGzipCallback {
     private int literalCount;
     
     private int resourceCount;
+    
+    
+
+    /**
+     * 
+     */
+    public ExtractTermsTreeCallback() {
+        super();
+        this.root = new TermRoot();
+    }
 
     /* (non-Javadoc)
      * @see io.ecarf.core.compress.NTripleGzipCallback#process(org.semanticweb.yars.nx.Node[])
