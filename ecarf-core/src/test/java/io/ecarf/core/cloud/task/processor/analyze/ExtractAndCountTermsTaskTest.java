@@ -48,7 +48,7 @@ public class ExtractAndCountTermsTaskTest {
      */
     //@Test
     public void testRun() throws IOException {
-        ExtractAndCountTermsTaskOld task = new ExtractAndCountTermsTaskOld();
+        ExtractAndCountTermsTask1 task = new ExtractAndCountTermsTask1();
         task.setCloudService(service);
         task.setBucket("dbpedia1-work");
         task.setSourceBucket("dbpedia");

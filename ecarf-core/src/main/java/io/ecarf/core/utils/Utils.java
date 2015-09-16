@@ -21,6 +21,8 @@ package io.ecarf.core.utils;
 import io.cloudex.framework.cloud.api.ApiUtils;
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.term.TermDictionary;
+import io.ecarf.core.term.TermPart;
+import io.ecarf.core.term.TermRoot;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -56,6 +58,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -113,12 +116,15 @@ public class Utils {
 	            //MapSerializer serializer = new MapSerializer();
 	            kryo.register(TermDictionary.class);
 	            kryo.register(HashSet.class);
+	            kryo.register(HashMap.class);
 	            //kryo.register(HashBiMap.class, serializer);
 	            kryo.register(HashBiMap.class, new MapSerializer() {
 	                public Map create (Kryo kryo, Input input, Class<Map> type) {
 	                    return HashBiMap.create();
 	                }
 	            });
+	            kryo.register(TermRoot.class);
+	            kryo.register(TermPart.class);
 	            kryo.setRegistrationRequired(true);
 
 	            return kryo;

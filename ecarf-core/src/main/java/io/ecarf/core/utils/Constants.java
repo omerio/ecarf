@@ -45,9 +45,15 @@ public class Constants {
 	
 	public static final String DOT_JSON = ".json";
 	
+	// Java serialized file
 	public static final String DOT_SER = ".ser";
+	
+	// Kryo serialized file
+	public static final String DOT_KRYO = ".kryo";
 		
 	public static final String NODE_TERMS = "node_terms_";
+	
+	public static final String BLANK_NODES = "blank_nodes_";
 	
 	public static final String DOT_TERMS = ".terms";
 	

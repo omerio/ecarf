@@ -99,5 +99,101 @@ public class TermUtils {
 		}
 		return relevantTerms;
 	}
+	
+	/**
+	 * Check if the provided term is an RDF or OWL term
+	 * @param term
+	 * @return
+	 */
+	/*public static boolean isRdfOrOwlTerm(String term) {
+	    boolean rdfOrOwlTerm = false;
+	    
+	    for(String rdfOwl: SchemaURIType.RDF_OWL_TERMS) {
+	        if(TermUtils.equals(rdfOwl, term)) {
+	            rdfOrOwlTerm = true;
+	            break;
+	        }
+	    }
+	    return rdfOrOwlTerm;
+	}*/
+	
+	/**
+	 * From NXParser 
+     * Compares strings backwards... why? Cos it should be faster for URLs...
+     * 
+     * @param a
+     *            A string
+     * @param b
+     *            A string
+     * @return a = b ?
+     */
+    public static boolean equals(String a, String b) {
+        if (a == b) {
+            return true;
+        }
+
+        int n = a.length();
+        if (n == b.length()) {
+            while (--n >= 0) {
+                // faster cos it reads directly from the array
+                if (a.charAt(n) != b.charAt(n))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    /*public static void main(String[] args) {
+        Set<String> terms = Sets.newHashSet("<http://dblp.uni-trier.de/rec/bibtex/books/mk/WidomC96>",
+                "<http://lsdis.cs.uga.edu/projects/semdis/opus#cites>", 
+                "<http://dblp.uni-trier.de/rec/bibtex/conf/vldb/AgrawalCL91>", "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>");
+        
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        for(int i = 0; i < 10_000_000; i++) {
+            for(String term: terms) {
+                isRdfOrOwlTerm(term);
+            }
+        }
+        
+        System.out.println("Approach1 time: " + stopwatch);
+        stopwatch.reset();
+        stopwatch.start();
+        
+        for(int i = 0; i < 10_000_000; i++) {
+            for(String term: terms) {
+                SchemaURIType.RDF_OWL_TERMS.contains(term);
+            }
+        }
+        
+        System.out.println("Approach2 time: " + stopwatch);
+        
+    }
+*/
+    // public static void main(String args[]){
+    // System.err.println(equals("asd", "asd"));
+    // System.err.println(equals("asd", "asdf"));
+    // System.err.println(equals("bsd", "asd"));
+    //
+    // long b4 = System.currentTimeMillis();
+    // for(int i=0; i<10000000; i++){
+    // "http://google.com/asd/asd".equals("http://google.com/asd/asd");
+    // "http://google.com/asd/asd".equals("http://google.com/asd/asdf");
+    // "http://google.com/asd/bsd".equals("http://google.com/asd/csd");
+    // "http://google.com/asd/csd".equals("http://google.com/asd/dsd");
+    // }
+    //
+    // System.err.println(System.currentTimeMillis()-b4);
+    // b4 = System.currentTimeMillis();
+    // for(int i=0; i<10000000; i++){
+    // equals("http://google.com/asd/asd", "http://google.com/asd/asd");
+    // equals("http://google.com/asd/asd", "http://google.com/asd/asdf");
+    // equals("http://google.com/asd/bsd", "http://google.com/asd/csd");
+    // equals("http://google.com/asd/csd", "http://google.com/asd/dsd");
+    // }
+    //
+    // System.err.println(System.currentTimeMillis()-b4);
+    // }
 
 }

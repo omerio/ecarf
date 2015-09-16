@@ -20,22 +20,38 @@ package io.ecarf.core.cloud.task;
 
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
+import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
+import io.ecarf.core.term.TermPart;
+import io.ecarf.core.term.TermRoot;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.semanticweb.yars.nx.BNode;
+import org.semanticweb.yars.nx.Literal;
+import org.semanticweb.yars.nx.Node;
 
 import com.google.common.base.Stopwatch;
 
@@ -79,23 +95,147 @@ public class ProcessLoadTaskTest {
         task.setSchemaTermsFile("schema_terms.json");
         task.run();*/
     }
+    
+    private static void testExtratCommonURIs() throws IOException {
+        //String filename = "/Users/omerio/Ontologies/swetodblp_2008_1.nt.gz";
+        String filename = "/Users/omerio/Ontologies/dbpedia/page_ids_en.nt.gz";
+        String termsFile = "/Users/omerio/SkyDrive/PhD/Experiments/phase2/05_09_2015_SwetoDblp_2n/schema_terms.txt";
 
-    /**
-     * 
-     * @param args
-     * @throws IOException 
-     * @throws ClassNotFoundException 
-     */
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        Set<String> schemaTerms = FileUtils.jsonFileToSet(termsFile);
+        TermCounter counter = new TermCounter();
+        counter.setTermsToCount(schemaTerms);
+        
+        //final Map<String, Integer> uris = new TreeMap<>();
+        final Set<String> resources = new HashSet<>();
+        final TermRoot root = new TermRoot();
+        final Set<String> blankNodes = new HashSet<>();
+        final Map<String, Object> results = new HashMap<>();
+        results.put("literalCount", 0);
+        results.put("resources", 0);
+        //final Set<String> schemaURIs = new HashSet<>();
+        
+       // final Set<String> schemaURIParts = Sets.newHashSet("http://www.w3.org/1999/02", "http://www.w3.org/2000/01", "http://www.w3.org/2002/07", "http://www.w3.org/TR");
 
-        /*try(Scanner reader = new Scanner(System.in);) {
-	        System.out.println("Attache profiler then presss any key to continue");
-	        reader.next();
-	    }
-	    System.out.println("Processing Data");*/
-        //System.out.println(GzipUtils.getUncompressedFilename("/blah/blah/myfile.json.gz"));
+        NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
+        NTripleGzipCallback callback = new NTripleGzipCallback() {
+
+            private TermCounter counter;
+            
+
+            @Override
+            public void setOutput(Appendable out) throws IOException {                
+            }
+
+            @Override
+            public String process(Node[] nodes) throws IOException {
+                
+                String term;
+
+                for (int i = 0; i < nodes.length; i++)  {
+                    
+                    // we are not going to unscape literals, these can contain new line and 
+                    // unscaping those will slow down the bigquery load, unless offcourse we use JSON
+                    // instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
+                    if((i == 2) && (nodes[i] instanceof Literal)) {
+
+                        Integer literalCount = (Integer) results.get("literalCount");
+                        results.put("literalCount", literalCount + 1);
+                        
+                        
+                    } else {
+                        
+                        //TODO if we are creating a dictionary why unscape this term anyway?
+                        //term = NxUtil.unescape(nodes[i].toN3());
+                        term = nodes[i].toN3();
+
+                        if(nodes[i] instanceof BNode) {
+                            blankNodes.add(term);
+
+                        } else {
+                                                        
+                            root.addTerm(term);
+                            //resources.add(term);
+
+                        }
+                        
+                        if(counter != null) {
+                            counter.count(term);
+                        }
+                    }
+                }
+   
+                return null;
+            }
+
+            @Override
+            public void setCounter(TermCounter counter) {   
+                this.counter = counter;
+            }
+            
+        };
+        
+        callback.setCounter(counter);
+        processor.read(callback);
+        
+        
+        /*for(Entry<String, Integer> uri: uris.entrySet()) {
+            if(uri.getValue() > 10) {
+                System.out.println(uri.getKey() + " --------- " + uri.getValue());
+            }
+        }*/
+        
+        try(PrintWriter writer = new PrintWriter(new FileOutputStream(Utils.TEMP_FOLDER + "term_root1.txt"))) {
+            System.out.println("Unique hostnames found in the datasets = " + root.size());
+            for(TermPart part: root.values()) {
+                writer.println("+ " + part.getTerm() + " ------- " + part.size());
+                print(part, false, new StringBuilder("  "), writer);
+            }
+            System.out.println("Number of blank nodes found: " + blankNodes.size());
+            System.out.println("Number resources found: " + resources.size());
+
+            System.out.println("First 10 shortened resources: ");
+            int i = 0;
+
+            for(String resource: resources) {
+
+                i++;
+                System.out.println(resource);
+                if(i == 10) {
+                    break;
+                }
+            }
+        }
+        
+        //System.out.println("TermRoot: " + root);
+        
+        Utils.objectToFile(Utils.TEMP_FOLDER + "term_root1.kryo.gz", root, true, false);
+        
+        
+    }
+    
+    private static void print(TermPart part, boolean printCurrent, StringBuilder indent, PrintWriter writer) {
+        
+        indent = new StringBuilder(indent.toString());
+        
+        if(part.hasChildren()) {
+            if(printCurrent) {
+                writer.println(indent.toString() + part.getTerm() + " ------- " + part.size());
+            }
+
+            indent.append("  ");
+            
+            for(TermPart child: part.values()) {
+                print(child, true, indent, writer);
+            }
+            
+        } else if(printCurrent){
+            writer.println(indent.toString() + part.getTerm());
+        }
+    }
+    
+    private static void testDictionary() throws IOException, ClassNotFoundException {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        String filename = "/Users/omerio/Ontologies/swetodblp_2008_8.nt.gz";
+        String filename = "/Users/omerio/Ontologies/dbpedia/instance_types_en.nt.gz";//"/Users/omerio/Ontologies/swetodblp_2008_8.nt.gz";
         String termsFile = "/Users/omerio/SkyDrive/PhD/Experiments/phase2/05_09_2015_SwetoDblp_2n/schema_terms.txt";
 
         Set<String> schemaTerms = FileUtils.jsonFileToSet(termsFile);
@@ -167,10 +307,91 @@ public class ProcessLoadTaskTest {
         id = dictionary.encode(term);
         System.out.println(id);
         
-        //System.out.println("Processed file and dictionary in: " + stopwatch);
+    }
+
+    /**
+     * 
+     * @param args
+     * @throws IOException 
+     * @throws ClassNotFoundException 
+     */
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+
+        //testDictionary();
+        //"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+        System.out.println("Starting");
+        testExtratCommonURIs();
+        //String term = "<http://en.wikisource.org/>";
+        //String term = "<http://en.wikisource.org/w/index.php?title=User:Tim_Starling/ScanSet_TIFF_demo&vol=02&page=EB2A196>";
+        /*String term = "<http://a/d>";
         
+        String path = term.substring(1, term.length() - 1);
+        String uri = StringUtils.substringBeforeLast(path, "/");
+
+        System.out.println(uri);
+        if(uri.length() > 7 && uri.length() + 1 < path.length()) {
+
+            System.out.println(StringUtils.remove(path, uri + "/"));
+        }*/
         
+        /*
+        StringBuilder sb = new StringBuilder();
+        for (int i = 100000; i < 100000 + 60; i++)
+            sb.append(i).append(' ');
+        String sample = sb.toString();
+
+        int runs = 100000;
+        for (int i = 0; i < 5; i++) {
+            {
+                long start = System.nanoTime();
+                for (int r = 0; r < runs; r++) {
+                    StringTokenizer st = new StringTokenizer(sample);
+                    List<String> list = new ArrayList<String>();
+                    while (st.hasMoreTokens())
+                        list.add(st.nextToken());
+                }
+                long time = System.nanoTime() - start;
+                System.out.printf("StringTokenizer took an average of %.1f us%n", time / runs / 1000.0);
+            }
+            {
+                long start = System.nanoTime();
+                Pattern spacePattern = Pattern.compile(" ");
+                for (int r = 0; r < runs; r++) {
+                    List<String> list = Arrays.asList(sample.split(" "));
+                }
+                long time = System.nanoTime() - start;
+                System.out.printf("String.split took an average of %.1f us%n", time / runs / 1000.0);
+            }
+            {
+                long start = System.nanoTime();
+                for (int r = 0; r < runs; r++) {
+                    List<String> list = new ArrayList<String>();
+                    int pos = 0, end;
+                    while ((end = sample.indexOf(' ', pos)) >= 0) {
+                        list.add(sample.substring(pos, end));
+                        pos = end + 1;
+                    }
+                }
+                long time = System.nanoTime() - start;
+                System.out.printf("indexOf loop took an average of %.1f us%n", time / runs / 1000.0);
+            }
+            
+            {
+                long start = System.nanoTime();
+                
+                for (int r = 0; r < runs; r++) {
+                    List<String> list = Arrays.asList(StringUtils.split(sample, " "));
+                }
+                long time = System.nanoTime() - start;
+                System.out.printf("StringUtils.split took an average of %.1f us%n", time / runs / 1000.0);
+            }
+            
+            System.out.println("-----------------------------------------------");
+         }
+         */
 
     }
+    
+    
 
 }

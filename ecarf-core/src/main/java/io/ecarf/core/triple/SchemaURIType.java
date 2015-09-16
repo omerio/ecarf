@@ -21,7 +21,7 @@ public enum SchemaURIType {
 	
 	RDF_TYPE("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>", false, true, true, false, 0),
 	RDF_PROPERTY("<http://www.w3.org/1999/02/22-rdf-syntax-ns#Property>", false, true, true, false, 1),
-	RDF_SEQ("http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq>", false, false, true, false, 2),
+	RDF_SEQ("<http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq>", false, false, true, false, 2),
 	RDF_NIL("<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>", false, false, true, false, 3),
     RDF_LIST("<http://www.w3.org/1999/02/22-rdf-syntax-ns#List>", false, false, true, false, 4),
     RDF_FIRST("<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>", false, false, true, false, 5),
@@ -38,8 +38,8 @@ public enum SchemaURIType {
 	RDFS_CLASS("<http://www.w3.org/2000/01/rdf-schema#Class>", false, false, true, false, 15),
 	RDFS_RESOURCE("<http://www.w3.org/2000/01/rdf-schema#Resource>", false, false, true, false, 16),
 	
-	RDFS_LABEL("http://www.w3.org/2000/01/rdf-schema#label", false, false, true, false, 17),
-	RDFS_COMMENT("http://www.w3.org/2000/01/rdf-schema#comment", false, false, true, false, 18),
+	RDFS_LABEL("<http://www.w3.org/2000/01/rdf-schema#label>", false, false, true, false, 17),
+	RDFS_COMMENT("<http://www.w3.org/2000/01/rdf-schema#comment>", false, false, true, false, 18),
 	
 	OWL_CLASS("<http://www.w3.org/2002/07/owl#Class>", false, false, false, true, 19),
 	OWL_FUNCTIONAL_PROPERTY("<http://www.w3.org/2002/07/owl#FunctionalProperty>", false, false, false, true, 20),
@@ -57,20 +57,24 @@ public enum SchemaURIType {
 	OWL_NAMED_INDIVIDUAL("<http://www.w3.org/2002/07/owl#NamedIndividual>", false, false, false, true, 32),
 	
 	// TODO review the OWL & OWL2 URIs
-	OWL_DATA_PROPERTY("http://www.w3.org/2002/07/owl#DatatypeProperty", false, false, false, true, 33),
-	OWL_OBJECT_PROPERTY("http://www.w3.org/2002/07/owl#ObjectProperty", false, false, false, true, 34),
+	OWL_DATA_PROPERTY("<http://www.w3.org/2002/07/owl#DatatypeProperty>", false, false, false, true, 33),
+	OWL_OBJECT_PROPERTY("<http://www.w3.org/2002/07/owl#ObjectProperty>", false, false, false, true, 34),
+	OWL_THING("<http://www.w3.org/2002/07/owl#Thing>", false, false, false, true, 35),
 	
-	OWL_ONTOLOGY("<http://www.w3.org/2002/07/owl#Ontology>", false, false, false, true, 35),
-	OWL_VERSION_INFO("http://www.w3.org/2002/07/owl#versionInfo", false, false, false, true, 36),
+	OWL_ONTOLOGY("<http://www.w3.org/2002/07/owl#Ontology>", false, false, false, true, 36),
+	OWL_VERSION_INFO("<http://www.w3.org/2002/07/owl#versionInfo>", false, false, false, true, 37),
 	
-	OWL2_PROPERTY_CHAIN_AXIOM("<http://www.w3.org/2002/07/owl#propertyChainAxiom>", false, false, false, true, 37),
-    OWL2_HAS_KEY("<http://www.w3.org/2002/07/owl#hasKey>", false, false, false, true, 38),
+	OWL2_PROPERTY_CHAIN_AXIOM("<http://www.w3.org/2002/07/owl#propertyChainAxiom>", false, false, false, true, 38),
+    OWL2_HAS_KEY("<http://www.w3.org/2002/07/owl#hasKey>", false, false, false, true, 39),
 	
 	// XML Schema 
-	XML_STRING("http://www.w3.org/2001/XMLSchema#string", false, false, false, false, 39),
-	XML_MONTH("http://www.w3.org/2001/XMLSchema#gMonth", false, false, false, false, 40),
-	XML_YEAR("http://www.w3.org/2001/XMLSchema#gYear", false, false, false, false, 41),
+	XML_STRING("<http://www.w3.org/2001/XMLSchema#string>", false, false, false, false, 40),
+	XML_MONTH("<http://www.w3.org/2001/XMLSchema#gMonth>", false, false, false, false, 41),
+	XML_YEAR("<http://www.w3.org/2001/XMLSchema#gYear>", false, false, false, false, 42),
 	;
+	
+	public static final String LIST_EXPANSION_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
+	public static final String W3_DOMAIN = "www.w3.org";
 	
 	public final String uri;
 	

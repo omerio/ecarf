@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.base.Stopwatch;
 
 /**
+ * A single thread version that extract and count all the terms using one thread at a time
  * @author Omer Dawelbeit (omerio)
  *
  */

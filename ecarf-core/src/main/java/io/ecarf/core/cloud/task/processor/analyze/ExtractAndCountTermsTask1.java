@@ -34,13 +34,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * A multi-threaded version that extract and counts all the terms using executor service
+ * Terms are extracted into a hashset which is then saved to a file
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ExtractAndCountTermsTaskOld extends ProcessLoadTask {
+public class ExtractAndCountTermsTask1 extends ProcessLoadTask {
 
 
-    private final static Log log = LogFactory.getLog(ExtractAndCountTermsTaskOld.class);
+    private final static Log log = LogFactory.getLog(ExtractAndCountTermsTask1.class);
 
     //private Set<String> allTerms = new HashSet<String>();
     
