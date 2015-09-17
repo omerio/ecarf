@@ -23,6 +23,7 @@ package io.ecarf.core.term;
 import io.cloudex.framework.utils.ObjectUtils;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.BiMapJsonDeserializer;
+import io.ecarf.core.utils.NumberUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.FileNotFoundException;
@@ -30,8 +31,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,53 +66,149 @@ public class TermDictionary implements Serializable {
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(BiMap.class,  new BiMapJsonDeserializer())
             .create(); 
+
+    public static final int RESOURCE_ID_INVALID = 100;
+    public static final String INVALID_RESOURCE = "<invalid>";
     
     /**
-     * Resources start at 100, leaving 0 to 99 to be assigned to RDF, RDFS, OWL & OWL2 URIs
+     * Resources start at 101, leaving 0 to 99 to be assigned to RDF, RDFS, OWL & OWL2 URIs
      */
-    public static final int RESOURCE_ID_START = 100;
-    
-    /**
-     * The first prime that is larger than 100 to be used for Blank Nodes
-     */
-    public static final int BLANK_NODE_ID_START = 101;
-    
+    public static final int RESOURCE_ID_START = 101;
+     
     private int largestResourceId = RESOURCE_ID_START;
     
-    private int largestBlankNodeId = BLANK_NODE_ID_START;
-    
+    /**
+     * The default number of bits used to store information about the parts of an encoded dictionary entry
+     * 0, to specify a blank node, 1 to n to specify n number of parts
+     */
+    private int infoBits = 8;
+      
     /**
      * We use a Guava BiMap to provide an inverse lookup into the dictionary Map
      * to be able to lookup terms by id. I'm assuming key lookups in both directions is O(1)
      * @see http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/BiMap.html
      */
-    private BiMap<String, Integer> dictionary = HashBiMap.create();;
+    private BiMap<String, Integer> dictionary = HashBiMap.create();
     
     /**
-     * Encode a resource
+     * Encode a term in the format <http://dbpedia.org/resource/Alexander_II_of_Russia>
      * @param term
      * @return
      */
-    public Integer encode(String term) {
-        return this.dictionary.get(term);
+    public long encode(String term) {
+        
+        long value = 0;
+        
+        if(SchemaURIType.RDF_OWL_TERMS.contains(term)) {
+            
+            value = this.dictionary.get(term);
+            
+        } else {
+            
+            // TODO why I'm using this code here instead of TermUtils.split?
+            // because I need to efficiently check for https
+            String url = term.substring(1, term.length() - 1);
+            String path = StringUtils.removeStart(url, TermUtils.HTTP);
+            boolean https = false;
+            
+            if(path.length() == url.length()) {
+                path = StringUtils.removeStart(path, TermUtils.HTTPS);
+                https = true;
+            }
+            
+            //String [] parts = StringUtils.split(path, URI_SEP);
+            // this is alot faster than String.split or StringUtils.split
+            List<String> parts = Utils.split(path, TermUtils.URI_SEP);
+            
+            if(!parts.isEmpty()) {
+                
+                // 1- encode parts
+                long[] values = new long[parts.size()];
+                int index = 0;
+                Integer enc;
+                for(String part: parts) {
+                    enc = this.dictionary.get(part);
+                    if(enc == null) {
+                        throw new IllegalArgumentException("Term part not found in the dictionary: " + part);
+                    }
+                    
+                    values[index] = enc;
+                    index++;
+                }
+                
+                // 2- compose
+                value = NumberUtils.joinWithInfo(infoBits, values);
+                
+                // 3- add http/s flag bit
+                value <<= 1;
+                
+                if(https) {
+                     value += 1;
+                }
+            
+            } else {
+                // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
+                value = RESOURCE_ID_INVALID;
+            }
+        }
+        
+        return value;
     }
     
     /**
-     * Inverse lookup by Id
-     * @param id
+     * Decode the value provided into a term
+     * @param value
      * @return
      */
-    public String decode(Integer id) {
-        return this.dictionary.inverse().get(id);
+    public String decode(long value) {
+        
+        String term = null;
+        
+        if(value <= RESOURCE_ID_INVALID) {
+            
+            if(value == RESOURCE_ID_INVALID) {
+                term = INVALID_RESOURCE;
+                
+            } else {
+                term = this.dictionary.inverse().get(value);
+            }
+            
+        } else {
+            
+            // 1- extract http/s flag bit
+            String protocol = ((value & 1) == 1) ? TermUtils.HTTPS : TermUtils.HTTP;
+            
+            // remove the http/s flag
+            value >>= 1;
+            
+            // 2- decompose
+            long [] values = NumberUtils.disjoinWithInfo(infoBits, value);
+            
+            // 3- decode parts
+            List<String> parts = new ArrayList<>();
+            for(long partv: values) {
+                parts.add(this.dictionary.inverse().get(partv));
+            }
+            
+            // 4- add http or https and <>
+            term = StringUtils.join(parts, TermUtils.URI_SEP);
+            
+            term = (new StringBuilder('<')).append(protocol).append(term).append('>').toString();
+        }
+        
+        
+        return term;
     }
-    
+        
     /**
-     * add a resource to the dictionar
-     * @param term
+     * add a part to the dictionary (part of a URI or a blank node)
+     * @param part
      */
-    public void add(String term) {
-        this.largestResourceId++;
-        this.dictionary.put(term, this.largestResourceId);
+    public void add(String part) {
+        if(!this.dictionary.containsKey(part)) {
+            this.largestResourceId++;
+            this.dictionary.put(part, this.largestResourceId);
+        }
     }
     
     /**
@@ -117,7 +216,7 @@ public class TermDictionary implements Serializable {
      * @param term
      * @param id
      */
-    public void add(String term, Integer id) {
+    private void add(String term, Integer id) {
         if(this.largestResourceId < id) {
             this.largestResourceId = id;
         }
@@ -155,7 +254,45 @@ public class TermDictionary implements Serializable {
         return dictionary;
     }
     
+    //-------------------------------------------------------- Binary Serialization 
+    /**
+     * Serialize this dictionary to a binary file, optionally compressed
+     * @param filename
+     * @param compress
+     * @throws IOException
+     */
+    public String toFile(String filename, boolean compress) throws IOException {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        
+        Utils.objectToFile(filename, this, compress, false);
+                
+        log.debug("TIMER# serialized dictionary to file: " + filename + ", in: " + stopwatch);
+        
+        return filename;
+    }
     
+    /**
+     * De-serialize a TermDictionary instance from a binary file.
+     * @param jsonFile - a file path
+     * @return a TermDictionary instance
+     * @throws FileNotFoundException if the file is not found
+     * @throws IOException if the io operation fails
+     * @throws ClassNotFoundException 
+     */
+    public static TermDictionary fromFile(String file, boolean compressed) 
+            throws FileNotFoundException, IOException, ClassNotFoundException {
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+
+        TermDictionary dictionary = Utils.objectFromFile(file, TermDictionary.class, compressed, false);
+
+        log.debug("TIMER# deserialized dictionary from file: " + file + ", in: " + stopwatch);
+
+        return dictionary;
+
+    }
+    
+  //-------------------------------------------------------- JSON Serialization 
     /**
      * Convert to JSON
      * @return json representation of this object.
@@ -198,28 +335,7 @@ public class TermDictionary implements Serializable {
             return dictionary;
         }
     }
-    
-    /**
-     * De-serialize a TermDictionary instance from a binary file.
-     * @param jsonFile - a file path
-     * @return a TermDictionary instance
-     * @throws FileNotFoundException if the file is not found
-     * @throws IOException if the io operation fails
-     * @throws ClassNotFoundException 
-     */
-    public static TermDictionary fromFile(String file, boolean compressed) 
-            throws FileNotFoundException, IOException, ClassNotFoundException {
-        
-        Stopwatch stopwatch = Stopwatch.createStarted();
 
-        TermDictionary dictionary = Utils.objectFromFile(file, TermDictionary.class, compressed);
-
-        log.debug("TIMER# deserialized dictionary from file: " + file + ", in: " + stopwatch);
-
-        return dictionary;
-
-    }
-    
     /**
      * Serialize this dictionary to a json file, optionally compressed
      * @param filename
@@ -240,26 +356,6 @@ public class TermDictionary implements Serializable {
     }
     
     /**
-     * Serialize this dictionary to a binary file, optionally compressed
-     * @param filename
-     * @param compress
-     * @throws IOException
-     */
-    public String toFile(String filename, boolean compress) throws IOException {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        
-        if(compress) {
-            filename = GzipUtils.getCompressedFilename(filename);
-        }
-        
-        Utils.objectToFile(filename, this, compress);
-                
-        log.debug("TIMER# serialized dictionary to file: " + filename + ", in: " + stopwatch);
-        
-        return filename;
-    }
-
-    /**
      * De-serialize a TermDictionary instance from a json string.
      * @param json - a json string
      * @return a TermDictionary instance
@@ -274,13 +370,6 @@ public class TermDictionary implements Serializable {
     public int getLargestResourceId() {
         return largestResourceId;
     }
-
-    /**
-     * @return the largestBlankNodeId
-     */
-    public int getLargestBlankNodeId() {
-        return largestBlankNodeId;
-    }
     
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
@@ -288,10 +377,23 @@ public class TermDictionary implements Serializable {
     @Override
     public String toString() {
         return new ToStringBuilder(this).
-                append("largestBlankNodeId", this.largestBlankNodeId).
                 append("largestResourceId", this.largestResourceId).
                 append("size", this.dictionary.size()).
                 toString();
+    }
+
+    /**
+     * @return the infoBits
+     */
+    public int getInfoBits() {
+        return infoBits;
+    }
+
+    /**
+     * @param infoBits the infoBits to set
+     */
+    public void setInfoBits(int infoBits) {
+        this.infoBits = infoBits;
     }
 
 }

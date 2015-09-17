@@ -42,10 +42,6 @@ public class TermRoot implements Serializable {
     
     private Map<String, TermPart> terms = new HashMap<>();
     
-    public static final String HTTP = "http://";
-    public static final String HTTPS = "https://";
-    public static final char URI_SEP = '/';
-    
     /**
      * Break down and add a term to this TermRoot
      * <http://dblp.uni-trier.de/rec/bibtex/books/mk/WidomC96>
@@ -56,15 +52,15 @@ public class TermRoot implements Serializable {
         if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
             
             String url = term.substring(1, term.length() - 1);
-            String path = StringUtils.removeStart(url, HTTP);
+            String path = StringUtils.removeStart(url, TermUtils.HTTP);
             
             if(path.length() == url.length()) {
-                path = StringUtils.removeStart(path, HTTPS);
+                path = StringUtils.removeStart(path, TermUtils.HTTPS);
             }
             
             //String [] parts = StringUtils.split(path, URI_SEP);
             // this is alot faster than String.split or StringUtils.split
-            List<String> parts = Utils.split(path, URI_SEP);
+            List<String> parts = Utils.split(path, TermUtils.URI_SEP);
             
             // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
             if(!parts.isEmpty()) {

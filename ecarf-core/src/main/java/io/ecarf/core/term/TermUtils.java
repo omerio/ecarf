@@ -19,14 +19,17 @@
 package io.ecarf.core.term;
 
 import io.ecarf.core.triple.SchemaURIType;
+import io.ecarf.core.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mortbay.log.Log;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -39,6 +42,11 @@ import com.google.common.collect.Sets;
  *
  */
 public class TermUtils {
+    
+    public static final String HTTP = "http://";
+    public static final String HTTPS = "https://";
+    public static final char URI_SEP = '/';
+    
 
 	/**
 	 * All the schema terms we care about in this version of the implementation
@@ -98,6 +106,25 @@ public class TermUtils {
 			}
 		}
 		return relevantTerms;
+	}
+	
+	/**
+	 * Split a term into parts
+	 * @param term
+	 * @return
+	 */
+	public static List<String> split(String term) {
+	    String url = term.substring(1, term.length() - 1);
+        String path = StringUtils.removeStart(url, HTTP);
+        
+        
+        if(path.length() == url.length()) {
+            path = StringUtils.removeStart(path, HTTPS);
+        }
+        
+        //String [] parts = StringUtils.split(path, URI_SEP);
+        // this is alot faster than String.split or StringUtils.split
+        return Utils.split(path, URI_SEP);
 	}
 	
 	/**

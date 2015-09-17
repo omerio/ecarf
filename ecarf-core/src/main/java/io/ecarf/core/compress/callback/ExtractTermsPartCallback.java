@@ -21,16 +21,14 @@ package io.ecarf.core.compress.callback;
 
 import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.term.TermCounter;
-import io.ecarf.core.term.TermRoot;
+import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
-import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
@@ -80,16 +78,7 @@ public class ExtractTermsPartCallback implements NTripleGzipCallback {
                     
                     if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
                         
-                        String url = term.substring(1, term.length() - 1);
-                        String path = StringUtils.removeStart(url, TermRoot.HTTP);
-                        
-                        if(path.length() == url.length()) {
-                            path = StringUtils.removeStart(path, TermRoot.HTTPS);
-                        }
-                        
-                        //String [] parts = StringUtils.split(path, URI_SEP);
-                        // this is alot faster than String.split or StringUtils.split
-                        List<String> parts = Utils.split(path, TermRoot.URI_SEP);
+                        List<String> parts = TermUtils.split(term);
                         
                         // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
                         if(!parts.isEmpty()) {

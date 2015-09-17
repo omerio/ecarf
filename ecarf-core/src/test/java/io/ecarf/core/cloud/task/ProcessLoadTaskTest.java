@@ -27,6 +27,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.term.TermPart;
 import io.ecarf.core.term.TermRoot;
+import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.TestUtils;
@@ -35,18 +36,12 @@ import io.ecarf.core.utils.Utils;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -115,6 +110,7 @@ public class ProcessLoadTaskTest {
         final Map<String, Object> results = new HashMap<>();
         results.put("literalCount", 0);
         results.put("resources", 0);
+        results.put("maxParts", 0);
         //final Set<String> schemaURIs = new HashSet<>();
         
        // final Set<String> schemaURIParts = Sets.newHashSet("http://www.w3.org/1999/02", "http://www.w3.org/2000/01", "http://www.w3.org/2002/07", "http://www.w3.org/TR");
@@ -124,6 +120,7 @@ public class ProcessLoadTaskTest {
 
             private TermCounter counter;
             
+            private int maxParts;
 
             @Override
             public void setOutput(Appendable out) throws IOException {                
@@ -165,16 +162,7 @@ public class ProcessLoadTaskTest {
                             
                             if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
                                 
-                                String url = term.substring(1, term.length() - 1);
-                                String path = StringUtils.removeStart(url, TermRoot.HTTP);
-                                
-                                if(path.length() == url.length()) {
-                                    path = StringUtils.removeStart(path, TermRoot.HTTPS);
-                                }
-                                
-                                //String [] parts = StringUtils.split(path, URI_SEP);
-                                // this is alot faster than String.split or StringUtils.split
-                               Set<String> parts = Utils.splitNoDuplicates(path, TermRoot.URI_SEP);
+                               List<String> parts = TermUtils.split(term);
                                // String [] parts = StringUtils.split(path, TermRoot.URI_SEP);
                                 
                                 // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
@@ -183,6 +171,12 @@ public class ProcessLoadTaskTest {
                                 }*/
                                 if(!parts.isEmpty()) {
                                     resources.addAll(parts);
+                                }
+                                
+                                if(this.maxParts < parts.size()) {
+                                    this.maxParts = parts.size();
+                                    results.put("maxParts", this.maxParts);
+                                    System.out.println(term);
                                 }
                             }
 
@@ -222,6 +216,7 @@ public class ProcessLoadTaskTest {
             }
         }
         
+        System.out.println("Maximum number of URI parts: " + results.get("maxParts"));
         System.out.println("Number of blank nodes found: " + blankNodes.size());
         System.out.println("Number of unique resources parts found: " + resources.size());
 
@@ -306,7 +301,7 @@ public class ProcessLoadTaskTest {
         // --- json
         
         // ---  object serialization
-        Stopwatch stopwatch1 = Stopwatch.createStarted();
+        /*Stopwatch stopwatch1 = Stopwatch.createStarted();
         String compressedFile = dictionary.toFile(dicFile1, true);
         System.out.println("(Java) Dictionary file saved to: " + compressedFile + ", timer: " + stopwatch1);
         Integer id = dictionary.encode(term);
@@ -336,7 +331,7 @@ public class ProcessLoadTaskTest {
         dictionary = Utils.objectFromFile(dicFile1, TermDictionary.class, true, false);
         System.out.println("(Kryo) Dictionary loaded from file, timer: " + stopwatch1);
         id = dictionary.encode(term);
-        System.out.println(id);
+        System.out.println(id);*/
         
     }
 
