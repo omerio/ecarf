@@ -61,6 +61,7 @@ public class ExtractCountTermsPartSubTask implements Callable<TermCounter> {
 
             log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
 
+            Stopwatch stopwatch1 = Stopwatch.createStarted();
             NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
             ExtractTermsPartCallback callback = new ExtractTermsPartCallback();
             callback.setCounter(counter);
@@ -69,13 +70,14 @@ public class ExtractCountTermsPartSubTask implements Callable<TermCounter> {
             Set<String> blankNodes = callback.getBlankNodes();
             Set<String> resources = callback.getResources();
 
+            stopwatch1.stop();
             // once the processing is done then delete the local file
             //FileUtils.deleteFile(localFile);
 
-            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
-            log.info("Number of resource URIs unique parts: " + resources.size());
-            log.info("Number of blank nodes: " + callback.getBlankNodes().size());
-            log.info("Number of literals: " + callback.getLiteralCount());
+            log.info("TIMER# Finished processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", info: " + file + "," + stopwatch1);
+            log.info("Number of resource URIs unique parts: " + file + "," + resources.size());
+            log.info("Number of blank nodes: " + file + "," + callback.getBlankNodes().size());
+            log.info("Number of literals: " + file + "," + callback.getLiteralCount());
             
             callback = null;
             processor = null;

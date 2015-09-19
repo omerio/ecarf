@@ -36,12 +36,14 @@ import io.ecarf.core.utils.Utils;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -94,6 +96,11 @@ public class ProcessLoadTaskTest {
     }
     
     private static void testExtratCommonURIs() throws IOException {
+        
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        
+        System.out.println("Starting file processing");
+        
         //String filename = "/Users/omerio/Ontologies/swetodblp_2008_1.nt.gz";
         //String filename = "/Users/omerio/Ontologies/dbpedia/page_ids_en.nt.gz";
         String filename = "/Users/omerio/Ontologies/dbpedia/external_links_en.nt.gz";
@@ -105,7 +112,7 @@ public class ProcessLoadTaskTest {
         
         //final Map<String, Integer> uris = new TreeMap<>();
         final Set<String> resources = new HashSet<>();
-        final TermRoot root = new TermRoot();
+        //final TermRoot root = new TermRoot();
         final Set<String> blankNodes = new HashSet<>();
         final Map<String, Object> results = new HashMap<>();
         results.put("literalCount", 0);
@@ -162,7 +169,7 @@ public class ProcessLoadTaskTest {
                             
                             if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
                                 
-                               List<String> parts = TermUtils.split(term);
+                               List<String> parts = TermUtils.splitIntoTwo(term);//TermUtils.split(term);
                                // String [] parts = StringUtils.split(path, TermRoot.URI_SEP);
                                 
                                 // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
@@ -173,11 +180,11 @@ public class ProcessLoadTaskTest {
                                     resources.addAll(parts);
                                 }
                                 
-                                if(this.maxParts < parts.size()) {
+                                /*if(this.maxParts < parts.size()) {
                                     this.maxParts = parts.size();
                                     results.put("maxParts", this.maxParts);
                                     System.out.println(term);
-                                }
+                                }*/
                             }
 
                         }
@@ -208,13 +215,15 @@ public class ProcessLoadTaskTest {
             }
         }*/
         
-        try(PrintWriter writer = new PrintWriter(new FileOutputStream(Utils.TEMP_FOLDER + "term_root2.txt"))) {
+        System.out.println("Processing completed in, " + stopwatch);
+        
+        /*try(PrintWriter writer = new PrintWriter(new FileOutputStream(Utils.TEMP_FOLDER + "term_root3.txt"))) {
             System.out.println("Unique hostnames found in the datasets = " + root.size());
             for(TermPart part: root.values()) {
                 writer.println("+ " + part.getTerm() + " ------- " + part.size());
                 print(part, false, new StringBuilder("  "), writer);
             }
-        }
+        }*/
         
         System.out.println("Maximum number of URI parts: " + results.get("maxParts"));
         System.out.println("Number of blank nodes found: " + blankNodes.size());
@@ -234,7 +243,7 @@ public class ProcessLoadTaskTest {
         
         //System.out.println("TermRoot: " + root);
         
-        Utils.objectToFile(Utils.TEMP_FOLDER + "term_root2.kryo.gz", resources, true, false);
+        Utils.objectToFile(Utils.TEMP_FOLDER + "term_root3.kryo.gz", resources, true, false);
         
         
     }
@@ -334,6 +343,8 @@ public class ProcessLoadTaskTest {
         System.out.println(id);*/
         
     }
+    
+    
 
     /**
      * 
@@ -355,7 +366,31 @@ public class ProcessLoadTaskTest {
         System.out.println(root.size());
         */
         
-        testExtratCommonURIs();
+        String [] uris = new String [] {
+                "<http://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1&Sect2=HITOFF&d=PALL&p=1&u=/netahtml/PTO/srchnum.htm&r=1&f=G&l=50&s1=6348648.PN.&OS=PN/6348648&RS=PN/6348648/>",
+                "<http://www.honda.lv/>", "<http://gmail.com>", "<http://gmail.com:8080/Test?id=test>",
+                "<http://web.archive.org/web/20051031200142/http:/www.mkaz.com/ebeab/history/>",
+                "<http://web.archive.org/web/20051031200142/?http:/www.mkaz.com/ebeab/history/>",
+                "<http://web.archive.org/web/20051031200142/http:/www.mkaz.com?id=ebeab/history/>",
+                "<http://www.hel.fi/wps/portal/Helsinki_en/?WCM_GLOBAL_CONTEXT=/en/Helsinki/>", 
+                "<http://dbpedia.org/resource/Team_handball>",
+                "<http://dbpedia.org/ontology/wikiPageExternalLink>",
+                "<http://www.nfsa.gov.au/blog/2012/09/28/tasmanian-time-capsule/>",
+                "<http://www.whereis.com/whereis/mapping/renderMapAddress.do?name=&streetNumber=&street=City%20Center&streetType=&suburb=Hobart&state=Tasmania&latitude=-42.881&longitude=147.3265&navId=$01006046X0OL9$&brandId=1&advertiserId=&requiredZoomLevel=3>",
+                "<http:///>"};
+        
+      //  for(int i = 0; i < 10_000_000; i ++) {
+          for(String uri: uris) {
+                System.out.println(uri);
+            System.out.println(TermUtils.splitIntoTwo(uri));
+
+            System.out.println("\n");
+
+          //      split(uri);
+           }
+       // }
+        
+        //testExtratCommonURIs();
         
         /*TermRoot root = new TermRoot();
         root.addTerm("<http://www.eurohandball.com/ech/men/2014/match/2/052/Netherlands+-+Sweden>");

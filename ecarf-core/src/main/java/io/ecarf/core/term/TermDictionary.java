@@ -164,7 +164,7 @@ public class TermDictionary implements Serializable {
         
         String term = null;
         
-        if(value <= RESOURCE_ID_INVALID) {
+        if(value <= RESOURCE_ID_INVALID && value >= 0) {
             
             if(value == RESOURCE_ID_INVALID) {
                 term = INVALID_RESOURCE;

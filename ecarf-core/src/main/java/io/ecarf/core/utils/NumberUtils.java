@@ -103,7 +103,7 @@ public final class NumberUtils {
             
             int i = 0;
     
-            while (value != 0) {
+            while (value > 0) {
     
                 for(int j = 0; j < n; j++) {
                     values[j] |= (value & 1) << i;
@@ -133,7 +133,7 @@ public final class NumberUtils {
         int i = 0;
         int n = values.length;
         
-        while(sum(values) != 0) {
+        while(sum(values) > 0) {
             
             for(int j = 0; j < n; j++) {
                 p |= (values[j] & 1) << (i + j);
