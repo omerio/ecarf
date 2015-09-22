@@ -47,6 +47,8 @@ public class CreateFileItemsTaskTest {
     private EcarfGoogleCloudServiceImpl service;
     
     Map<String, Long> triplesStat = new HashMap<>(); 
+    
+    Map<String, Double> triplesTimeStat = new HashMap<>();
 
     /**
      * @throws java.lang.Exception
@@ -56,6 +58,69 @@ public class CreateFileItemsTaskTest {
         this.service = new EcarfGoogleCloudServiceImpl();
         TestUtils.prepare(service);
         
+        this.updateMaps();
+    }
+
+    /**
+     * Test method for {@link io.ecarf.core.cloud.task.coordinator.CreateFileItemsTask#run()}.
+     * @throws IOException 
+     */
+    @Test
+    public void testRun() throws IOException {
+        CreateFileItemsTask task = new CreateFileItemsTask();
+        task.setCloudService(service);
+        task.setBucket("dbpedia");
+        
+        task.run();
+        
+        Map<String, Object> output = task.getOutput();
+        
+        
+        
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        
+        List<Item> items = (List<Item>) output.get("fileItems");
+        
+        assertEquals(items.size(), this.triplesStat.size());
+        assertEquals(items.size(), this.triplesTimeStat.size());
+        
+        for(Item item: items) {
+            System.out.println("Filename: " + item.getKey());
+            System.out.println("Weight: " + item.getWeight() + "\n");
+            
+            Long statements = this.triplesStat.get(item.getKey());
+            Double time = this.triplesTimeStat.get(item.getKey());
+            
+            assertNotNull(statements);
+            
+            //assertEquals(statements, item.getWeight());
+            assertEquals(time, item.getWeight());
+            
+        }
+    }
+    
+    @Test
+    public void testCreateTriplesFilesStats() throws IOException {
+          
+        List<TriplesFileStats> stats = new ArrayList<>();
+        
+        for(Entry<String, Long> entry: triplesStat.entrySet()) {
+            TriplesFileStats stat = new TriplesFileStats();
+            stat.setFilename(entry.getKey());
+            stat.setStatements(entry.getValue());
+            stat.setProcessingTime(triplesTimeStat.get(entry.getKey()));
+            stats.add(stat);
+        }
+        
+        String filename = FilenameUtils.getLocalFilePath(FilenameUtils.TRIPLES_FILES_STATS_JSON);
+        
+        TriplesFileStats.toJsonFile(filename, stats, false);
+        
+        System.out.println("Successfully created: " + filename);
+    }
+    
+    private void updateMaps() {
         triplesStat.put("raw_infobox_properties1_en.nt.gz",              35099568L);
         triplesStat.put("raw_infobox_properties2_en.nt.gz",              35099567L);
         triplesStat.put("wikipedia_links_en.nt.gz",                      30424452L);
@@ -122,58 +187,75 @@ public class CreateFileItemsTaskTest {
         triplesStat.put("eurostat_wbsg_links.nt.gz"                   ,  137L);
         triplesStat.put("pnd_en.nt.gz"                                ,  42L);
         triplesStat.put("revyu_links.nt.gz"                           ,  6L);
-    }
-
-    /**
-     * Test method for {@link io.ecarf.core.cloud.task.coordinator.CreateFileItemsTask#run()}.
-     * @throws IOException 
-     */
-    @Test
-    public void testRun() throws IOException {
-        CreateFileItemsTask task = new CreateFileItemsTask();
-        task.setCloudService(service);
-        task.setBucket("dbpedia");
         
-        task.run();
+        // add the time
         
-        Map<String, Object> output = task.getOutput();
-        
-        
-        
-        assertNotNull(output);
-        assertEquals(1, output.size());
-        
-        List<Item> items = (List<Item>) output.get("fileItems");
-        
-        for(Item item: items) {
-            System.out.println("Filename: " + item.getKey());
-            System.out.println("Weight: " + item.getWeight() + "\n");
-            
-            Long statements = this.triplesStat.get(item.getKey());
-            assertNotNull(statements);
-            
-            assertEquals(statements, item.getWeight());
-            
-        }
-    }
-    
-    @Test
-    public void testCreateTriplesFilesStats() throws IOException {
-          
-        List<TriplesFileStats> stats = new ArrayList<>();
-        
-        for(Entry<String, Long> entry: triplesStat.entrySet()) {
-            TriplesFileStats stat = new TriplesFileStats();
-            stat.setFilename(entry.getKey());
-            stat.setStatements(entry.getValue());
-            stats.add(stat);
-        }
-        
-        String filename = FilenameUtils.getLocalFilePath(FilenameUtils.TRIPLES_FILES_STATS_JSON);
-        
-        TriplesFileStats.toJsonFile(filename, stats, false);
-        
-        System.out.println("Successfully created: " + filename);
+        triplesTimeStat.put("raw_infobox_properties1_en.nt.gz", 116520.0);
+        triplesTimeStat.put("raw_infobox_properties2_en.nt.gz", 192240.0);
+        triplesTimeStat.put("wikipedia_links_en.nt.gz", 123960.0);
+        triplesTimeStat.put("mappingbased_properties_cleaned_en.nt.gz", 163500.0);
+        triplesTimeStat.put("yago_types1.nt.gz", 87540.0);
+        triplesTimeStat.put("yago_types2.nt.gz", 116760.0);
+        triplesTimeStat.put("article_categories_en.nt.gz", 104880.0);
+        triplesTimeStat.put("instance_types_en.nt.gz", 77940.0);
+        triplesTimeStat.put("page_ids_en.nt.gz", 72900.0);
+        triplesTimeStat.put("revision_ids_en.nt.gz", 99420.0);
+        triplesTimeStat.put("revision_uris_en.nt.gz", 128100.0);
+        triplesTimeStat.put("interlanguage_links_chapters_en.nt.gz", 69240.0);
+        triplesTimeStat.put("labels_en.nt.gz", 51610.0);
+        triplesTimeStat.put("images_en.nt.gz", 57270.0);
+        triplesTimeStat.put("external_links_en.nt.gz", 85020.0);
+        triplesTimeStat.put("persondata_en.nt.gz", 21100.0);
+        triplesTimeStat.put("redirects_transitive_en.nt.gz", 49490.0);
+        triplesTimeStat.put("flickrwrappr_links.nt.gz", 27620.0);
+        triplesTimeStat.put("skos_categories_en.nt.gz", 18660.0);
+        triplesTimeStat.put("long_abstracts_en.nt.gz", 53860.0);
+        triplesTimeStat.put("short_abstracts_en.nt.gz", 33230.0);
+        triplesTimeStat.put("freebase_links.nt.gz", 33130.0);
+        triplesTimeStat.put("instance_types_heuristic_en.nt.gz", 12470.0);
+        triplesTimeStat.put("yago_links.nt.gz", 26450.0);
+        triplesTimeStat.put("geo_coordinates_en.nt.gz", 5975.0);
+        triplesTimeStat.put("disambiguations_en.nt.gz", 6653.0);
+        triplesTimeStat.put("category_labels_en.nt.gz", 3526.0);
+        triplesTimeStat.put("umbel_links.nt.gz", 3476.0);
+        triplesTimeStat.put("iri_same_as_uri_en.nt.gz", 4077.0);
+        triplesTimeStat.put("specific_mappingbased_properties_en.nt.gz", 3862.0);
+        triplesTimeStat.put("homepages_en.nt.gz", 2061.0);
+        triplesTimeStat.put("wordnet_links.nt.gz", 2109.0);
+        triplesTimeStat.put("yago_taxonomy.nt.gz", 6756.0);
+        triplesTimeStat.put("geonames_links.nt.gz", 2087.0);
+        triplesTimeStat.put("linkedgeodata_links.nt.gz", 390.9);
+        triplesTimeStat.put("raw_infobox_property_definitions_en.nt.gz", 269.7);
+        triplesTimeStat.put("gadm_links.nt.gz", 142.1);
+        triplesTimeStat.put("opencyc_links.nt.gz", 114.8);
+        triplesTimeStat.put("musicbrainz_links.nt.gz", 104.6);
+        triplesTimeStat.put("geospecies_links.nt.gz", 70.88);
+        triplesTimeStat.put("linkedmdb_links.nt.gz", 61.88);
+        triplesTimeStat.put("uscensus_links.nt.gz", 68.55);
+        triplesTimeStat.put("eunis_links.nt.gz", 424.4);
+        triplesTimeStat.put("bricklink_links.nt.gz", 50.76);
+        triplesTimeStat.put("nytimes_links.nt.gz", 50.37);
+        triplesTimeStat.put("bookmashup_links.nt.gz", 378.6);
+        triplesTimeStat.put("wikicompany_links.nt.gz", 46.91);
+        triplesTimeStat.put("italian_public_schools_links.nt.gz", 34.95);
+        triplesTimeStat.put("drugbank_links.nt.gz", 33.87);
+        triplesTimeStat.put("gutenberg_links.nt.gz", 27.63);
+        triplesTimeStat.put("diseasome_links.nt.gz", 25.39);
+        triplesTimeStat.put("sider_links.nt.gz", 25.62);
+        triplesTimeStat.put("tcm_links.nt.gz", 21.88);
+        triplesTimeStat.put("dailymed_links.nt.gz", 21.64);
+        triplesTimeStat.put("dbtune_links.nt.gz", 20.91);
+        triplesTimeStat.put("openei_links.nt.gz", 20.26);
+        triplesTimeStat.put("amsterdammuseum_links.nt.gz", 20.55);
+        triplesTimeStat.put("factbook_links.nt.gz", 40.06);
+        triplesTimeStat.put("bbcwildlife_links.nt.gz", 18.75);
+        triplesTimeStat.put("cordis_links.nt.gz", 21.18);
+        triplesTimeStat.put("eurostat_linkedstatistics_links.nt.gz", 18.25);
+        triplesTimeStat.put("dblp_links.nt.gz", 18.36);
+        triplesTimeStat.put("gho_links.nt.gz", 19.68);
+        triplesTimeStat.put("eurostat_wbsg_links.nt.gz", 18.0);
+        triplesTimeStat.put("pnd_en.nt.gz", 16.63);
+        triplesTimeStat.put("revyu_links.nt.gz", 17.85);
     }
 
 }

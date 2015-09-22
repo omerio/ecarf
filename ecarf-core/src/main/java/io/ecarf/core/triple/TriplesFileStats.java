@@ -57,7 +57,7 @@ public class TriplesFileStats implements Serializable {
     
     private Long statements;
     
-    private Long processingTime;
+    private Double processingTime;
 
     
     /**
@@ -119,14 +119,14 @@ public class TriplesFileStats implements Serializable {
     /**
      * @return the processingTime
      */
-    public Long getProcessingTime() {
+    public Double getProcessingTime() {
         return processingTime;
     }
 
     /**
      * @param processingTime the processingTime to set
      */
-    public void setProcessingTime(Long processingTime) {
+    public void setProcessingTime(Double processingTime) {
         this.processingTime = processingTime;
     }
     

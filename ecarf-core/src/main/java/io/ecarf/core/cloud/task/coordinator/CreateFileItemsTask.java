@@ -103,7 +103,7 @@ public class CreateFileItemsTask extends CommonTask {
 		            if(item != null)  {
 		                if(stat.getProcessingTime() != null) {
 		                
-		                    item.setWeight(stat.getProcessingTime());
+		                    item.setWeight(stat.getProcessingTime().longValue());
 		                
 		                } else if(stat.getStatements() != null) {
 		                    
