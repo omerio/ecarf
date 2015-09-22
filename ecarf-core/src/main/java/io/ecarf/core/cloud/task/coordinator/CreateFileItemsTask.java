@@ -21,11 +21,15 @@ package io.ecarf.core.cloud.task.coordinator;
 import io.cloudex.framework.cloud.entities.StorageObject;
 import io.cloudex.framework.partition.entities.Item;
 import io.cloudex.framework.task.CommonTask;
+import io.ecarf.core.triple.TriplesFileStats;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.FilenameUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,13 +62,60 @@ public class CreateFileItemsTask extends CommonTask {
 		
 		List<Item> items = new ArrayList<>();
 		
+		String triplesFilesStats = null;
+		
 		for(StorageObject object: objects) {
+		    
 			String filename = object.getName();
+			
 			if(filename.endsWith(Constants.COMPRESSED_N_TRIPLES)) {
 				items.add(new Item(filename, object.getSize().longValue()));
+				
+			} else if(FilenameUtils.TRIPLES_FILES_STATS_JSON.equals(filename)) {
+			    
+			    triplesFilesStats = filename;
+			    log.info("Found triples files stats: " + filename);
+			    
 			} else {
 				log.warn("Skipping file: " + filename);
 			}
+		}
+		
+		// if the triples files stats is found then use it
+		if(triplesFilesStats != null) {
+		    
+		    Map<String, Item> fileItems = new HashMap<>();
+		    // quickly key items by filename
+		    for(Item item: items) {
+		        fileItems.put(item.getKey(), item);
+		    }
+		    
+		    try {
+		        
+		        String localFile = FilenameUtils.getLocalFilePath(triplesFilesStats);
+		        this.cloudService.downloadObjectFromCloudStorage(triplesFilesStats, localFile, bucket);
+
+		        List<TriplesFileStats> stats = TriplesFileStats.fromJsonFile(localFile, false);
+		        
+		        for(TriplesFileStats stat: stats) {
+		            Item item = fileItems.get(stat.getFilename());
+		            
+		            if(item != null)  {
+		                if(stat.getProcessingTime() != null) {
+		                
+		                    item.setWeight(stat.getProcessingTime());
+		                
+		                } else if(stat.getStatements() != null) {
+		                    
+		                    item.setWeight(stat.getStatements());
+		                }
+		            }
+		        }
+
+		    } catch(Exception e) {
+
+		        log.error("Failed to download and process triples files stats", e);
+		    }
 		}
 		
 		// add the items to the output

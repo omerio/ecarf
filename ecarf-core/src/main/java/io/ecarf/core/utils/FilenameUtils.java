@@ -29,6 +29,8 @@ package io.ecarf.core.utils;
  */
 public final class FilenameUtils {
     
+    public static final String TRIPLES_FILES_STATS_JSON = "triples_files_stats.json";
+    
     /**
      * Return the path to local file that lives in the temp folder
      * 
