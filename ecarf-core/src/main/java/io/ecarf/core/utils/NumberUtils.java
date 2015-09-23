@@ -125,8 +125,11 @@ public final class NumberUtils {
      */
     public static long join(long... values) {
            
-        if(values == null || values.length < 2) {
-            throw new IllegalArgumentException("expecting at least 2 values");
+        if(values.length == 0) {
+            throw new IllegalArgumentException("expecting at least 1 value");
+       
+        } else if(values.length == 1) {
+            return values[0];
         }
         
         long p = 0;

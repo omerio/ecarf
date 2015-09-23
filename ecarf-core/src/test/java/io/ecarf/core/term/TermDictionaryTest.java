@@ -1,13 +1,16 @@
 package io.ecarf.core.term;
 
-import static org.junit.Assert.*;
-import io.ecarf.core.compress.callback.ExtractTermsPartCallback;
+import static org.junit.Assert.assertEquals;
+import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
 
 import java.io.StringReader;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.semanticweb.yars.nx.BNode;
+import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
 
@@ -25,7 +28,7 @@ public class TermDictionaryTest {
             "<http://dbpedia.org/resource/Arminianism> <http://dbpedia.org/ontology/wikiPageExternalLink> <http://oa.doria.fi/handle/10024/43883?locale=len> .\n" +
             "<http://dbpedia.org/resource/Alfred_Russel_Wallace> <http://dbpedia.org/ontology/wikiPageExternalLink> <https://picasaweb.google.com/WallaceMemorialFund> .\n" +
             "<http://dbpedia.org/resource/Omerio> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://picasaweb.google.com> .\n" +
-            "<http://dbpedia.org/resource/Omerio> <http://www.w3.org/2000/01/rdf-schema#range> <http:///picasaweb.google.com> .\n" +
+            //"<http://dbpedia.org/resource/Omerio> <http://www.w3.org/2000/01/rdf-schema#range> <http:///picasaweb.google.com> .\n" +
             "<http://dblp.uni-trier.de/rec/bibtex/books/acm/kim95/AnnevelinkACFHK95> <http://lsdis.cs.uga.edu/projects/semdis/opus#author> _:B54825b3X3A145000e6696X3AX2D7fff .\n" +
             "_:B54825b3X3A145000e6696X3AX2D7fff <http://www.w3.org/1999/02/22-rdf-syntax-ns#_1> <http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/a/Annevelink:Jurgen.html> .\n" +
             "_:B54825b3X3A145000e6696X3AX2D7fff <http://www.w3.org/1999/02/22-rdf-syntax-ns#_2> <http://www.informatik.uni-trier.de/~ley/db/indices/a-tree/a/Ahad:Rafiul.html> .\n" +
@@ -39,6 +42,8 @@ public class TermDictionaryTest {
     
     
     private TermDictionary dictionary;
+    
+    private Set<String> allTerms = new HashSet<>();
 
     @Before
     public void setUp() throws Exception {
@@ -48,7 +53,7 @@ public class TermDictionaryTest {
         
         int count = 0;
         
-        ExtractTermsPartCallback callback = new ExtractTermsPartCallback();
+        ExtractTerms2PartCallback callback = new ExtractTerms2PartCallback();
         callback.setCounter(new TermCounter());
 
         while (nxp.hasNext())  {
@@ -60,12 +65,28 @@ public class TermDictionaryTest {
 
                 callback.process(ns);
                 count++;
+                
+                for (int i = 0; i < ns.length; i++)  {
+
+                    // we are not going to unscape literals, these can contain new line and 
+                    // unscaping those will slow down the bigquery load, unless offcourse we use JSON
+                    // instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
+                    if(!((i == 2) && (ns[i] instanceof Literal))) {
+
+                        //TODO if we are creating a dictionary why unscape this term anyway?
+                        //term = NxUtil.unescape(nodes[i].toN3());
+                        if(!(ns[i] instanceof BNode)) {
+                           
+                            allTerms.add(ns[i].toN3());
+                        }
+                    }
+                }
             } 
         }
         
         // we have finished populate the dictionary
         System.out.println("Processed: " + count + " triples");
-        assertEquals(22, count);
+        assertEquals(21, count);
         assertEquals(4, callback.getLiteralCount());
         int numBlankNodes = callback.getBlankNodes().size();
         assertEquals(1, numBlankNodes);
@@ -76,14 +97,35 @@ public class TermDictionaryTest {
             dictionary.add(part);
         }
         
+        for(String bNode: callback.getBlankNodes()) {
+            dictionary.add(bNode);
+        }
+        
     }
 
     @Test
     public void testEncodeDecode() {
         String term = "<http://dblp.uni-trier.de/rec/bibtex/books/acm/kim95/BreitbartGS95>";
+        this.validateRoundTrip(term);
+        
+        term = "<http://www.agronomy.org/>";
+        this.validateRoundTrip(term);
+        
+        term = "<https://www.createspace.com/282950>";
+        this.validateRoundTrip(term);
+        
+        term = "<https://dblp.uni-trier.de/rec/bibtex/books/acm/kim95/BreitbartGS95/>";
+        this.validateRoundTrip(term);
+        
+        for(String tm: allTerms) {
+            this.validateRoundTrip(tm);
+        }
+    }
+    
+    private void validateRoundTrip(String term) {
         long id = dictionary.encode(term);
         
-        System.out.println(id);
+        System.out.println(id + "       " + term);
         
         String decterm = dictionary.decode(id);
         

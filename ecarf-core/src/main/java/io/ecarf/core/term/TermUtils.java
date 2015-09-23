@@ -47,6 +47,7 @@ public class TermUtils {
     public static final String HTTP = "http://";
     public static final String HTTPS = "https://";
     public static final char URI_SEP = '/';
+    public static final String URI_SEP_STR = "/";
     
 
 	/**
@@ -157,6 +158,15 @@ public class TermUtils {
         }
         return index;
     }
+	
+	/**
+	 * Split into two
+	 * @param term
+	 * @return
+	 */
+	public static List<String> splitIntoTwo(String term) {
+	    return splitIntoTwo(term, true);
+	}
     
 	/**
 	 * Split the provided term into 2 parts using the slash a separator. Uses some rules concerning : and ?
@@ -202,15 +212,25 @@ public class TermUtils {
 	 * @param term
 	 * @return
 	 */
-    public static List<String> splitIntoTwo(String term) {
+    public static List<String> splitIntoTwo(String term, boolean hasProtocol) {
         
+        String path;
         
-        String url = term.substring(1, term.length() - 1);
-        String path = StringUtils.removeStart(url, TermUtils.HTTP);
+        if(hasProtocol) {
+            String url = term.substring(1, term.length() - 1);
+            path = StringUtils.removeStart(url, TermUtils.HTTP);
+
+            if(path.length() == url.length()) {
+                path = StringUtils.removeStart(path, TermUtils.HTTPS);
+            }
+            
+        } else {
+            path = term;
+        }
         
-        
-        if(path.length() == url.length()) {
-            path = StringUtils.removeStart(path, TermUtils.HTTPS);
+        // remove trailing slash
+        if(StringUtils.endsWith(path, URI_SEP_STR)) {
+            path = StringUtils.removeEnd(path, URI_SEP_STR);
         }
         
         //System.out.println(path);

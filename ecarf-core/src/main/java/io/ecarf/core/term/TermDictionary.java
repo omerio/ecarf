@@ -81,7 +81,7 @@ public class TermDictionary implements Serializable {
      * The default number of bits used to store information about the parts of an encoded dictionary entry
      * 0, to specify a blank node, 1 to n to specify n number of parts
      */
-    private int infoBits = 8;
+    //private int infoBits = 8;
       
     /**
      * We use a Guava BiMap to provide an inverse lookup into the dictionary Map
@@ -89,6 +89,25 @@ public class TermDictionary implements Serializable {
      * @see http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/BiMap.html
      */
     private BiMap<String, Integer> dictionary = HashBiMap.create();
+    
+    
+    /**
+     * Encode a blank node
+     * @param blankNode
+     * @return
+     */
+    public long encodeBlankNode(String blankNode) {
+        long value = 0;
+        
+        Integer enc = this.dictionary.get(blankNode);
+        if(enc == null) {
+            throw new IllegalArgumentException("Term part not found in the dictionary: " + blankNode);
+        }
+        
+        value = (value <<= 3) | 0b001;
+
+        return value;
+    }
     
     /**
      * Encode a term in the format <http://dbpedia.org/resource/Alexander_II_of_Russia>
@@ -118,7 +137,8 @@ public class TermDictionary implements Serializable {
             
             //String [] parts = StringUtils.split(path, URI_SEP);
             // this is alot faster than String.split or StringUtils.split
-            List<String> parts = Utils.split(path, TermUtils.URI_SEP);
+            
+            List<String> parts = TermUtils.splitIntoTwo(term);
             
             if(!parts.isEmpty()) {
                 
@@ -137,14 +157,27 @@ public class TermDictionary implements Serializable {
                 }
                 
                 // 2- compose
-                value = NumberUtils.joinWithInfo(infoBits, values);
+                value = NumberUtils.join(values);
                 
-                // 3- add http/s flag bit
-                value <<= 1;
+                // 3- add flags
+                //              1                               1                           1 
+                // has  / at the end (1) or not (0)     http (0) or https (1)     one (1) or two (0) parts
+                int flags = 0;
+                
+                if(parts.size() == 1) {
+                    flags = 1;
+                }
                 
                 if(https) {
-                     value += 1;
+                     flags |= 0b10;
                 }
+                
+                // do we have a slash at the end of the URL or not
+                if(url.lastIndexOf(TermUtils.URI_SEP) == (url.length() - 1)) {
+                    flags |= 0b100;
+                }
+                
+                value = (value <<= 3) | flags;
             
             } else {
                 // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
@@ -170,33 +203,62 @@ public class TermDictionary implements Serializable {
                 term = INVALID_RESOURCE;
                 
             } else {
-                term = this.dictionary.inverse().get(value);
+                // built in RDF or OWL URI
+                term = this.dictionary.inverse().get((int) value);
             }
             
         } else {
             
-            // 1- extract http/s flag bit
-            String protocol = ((value & 1) == 1) ? TermUtils.HTTPS : TermUtils.HTTP;
+            // extract the flags
+            int flags = (int) (value & 0b111);
             
-            // remove the http/s flag
-            value >>= 1;
+            // one or two parts
+            int n = ((flags & 0b001) == 1) ? 1 : 2;
             
-            // 2- decompose
-            long [] values = NumberUtils.disjoinWithInfo(infoBits, value);
+            // has http/s 
+            String protocol = ((flags & 0b010) == 2) ? TermUtils.HTTPS : TermUtils.HTTP;
             
-            // 3- decode parts
-            List<String> parts = new ArrayList<>();
-            for(long partv: values) {
-                parts.add(this.dictionary.inverse().get(partv));
+            // has slash at the end or not
+            boolean hasSlash = ((flags & 0b100) == 4);
+            
+            boolean blank = false;
+            
+            // remove the 3 flags bits
+            value >>= 3;
+
+            if(n == 1) {
+
+                term = this.dictionary.inverse().get((int) value);
+                
+                blank = term.startsWith("_");
+
+            } else {
+
+                // 2- decompose
+                long [] values = NumberUtils.disjoin(n, value);
+
+                // 3- decode parts
+                List<String> parts = new ArrayList<>();
+                for(long partv: values) {
+                    parts.add(this.dictionary.inverse().get((int) partv));
+                }
+
+                term = StringUtils.join(parts, TermUtils.URI_SEP);
             }
             
-            // 4- add http or https and <>
-            term = StringUtils.join(parts, TermUtils.URI_SEP);
-            
-            term = (new StringBuilder('<')).append(protocol).append(term).append('>').toString();
+            if(!blank) {
+                // 4- Assemble the term values
+                StringBuilder termBuilder = (new StringBuilder(250))
+                        .append('<').append(protocol).append(term);
+
+                if(hasSlash) {
+                    termBuilder.append(TermUtils.URI_SEP);
+                }
+
+                term = termBuilder.append('>').toString();
+            }
         }
-        
-        
+          
         return term;
     }
         
@@ -380,20 +442,6 @@ public class TermDictionary implements Serializable {
                 append("largestResourceId", this.largestResourceId).
                 append("size", this.dictionary.size()).
                 toString();
-    }
-
-    /**
-     * @return the infoBits
-     */
-    public int getInfoBits() {
-        return infoBits;
-    }
-
-    /**
-     * @param infoBits the infoBits to set
-     */
-    public void setInfoBits(int infoBits) {
-        this.infoBits = infoBits;
     }
 
 }

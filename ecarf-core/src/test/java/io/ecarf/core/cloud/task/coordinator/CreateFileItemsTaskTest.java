@@ -95,7 +95,7 @@ public class CreateFileItemsTaskTest {
             assertNotNull(statements);
             
             //assertEquals(statements, item.getWeight());
-            assertEquals(time, item.getWeight());
+            assertEquals(time, item.getWeight(), 0.9);
             
         }
     }
@@ -190,7 +190,74 @@ public class CreateFileItemsTaskTest {
         
         // add the time
         
-        triplesTimeStat.put("raw_infobox_properties1_en.nt.gz", 116520.0);
+        triplesTimeStat.put("raw_infobox_properties1_en.nt.gz", 131220.0);
+        triplesTimeStat.put("raw_infobox_properties2_en.nt.gz", 208560.0);
+        triplesTimeStat.put("wikipedia_links_en.nt.gz", 156840.0);
+        triplesTimeStat.put("mappingbased_properties_cleaned_en.nt.gz", 185700.0);
+        triplesTimeStat.put("yago_types1.nt.gz", 103320.0);
+        triplesTimeStat.put("yago_types2.nt.gz", 127500.0);
+        triplesTimeStat.put("article_categories_en.nt.gz", 127200.0);
+        triplesTimeStat.put("instance_types_en.nt.gz", 91020.0);
+        triplesTimeStat.put("page_ids_en.nt.gz", 134520.0);
+        triplesTimeStat.put("revision_ids_en.nt.gz", 158520.0);
+        triplesTimeStat.put("revision_uris_en.nt.gz", 284700.0);
+        triplesTimeStat.put("interlanguage_links_chapters_en.nt.gz", 136620.0);
+        triplesTimeStat.put("labels_en.nt.gz", 95040.0);
+        triplesTimeStat.put("images_en.nt.gz", 94980.0);
+        triplesTimeStat.put("external_links_en.nt.gz", 124980.0);
+        triplesTimeStat.put("persondata_en.nt.gz", 26710.0);
+        triplesTimeStat.put("redirects_transitive_en.nt.gz", 108360.0);
+        triplesTimeStat.put("flickrwrappr_links.nt.gz", 55640.0);
+        triplesTimeStat.put("skos_categories_en.nt.gz", 23990.0);
+        triplesTimeStat.put("long_abstracts_en.nt.gz", 90840.0);
+        triplesTimeStat.put("short_abstracts_en.nt.gz", 62280.0);
+        triplesTimeStat.put("freebase_links.nt.gz", 68280.0);
+        triplesTimeStat.put("instance_types_heuristic_en.nt.gz", 15200.0);
+        triplesTimeStat.put("yago_links.nt.gz", 37880.0);
+        triplesTimeStat.put("geo_coordinates_en.nt.gz", 8938.0);
+        triplesTimeStat.put("disambiguations_en.nt.gz", 12180.0);
+        triplesTimeStat.put("category_labels_en.nt.gz", 7839.0);
+        triplesTimeStat.put("umbel_links.nt.gz", 6167.0);
+        triplesTimeStat.put("iri_same_as_uri_en.nt.gz", 13600.0);
+        triplesTimeStat.put("specific_mappingbased_properties_en.nt.gz", 6166.0);
+        triplesTimeStat.put("homepages_en.nt.gz", 7843.0);
+        triplesTimeStat.put("wordnet_links.nt.gz", 4289.0);
+        triplesTimeStat.put("yago_taxonomy.nt.gz", 8831.0);
+        triplesTimeStat.put("geonames_links.nt.gz", 5974.0);
+        triplesTimeStat.put("linkedgeodata_links.nt.gz", 1546.0);
+        triplesTimeStat.put("raw_infobox_property_definitions_en.nt.gz", 932.3);
+        triplesTimeStat.put("gadm_links.nt.gz", 632.0);
+        triplesTimeStat.put("opencyc_links.nt.gz", 746.0);
+        triplesTimeStat.put("musicbrainz_links.nt.gz", 836.9);
+        triplesTimeStat.put("geospecies_links.nt.gz", 578.3);
+        triplesTimeStat.put("linkedmdb_links.nt.gz", 541.1);
+        triplesTimeStat.put("uscensus_links.nt.gz", 965.8);
+        triplesTimeStat.put("eunis_links.nt.gz", 1329.0);
+        triplesTimeStat.put("bricklink_links.nt.gz", 313.8);
+        triplesTimeStat.put("nytimes_links.nt.gz", 650.7);
+        triplesTimeStat.put("bookmashup_links.nt.gz", 1131.0);
+        triplesTimeStat.put("wikicompany_links.nt.gz", 924.5);
+        triplesTimeStat.put("italian_public_schools_links.nt.gz", 436.1);
+        triplesTimeStat.put("drugbank_links.nt.gz", 391.3);
+        triplesTimeStat.put("gutenberg_links.nt.gz", 484.7);
+        triplesTimeStat.put("diseasome_links.nt.gz", 602.6);
+        triplesTimeStat.put("sider_links.nt.gz", 412.7);
+        triplesTimeStat.put("tcm_links.nt.gz", 279.6);
+        triplesTimeStat.put("dailymed_links.nt.gz", 309.1);
+        triplesTimeStat.put("dbtune_links.nt.gz", 277.4);
+        triplesTimeStat.put("openei_links.nt.gz", 409.2);
+        triplesTimeStat.put("amsterdammuseum_links.nt.gz", 4592.0);
+        triplesTimeStat.put("factbook_links.nt.gz", 297.1);
+        triplesTimeStat.put("bbcwildlife_links.nt.gz", 308.8);
+        triplesTimeStat.put("cordis_links.nt.gz", 4154.0);
+        triplesTimeStat.put("eurostat_linkedstatistics_links.nt.gz", 305.4);
+        triplesTimeStat.put("dblp_links.nt.gz", 315.9);
+        triplesTimeStat.put("gho_links.nt.gz", 358.9);
+        triplesTimeStat.put("eurostat_wbsg_links.nt.gz", 859.0);
+        triplesTimeStat.put("pnd_en.nt.gz", 280.6);
+        triplesTimeStat.put("revyu_links.nt.gz", 278.3);
+        
+       /* triplesTimeStat.put("raw_infobox_properties1_en.nt.gz", 116520.0);
         triplesTimeStat.put("raw_infobox_properties2_en.nt.gz", 192240.0);
         triplesTimeStat.put("wikipedia_links_en.nt.gz", 123960.0);
         triplesTimeStat.put("mappingbased_properties_cleaned_en.nt.gz", 163500.0);
@@ -256,6 +323,8 @@ public class CreateFileItemsTaskTest {
         triplesTimeStat.put("eurostat_wbsg_links.nt.gz", 18.0);
         triplesTimeStat.put("pnd_en.nt.gz", 16.63);
         triplesTimeStat.put("revyu_links.nt.gz", 17.85);
+        
+        */
     }
 
 }
