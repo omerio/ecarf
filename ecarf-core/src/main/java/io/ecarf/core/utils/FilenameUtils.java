@@ -31,6 +31,14 @@ public final class FilenameUtils {
     
     public static final String TRIPLES_FILES_STATS_JSON = "triples_files_stats.json";
     
+    public static final String KRYO_SERIALIZED_EXT = ".kryo.gz";
+    
+    public static final String DICTIONARY = "dictionary";
+        
+    public static final String DICTIONARY_JSON = DICTIONARY + Constants.DOT_JSON;
+    
+    public static final String DICTIONARY_SER = DICTIONARY + Constants.DOT_SER;
+    
     /**
      * Return the path to local file that lives in the temp folder
      * 
@@ -39,6 +47,14 @@ public final class FilenameUtils {
      */
     public static String getLocalFilePath(String filename) {
         return Utils.TEMP_FOLDER + filename;
+    }
+    
+    /**
+     * The serialized and gziped dictionary filename
+     * @return
+     */
+    public static String getSerializedGZipedDictionaryFilename() {
+        return DICTIONARY + KRYO_SERIALIZED_EXT;
     }
 
     /**

@@ -26,24 +26,20 @@ import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.term.TermPart;
-import io.ecarf.core.term.TermRoot;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
-import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.TestUtils;
 import io.ecarf.core.utils.Utils;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -305,7 +301,7 @@ public class ProcessLoadTaskTest {
         }
 
         String term = "<http://dblp.uni-trier.de/rec/bibtex/journals/ijcsa/AndonoffBH07>";
-        String dicFile1 = FileUtils.TEMP_FOLDER + Constants.DICTIONARY_SER;
+        String dicFile1 = FileUtils.TEMP_FOLDER + FilenameUtils.DICTIONARY_SER;
         
         // --- json
         

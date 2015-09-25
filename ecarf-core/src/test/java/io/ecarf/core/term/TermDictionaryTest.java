@@ -6,6 +6,7 @@ import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +14,8 @@ import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.parser.NxParser;
+
+import com.google.common.base.Stopwatch;
 
 public class TermDictionaryTest {
     
@@ -41,13 +44,13 @@ public class TermDictionaryTest {
             "<http://dbpedia.org/resource/Aachen> <http://dbpedia.org/ontology/wikiPageExternalLink> <https://www.createspace.com/282950> .";
     
     
-    private TermDictionary dictionary;
+    private AbstractDictionary dictionary;
     
     private Set<String> allTerms = new HashSet<>();
 
     @Before
     public void setUp() throws Exception {
-        dictionary = TermDictionary.createRDFOWLDictionary();
+        dictionary = TermDictionary.populateRDFOWLData(new TermDictionaryConcurrent());
         
         NxParser nxp = new NxParser(new StringReader(N_TRIPLES));
         
@@ -85,13 +88,13 @@ public class TermDictionaryTest {
         }
         
         // we have finished populate the dictionary
-        System.out.println("Processed: " + count + " triples");
+        //System.out.println("Processed: " + count + " triples");
         assertEquals(21, count);
         assertEquals(4, callback.getLiteralCount());
         int numBlankNodes = callback.getBlankNodes().size();
         assertEquals(1, numBlankNodes);
         
-        System.out.println("Total URI parts: " + callback.getResources().size());
+        //System.out.println("Total URI parts: " + callback.getResources().size());
         
         for(String part: callback.getResources()) {
             dictionary.add(part);
@@ -125,11 +128,36 @@ public class TermDictionaryTest {
     private void validateRoundTrip(String term) {
         long id = dictionary.encode(term);
         
-        System.out.println(id + "       " + term);
+        //System.out.println(id + "       " + term);
         
         String decterm = dictionary.decode(id);
         
         assertEquals(term, decterm);
+    }
+    
+    
+    public static void main(String [] args) throws Exception {
+        int count = 400;
+        
+        TermDictionaryTest test = new TermDictionaryTest();
+        Stopwatch stopwatch = Stopwatch.createUnstarted();
+        
+        long total = 0;
+        
+        for(int i = 0; i < count; i++) {
+            stopwatch.start();
+            test.setUp();
+            test.testEncodeDecode();
+            
+            total += stopwatch.elapsed(TimeUnit.MILLISECONDS);
+            
+            stopwatch.reset();
+        }
+        
+        System.out.println("Total iterations: " + count);
+        System.out.println("Total time: " + total);
+        System.out.println("Average iteration time in milliseconds: " + (total / count));
+        
     }
 
 

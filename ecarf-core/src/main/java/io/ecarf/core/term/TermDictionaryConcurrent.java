@@ -22,12 +22,14 @@ package io.ecarf.core.term;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
 
 /**
  * Represent a term dictionary holding URIs and Blank nodes as the key and the encoded integer as the value
@@ -40,38 +42,40 @@ import com.google.common.collect.HashBiMap;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class TermDictionary extends AbstractDictionary implements Serializable {
+public class TermDictionaryConcurrent extends AbstractDictionary implements Serializable {
 
     private static final long serialVersionUID = 1314487458787673648L;
-    
-    private final static Log log = LogFactory.getLog(TermDictionary.class);
-    
-      
+
+    private final static Log log = LogFactory.getLog(TermDictionaryConcurrent.class);
+
+
     /**
      * We use a Guava BiMap to provide an inverse lookup into the dictionary Map
      * to be able to lookup terms by id. I'm assuming key lookups in both directions is O(1)
      * @see http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/BiMap.html
      */
-    private BiMap<String, Integer> dictionary = HashBiMap.create();
+    private BiMap<Object, Object> dictionary = Maps.synchronizedBiMap(HashBiMap.create()); //HashBiMap.create();
+    
+    private AtomicInteger largestResourceId = new AtomicInteger(RESOURCE_ID_START);
 
 
     @Override
     public Integer get(String key) {
-        
-        return this.dictionary.get(key);
+
+        return (Integer) this.dictionary.get(key);
     }
 
 
     @Override
     public String get(Integer value) {
-        
-        return this.dictionary.inverse().get(value);
+
+        return (String) this.dictionary.inverse().get(value);
     }
 
 
     @Override
     public int size() {
-        
+
         return this.dictionary.size();
     }
 
@@ -79,16 +83,49 @@ public class TermDictionary extends AbstractDictionary implements Serializable {
     @Override
     public void put(String key, Integer value) {
         this.dictionary.put(key, value);
-        
+
+    }
+
+
+    /**
+     * add a part to the dictionary (part of a URI or a blank node)
+     * @param part
+     */
+    @Override
+    public void add(String part) {
+        if(!this.containsKey(part)) {
+            
+            int resourceId = this.largestResourceId.addAndGet(1);
+            this.put(part, resourceId);
+        }
+    }
+
+    /**
+     * Add an entry to the dictionary
+     * @param term
+     * @param id
+     */
+    @Override
+    protected void add(String term, Integer id) {
+
+        if(!this.containsKey(term)) {
+            
+            int largest = this.largestResourceId.get();
+
+            if(largest < id) {
+                this.largestResourceId.set(id);
+            }
+            this.put(term, id);
+        }
     }
 
 
     @Override
     public boolean containsKey(String key) {
-       
+
         return this.dictionary.containsKey(key);
     }
-    
-    
+
+
 
 }
