@@ -20,6 +20,7 @@
 
 package io.ecarf.core.cloud.task.processor.dictionary;
 
+import io.cloudex.framework.cloud.api.ApiUtils;
 import io.cloudex.framework.partition.entities.Item;
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
@@ -28,6 +29,7 @@ import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -82,7 +84,7 @@ public class AssembleDictionarySubTask implements Callable<Void> {
 
             try {
 
-                this.cloud.downloadObjectFromCloudStorage(file, localFile, this.bucket);
+                this.downloadFile(file, localFile, 1);
 
                 // all downloaded, carryon now, process the files
                 log.info("Processing file: " + localFile + ", dictionary items: " + dictionary.size() + 
@@ -118,6 +120,29 @@ public class AssembleDictionarySubTask implements Callable<Void> {
         }
 
         return null;
+    }
+    
+    /**
+     * 
+     * @param file
+     * @param localFile
+     * @param retries
+     * @throws IOException 
+     */
+    private void downloadFile(String file, String localFile, int retries) throws IOException {
+        try {
+            
+            this.cloud.downloadObjectFromCloudStorage(file, localFile, this.bucket);
+            
+        } catch(SocketException e) {
+            if(retries == 3) {
+                throw e;
+                
+            } else {
+                ApiUtils.block(1);
+                downloadFile(file, localFile, retries++);
+            }
+        }
     }
 
 }
