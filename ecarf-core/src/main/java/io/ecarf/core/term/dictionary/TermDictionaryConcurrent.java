@@ -60,7 +60,7 @@ public class TermDictionaryConcurrent extends TermDictionary implements Serializ
      */
     private ConcurrentMap<String, Integer> dictionary = new ConcurrentHashMap<>(1_000_000); //HashBiMap.create();
     
-    private AtomicInteger largestResourceId = new AtomicInteger(RESOURCE_ID_START);
+    private final AtomicInteger largestResourceId = new AtomicInteger(RESOURCE_ID_START);
 
 
     @Override
@@ -99,8 +99,8 @@ public class TermDictionaryConcurrent extends TermDictionary implements Serializ
     public void add(String part) {
         if(!this.dictionary.containsKey(part)) {
             
-            int resourceId = this.largestResourceId.addAndGet(1);
-            this.dictionary.put(part, resourceId);
+            int resourceId = this.largestResourceId.incrementAndGet();
+            this.dictionary.putIfAbsent(part, resourceId);
         }
     }
 
