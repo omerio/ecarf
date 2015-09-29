@@ -18,9 +18,10 @@
  */
 
 
-package io.ecarf.core.term;
+package io.ecarf.core.term.dictionary;
 
 import io.cloudex.framework.utils.ObjectUtils;
+import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.BiMapJsonDeserializer;
 import io.ecarf.core.utils.NumberUtils;
@@ -33,6 +34,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -56,11 +58,11 @@ import com.google.gson.stream.JsonReader;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public abstract class AbstractDictionary implements Serializable {
+public abstract class TermDictionary implements Serializable {
 
     private static final long serialVersionUID = 1314487458787673648L;
     
-    private final static Log log = LogFactory.getLog(AbstractDictionary.class);
+    private final static Log log = LogFactory.getLog(TermDictionary.class);
     
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(BiMap.class,  new BiMapJsonDeserializer())
@@ -101,6 +103,8 @@ public abstract class AbstractDictionary implements Serializable {
     public abstract void put(String key, Integer value);
     
     public abstract boolean containsKey(String key);
+    
+    protected abstract void putAll(Map<? extends String, ? extends Integer> map);
     
     
     /**
@@ -302,7 +306,7 @@ public abstract class AbstractDictionary implements Serializable {
      * Create a dictionary pre-populated with the default RDF and OWL URIs
      * @return
      */
-    public static AbstractDictionary populateRDFOWLData(AbstractDictionary dictionary) {
+    public static TermDictionary populateRDFOWLData(TermDictionary dictionary) {
         
         for(SchemaURIType uri: SchemaURIType.values()) {
             dictionary.add(uri.uri, uri.id);
@@ -336,12 +340,12 @@ public abstract class AbstractDictionary implements Serializable {
      * @throws IOException if the io operation fails
      * @throws ClassNotFoundException 
      */
-    public static AbstractDictionary fromFile(String file, boolean compressed) 
+    public static TermDictionary fromFile(String file, boolean compressed) 
             throws FileNotFoundException, IOException, ClassNotFoundException {
         
         Stopwatch stopwatch = Stopwatch.createStarted();
 
-        AbstractDictionary dictionary = Utils.objectFromFile(file, AbstractDictionary.class, compressed, false);
+        TermDictionary dictionary = Utils.objectFromFile(file, TermDictionary.class, compressed, false);
 
         log.debug("TIMER# deserialized dictionary from file: " + file + ", in: " + stopwatch);
 
@@ -365,7 +369,7 @@ public abstract class AbstractDictionary implements Serializable {
      * @throws FileNotFoundException if the file is not found
      * @throws IOException if the json conversion fails
      */
-    public static AbstractDictionary fromJsonFile(String jsonFile) throws FileNotFoundException, IOException {
+    public static TermDictionary fromJsonFile(String jsonFile) throws FileNotFoundException, IOException {
         return fromJsonFile(jsonFile, false);
     }
 
@@ -376,7 +380,7 @@ public abstract class AbstractDictionary implements Serializable {
      * @throws FileNotFoundException if the file is not found
      * @throws IOException if the json conversion fails
      */
-    public static AbstractDictionary fromJsonFile(String jsonFile, boolean compressed) throws FileNotFoundException, IOException {
+    public static TermDictionary fromJsonFile(String jsonFile, boolean compressed) throws FileNotFoundException, IOException {
         Stopwatch stopwatch = Stopwatch.createStarted();
         
         String filename = jsonFile;
@@ -385,7 +389,7 @@ public abstract class AbstractDictionary implements Serializable {
         }
         
         try(FileReader reader = new FileReader(filename)) {
-            AbstractDictionary dictionary = GSON.fromJson(new JsonReader(reader), AbstractDictionary.class);
+            TermDictionary dictionary = GSON.fromJson(new JsonReader(reader), TermDictionary.class);
             
             log.debug("TIMER# deserialized dictionary from JSON file: " + jsonFile + ", in: " + stopwatch);
             
@@ -417,8 +421,8 @@ public abstract class AbstractDictionary implements Serializable {
      * @param json - a json string
      * @return a TermDictionary instance
      */
-    public static AbstractDictionary fromJsonString(String json) {
-        return GSON.fromJson(json, AbstractDictionary.class);
+    public static TermDictionary fromJsonString(String json) {
+        return GSON.fromJson(json, TermDictionary.class);
     }
 
     /**
@@ -428,6 +432,13 @@ public abstract class AbstractDictionary implements Serializable {
         return largestResourceId;
     }
     
+    /**
+     * @param largestResourceId the largestResourceId to set
+     */
+    protected void setLargestResourceId(int largestResourceId) {
+        this.largestResourceId = largestResourceId;
+    }
+
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */

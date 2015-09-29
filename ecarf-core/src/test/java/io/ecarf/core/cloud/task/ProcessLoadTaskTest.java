@@ -24,9 +24,9 @@ import io.ecarf.core.compress.NTripleGzipCallback;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
-import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.term.TermPart;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.term.dictionary.TermDictionaryGuava;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.TestUtils;
@@ -294,7 +294,7 @@ public class ProcessLoadTaskTest {
 
         Set<String> resources = callback.getResources();
 
-        TermDictionary dictionary = new TermDictionary();
+        TermDictionaryGuava dictionary = new TermDictionaryGuava();
 
         for(String term: resources) {
             dictionary.add(term);

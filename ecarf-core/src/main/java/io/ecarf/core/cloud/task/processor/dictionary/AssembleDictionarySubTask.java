@@ -23,7 +23,7 @@ package io.ecarf.core.cloud.task.processor.dictionary;
 import io.cloudex.framework.partition.entities.Item;
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
-import io.ecarf.core.term.AbstractDictionary;
+import io.ecarf.core.term.dictionary.TermDictionary;
 import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.Utils;
 
@@ -47,7 +47,7 @@ public class AssembleDictionarySubTask implements Callable<Void> {
 
     private final static Log log = LogFactory.getLog(AssembleDictionarySubTask.class);
 
-    private AbstractDictionary dictionary;
+    private TermDictionary dictionary;
     private EcarfGoogleCloudService cloud;
     private String bucket;
     private List<Item> files;
@@ -58,7 +58,7 @@ public class AssembleDictionarySubTask implements Callable<Void> {
      * @param bucket
      * @param files
      */
-    public AssembleDictionarySubTask(AbstractDictionary dictionary,
+    public AssembleDictionarySubTask(TermDictionary dictionary,
             EcarfGoogleCloudService cloud, String bucket, List<Item> files) {
         super();
         this.dictionary = dictionary;

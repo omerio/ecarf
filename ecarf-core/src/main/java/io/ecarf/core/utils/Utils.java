@@ -20,9 +20,12 @@ package io.ecarf.core.utils;
 
 import io.cloudex.framework.cloud.api.ApiUtils;
 import io.cloudex.framework.utils.FileUtils;
-import io.ecarf.core.term.TermDictionary;
 import io.ecarf.core.term.TermPart;
 import io.ecarf.core.term.TermRoot;
+import io.ecarf.core.term.dictionary.TermDictionaryCommons;
+import io.ecarf.core.term.dictionary.TermDictionaryConcurrent;
+import io.ecarf.core.term.dictionary.TermDictionaryCore;
+import io.ecarf.core.term.dictionary.TermDictionaryGuava;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -64,11 +67,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
@@ -120,7 +126,7 @@ public class Utils {
 	            colSerializer.setImmutable(true);
 	            colSerializer.setElementsCanBeNull(false);*/
 	            
-	            kryo.register(TermDictionary.class);
+	            kryo.register(TermDictionaryCore.class);
 	            kryo.register(HashSet.class);
 	            kryo.register(HashMap.class, mapSerializer);
 	            //kryo.register(HashBiMap.class, serializer);
@@ -132,6 +138,12 @@ public class Utils {
 	            });
 	            kryo.register(TermRoot.class);
 	            kryo.register(TermPart.class);
+	            kryo.register(TermDictionaryGuava.class);
+	            kryo.register(TermDictionaryCommons.class);
+	            kryo.register(TermDictionaryConcurrent.class);
+	            kryo.register(ConcurrentHashMap.class);
+	            kryo.register(AtomicInteger.class);
+	            kryo.register(DualHashBidiMap.class);
 	            kryo.setRegistrationRequired(true);
 
 	            return kryo;

@@ -34,7 +34,8 @@
             "className":"io.ecarf.core.cloud.task.processor.dictionary.AssembleDictionaryTask",
             "target":"PROCESSOR",
             "input":{
-                "bucket":"#bucket"
+                "bucket":"#bucket",
+                "targetBucket":"#outBucket" 
             },
             "partitioning":{
                 "type":"COUNT",

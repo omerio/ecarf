@@ -24,7 +24,7 @@ import io.cloudex.cloud.impl.google.compute.GoogleMetaData;
 import io.cloudex.framework.task.CommonTask;
 import io.ecarf.core.compress.NTripleGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
-import io.ecarf.core.term.TermDictionary;
+import io.ecarf.core.term.dictionary.TermDictionaryGuava;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.FilenameUtils;
@@ -148,7 +148,7 @@ public class CreateTermDictionaryTask extends CommonTask {
         
         // 3- Create a dictionary bootstrapped with RDF & OWL URIs
         log.info("Creating terms dictionary, timer: " + stopwatch);
-        TermDictionary dictionary = (TermDictionary) TermDictionary.populateRDFOWLData(new TermDictionary());
+        TermDictionaryGuava dictionary = (TermDictionaryGuava) TermDictionaryGuava.populateRDFOWLData(new TermDictionaryGuava());
         
         log.info("Removing RDF & OWL terms from all terms, timer: " + stopwatch);
         // should be faster to remove these terms than looping through all terms and checking

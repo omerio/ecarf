@@ -1,8 +1,11 @@
-package io.ecarf.core.term;
+package io.ecarf.core.term.dictionary;
 
 import static org.junit.Assert.assertEquals;
 import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
+import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.utils.FilenameUtils;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,13 +47,13 @@ public class TermDictionaryTest {
             "<http://dbpedia.org/resource/Aachen> <http://dbpedia.org/ontology/wikiPageExternalLink> <https://www.createspace.com/282950> .";
     
     
-    private AbstractDictionary dictionary;
+    private TermDictionary dictionary;
     
     private Set<String> allTerms = new HashSet<>();
 
     @Before
     public void setUp() throws Exception {
-        dictionary = TermDictionary.populateRDFOWLData(new TermDictionaryConcurrent());
+        dictionary = TermDictionaryGuava.populateRDFOWLData(new TermDictionaryCore());
         
         NxParser nxp = new NxParser(new StringReader(N_TRIPLES));
         
@@ -104,6 +107,8 @@ public class TermDictionaryTest {
             dictionary.add(bNode);
         }
         
+        ((TermDictionaryCore) dictionary).inverse();
+        
     }
 
     @Test
@@ -123,6 +128,12 @@ public class TermDictionaryTest {
         for(String tm: allTerms) {
             this.validateRoundTrip(tm);
         }
+    }
+    
+    @Test
+    public void testSerialize() throws IOException {
+        
+        this.dictionary.toFile(FilenameUtils.getLocalFilePath("dictionary.kryo.gz"), true);
     }
     
     private void validateRoundTrip(String term) {

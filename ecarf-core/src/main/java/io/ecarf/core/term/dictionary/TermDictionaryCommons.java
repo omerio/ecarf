@@ -18,7 +18,9 @@
  */
 
 
-package io.ecarf.core.term;
+package io.ecarf.core.term.dictionary;
+
+import java.util.Map;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -27,7 +29,7 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class TermDictionary1 extends AbstractDictionary {
+public class TermDictionaryCommons extends TermDictionary {
 
     private static final long serialVersionUID = -3823668914506139740L;
     
@@ -61,6 +63,15 @@ public class TermDictionary1 extends AbstractDictionary {
     public boolean containsKey(String key) {
         
         return this.dictionary.containsKey(key);
+    }
+
+    /**
+     * @param m
+     * @see java.util.Map#putAll(java.util.Map)
+     */
+    @Override
+    protected void putAll(Map<? extends String, ? extends Integer> map) {
+        this.dictionary.putAll(map);
     }
 
 }
