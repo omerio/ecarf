@@ -377,7 +377,7 @@ public class Utils {
         } else {
             Kryo kryo = POOL.borrow();
             // do s.th. with kryo here, and afterwards release it
-            try(Output output = new Output(stream)) {
+            try(Output output = new Output(stream, Constants.GZIP_BUF_SIZE)) {
                 kryo.writeObject(output, object);
             }
             
@@ -436,7 +436,7 @@ public class Utils {
         } else {
             Kryo kryo = POOL.borrow();
             // do s.th. with kryo here, and afterwards release it
-            try(Input input = new Input(stream)) {
+            try(Input input = new Input(stream, Constants.GZIP_BUF_SIZE)) {
               object  = kryo.readObject(input, classOfT);
             }
 

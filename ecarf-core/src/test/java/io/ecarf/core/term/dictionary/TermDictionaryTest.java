@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.FilenameUtils;
+import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -148,7 +149,7 @@ public class TermDictionaryTest {
     
     
     public static void main(String [] args) throws Exception {
-        int count = 400;
+        /*int count = 400;
         
         TermDictionaryTest test = new TermDictionaryTest();
         Stopwatch stopwatch = Stopwatch.createUnstarted();
@@ -167,7 +168,10 @@ public class TermDictionaryTest {
         
         System.out.println("Total iterations: " + count);
         System.out.println("Total time: " + total);
-        System.out.println("Average iteration time in milliseconds: " + (total / count));
+        System.out.println("Average iteration time in milliseconds: " + (total / count));*/
+        
+        TermDictionaryCore dictionary = Utils.objectFromFile("/Users/omerio/Downloads/cloudex-processor-1443542175611_dictionary.gz", TermDictionaryCore.class, true, false);
+        System.out.println(dictionary.size());
         
     }
 
