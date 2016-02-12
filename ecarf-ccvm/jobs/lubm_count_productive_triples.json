@@ -20,22 +20,6 @@
     },
     "tasks":[
         {
-            "id":"start-processors-task",
-            "description": "A dummy task to start all the processors before hand",
-            "className":"io.ecarf.core.cloud.task.processor.DummyProcessorTask",
-            "target":"PROCESSOR",
-            "input":{
-                "item":"#fakeItems"
-            },
-            "partitioning":{
-                "type":"ITEMS",
-                "input":{
-                    "items":"#fakeItems"
-                }
-            },
-            "errorAction":"EXIT"
-        },
-        {
             "id":"schema-term-count-task",
             "description": "Load the schema and do a count of the relevant terms",
             "className":"io.ecarf.core.cloud.task.coordinator.CountSchemaTermTask",
@@ -61,6 +45,22 @@
             "output":[
                 "fileItems"
             ],
+            "errorAction":"EXIT"
+        },
+        {
+            "id":"start-processors-task",
+            "description": "A dummy task to start all the processors before hand",
+            "className":"io.ecarf.core.cloud.task.processor.DummyProcessorTask",
+            "target":"PROCESSOR",
+            "input":{
+                "item":"#fakeItems"
+            },
+            "partitioning":{
+                "type":"ITEMS",
+                "input":{
+                    "items":"#fakeItems"
+                }
+            },
             "errorAction":"EXIT"
         },
         {
