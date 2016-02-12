@@ -198,8 +198,8 @@ public class GoogleCloudServiceTest {
 	public void testDownloadFileFromCloudStorage() throws IOException {
 		this.service.init();
 		
-		this.service.downloadObjectFromCloudStorage("swetodblp_06012015000000000011", 
-				Utils.TEMP_FOLDER + "swetodblp_06012015000000000011", "ecarf", new Callback() {
+		this.service.downloadObjectFromCloudStorage("univ-bench.nt", 
+				Utils.TEMP_FOLDER + "univ-bench.nt", "lubm", new Callback() {
 			@Override
 			public void execute() {
 				System.out.println("Download complete");

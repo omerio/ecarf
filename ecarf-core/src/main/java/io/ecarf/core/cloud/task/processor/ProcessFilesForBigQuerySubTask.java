@@ -25,15 +25,16 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 	private EcarfGoogleCloudService cloud;
 	private TermCounter counter;
 	private String bucket;
+	private String sourceBucket;
 	private boolean countOnly;
 
-	public ProcessFilesForBigQuerySubTask(String file, String bucket, TermCounter counter, boolean countOnly, CloudService cloud) {
+	public ProcessFilesForBigQuerySubTask(String file, String bucket, String sourceBucket, TermCounter counter, boolean countOnly, CloudService cloud) {
 		super();
 		this.file = file;
 		this.cloud = (EcarfGoogleCloudService) cloud;
 		this.counter = counter;
 		this.bucket = bucket;
-
+		this.sourceBucket = sourceBucket;
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 
 		//log.info("Downloading file: " + file);
 
-		this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
+		this.cloud.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
 
 		// all downloaded, carryon now, process the files
 		log.info("Processing file: " + localFile + ", countOnly = " + countOnly);

@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,6 +56,8 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     private final static Log log = LogFactory.getLog(ProcessLoadTask.class);
 
     private String bucket;
+    
+    private String sourceBucket;
 
     private String schemaTermsFile;
     
@@ -102,6 +105,12 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     @Override
     public List<Callable<TermCounter>> getSubTasks(Set<String> files) {
         List<Callable<TermCounter>> tasks = new ArrayList<>();
+        
+        if(StringUtils.isBlank(sourceBucket)) {
+            log.warn("sourceBucket is empty, using bucket: " + this.bucket);
+            this.sourceBucket = this.bucket;
+        }
+        
         for(final String file: files) {
 
             TermCounter counter = null;
@@ -112,7 +121,8 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             }
 
             ProcessFilesForBigQuerySubTask task = 
-                    new ProcessFilesForBigQuerySubTask(file, bucket, counter, Boolean.valueOf(countOnly), this.getCloudService());
+                    new ProcessFilesForBigQuerySubTask(file, bucket, sourceBucket, 
+                            counter, Boolean.valueOf(countOnly), this.getCloudService());
             tasks.add(task);
 
         }
@@ -199,6 +209,20 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
      */
     public void setCountOnly(String countOnly) {
         this.countOnly = countOnly;
+    }
+
+    /**
+     * @return the sourceBucket
+     */
+    public String getSourceBucket() {
+        return sourceBucket;
+    }
+
+    /**
+     * @param sourceBucket the sourceBucket to set
+     */
+    public void setSourceBucket(String sourceBucket) {
+        this.sourceBucket = sourceBucket;
     }
 
 }
