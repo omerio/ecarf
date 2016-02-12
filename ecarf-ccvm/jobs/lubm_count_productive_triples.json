@@ -4,7 +4,7 @@
     "mode":"Serial",
     "data":{
         "sourceBucket": "lubm",
-        "bucket": "lubm-output/2-nodes",
+        "bucket": "lubm-output",
         "schema": "univ-bench.nt",
         "countOnly": "true",
         "fakeItems": ["item1", "item2"],
