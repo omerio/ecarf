@@ -34,6 +34,7 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 		this.cloud = (EcarfGoogleCloudService) cloud;
 		this.counter = counter;
 		this.bucket = bucket;
+		this.countOnly = countOnly;
 		this.sourceBucket = sourceBucket;
 	}
 
