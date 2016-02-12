@@ -8,7 +8,7 @@
     },
     "vmConfig":{
         "zoneId":"us-central1-a",
-        "imageId":"ecarf-1000/global/images/ecarf-centos-6-v20150818-2",
+        "imageId":"ecarf-1000/global/images/ecarf-centos-6-v20160126",
         "vmType":"n1-highmem-4",
         "cost":0.252,
         "minUsage":600,
