@@ -187,4 +187,18 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
         return count;
     }
 
+    /**
+     * @return the countOnly
+     */
+    public String getCountOnly() {
+        return countOnly;
+    }
+
+    /**
+     * @param countOnly the countOnly to set
+     */
+    public void setCountOnly(String countOnly) {
+        this.countOnly = countOnly;
+    }
+
 }
