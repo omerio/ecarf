@@ -25,8 +25,9 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 	private EcarfGoogleCloudService cloud;
 	private TermCounter counter;
 	private String bucket;
+	private boolean countOnly;
 
-	public ProcessFilesForBigQuerySubTask(String file, String bucket, TermCounter counter, CloudService cloud) {
+	public ProcessFilesForBigQuerySubTask(String file, String bucket, TermCounter counter, boolean countOnly, CloudService cloud) {
 		super();
 		this.file = file;
 		this.cloud = (EcarfGoogleCloudService) cloud;
@@ -47,22 +48,25 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 		this.cloud.downloadObjectFromCloudStorage(file, localFile, bucket);
 
 		// all downloaded, carryon now, process the files
-
-		log.info("Processing file: " + localFile);
-		String outFile = this.cloud.prepareForBigQueryImport(localFile, counter);
+		log.info("Processing file: " + localFile + ", countOnly = " + countOnly);
+		
+		String outFile = this.cloud.prepareForBigQueryImport(localFile, counter, countOnly);
 
 		// once the processing is done then delete the local file
 		FileUtils.deleteFile(localFile);
 
-		// now upload the files again
+		// if we are not just counting then upload the output files
+		if(!countOnly) {
+		    // now upload the files again
+		    log.info("Uploading file: " + outFile);
+		    this.cloud.uploadFileToCloudStorage(outFile, bucket);
 
-		log.info("Uploading file: " + outFile);
-		this.cloud.uploadFileToCloudStorage(outFile, bucket);
-
-		// now delete all the locally processed files
-		FileUtils.deleteFile(outFile);
+		    // now delete all the locally processed files
+		    FileUtils.deleteFile(outFile);
+		}
 
 		return counter;
 	}
+
 
 }

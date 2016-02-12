@@ -96,7 +96,7 @@ public class ProcessLoadTaskOld extends CommonTask {
 			// all downloaded, carryon now, process the files
 
 			log.info("Processing file: " + localFile);
-			String outFile = cloudService.prepareForBigQueryImport(localFile, counter);
+			String outFile = cloudService.prepareForBigQueryImport(localFile, counter, false);
 
 			// once the processing is done then delete the local file
 			FileUtils.deleteFile(localFile);

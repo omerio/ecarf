@@ -27,6 +27,7 @@ import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.compress.NxGzipCallback;
 import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.StringEscapeCallback;
+import io.ecarf.core.compress.callback.TermCounterCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Utils;
@@ -54,7 +55,7 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
      */
     @Override
     public String prepareForBigQueryImport(String filename) throws IOException {
-        return this.prepareForBigQueryImport(filename, null);
+        return this.prepareForBigQueryImport(filename, null, false);
     }
 
     /**
@@ -65,20 +66,36 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
      * @throws IOException 
      */
     @Override
-    public String prepareForBigQueryImport(String filename, final TermCounter counter) throws IOException {
+    public String prepareForBigQueryImport(String filename, final TermCounter counter, boolean countOnly) throws IOException {
         /*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
               .append(File.separator).append("out_").append(filename).toString();*/
         NxGzipProcessor processor = new NxGzipProcessor(filename);
-        
-        NxGzipCallback callback = new StringEscapeCallback();
+
+        NxGzipCallback callback;
+
+        if(countOnly) {
+            callback = new TermCounterCallback();
+            
+        } else {
+            
+            callback = new StringEscapeCallback();
+        }
 
         callback.setCounter(counter);
+
+        String outFilename = null;
         
-        String outFilename = processor.process(callback);
+        if(countOnly) {
+            
+            processor.read(callback);
+            
+        } else {
+            outFilename = processor.process(callback);
+        }
 
         return outFilename;
     }
-    
+
     /**
      * Download a json file from cloud storage which includes a JSON array and then parse it as a set
      * @param filename

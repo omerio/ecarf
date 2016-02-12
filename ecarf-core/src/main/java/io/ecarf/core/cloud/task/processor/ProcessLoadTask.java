@@ -57,6 +57,8 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     private String bucket;
 
     private String schemaTermsFile;
+    
+    private String countOnly;
 
     private Set<String> schemaTerms;
     
@@ -109,7 +111,8 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
                 counter.setTermsToCount(schemaTerms);
             }
 
-            ProcessFilesForBigQuerySubTask task = new ProcessFilesForBigQuerySubTask(file, bucket, counter, this.getCloudService());
+            ProcessFilesForBigQuerySubTask task = 
+                    new ProcessFilesForBigQuerySubTask(file, bucket, counter, Boolean.valueOf(countOnly), this.getCloudService());
             tasks.add(task);
 
         }

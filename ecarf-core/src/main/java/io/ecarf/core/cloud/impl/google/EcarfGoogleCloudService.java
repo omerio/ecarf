@@ -50,7 +50,7 @@ public interface EcarfGoogleCloudService extends GoogleCloudService {
      * @return
      * @throws IOException 
      */
-    public String prepareForBigQueryImport(String filename, final TermCounter counter) throws IOException;
+    public String prepareForBigQueryImport(String filename, final TermCounter counter, boolean countOnly) throws IOException;
     
     /**
      * Stream local N triple files into big query

@@ -55,7 +55,7 @@ public class NTripleGzipProcessorTest {
 		EcarfGoogleCloudService service = new EcarfGoogleCloudServiceImpl();
 		
 		long startTime = System.nanoTime();
-		String outFile = service.prepareForBigQueryImport(IN_FILE, counter);
+		String outFile = service.prepareForBigQueryImport(IN_FILE, counter, false);
 		long estimatedTime = System.nanoTime() - startTime;
 		
 		double seconds = (double)estimatedTime / 1000000000.0;
