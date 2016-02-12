@@ -58,7 +58,10 @@ public class DoUploadOutputLogTask extends CommonTask {
 		String logFolder = Config.getProperty(Constants.OUTPUT_FOLDER_KEY);
 		String instanceId = cloudService.getInstanceId();
 		
-		String newLogFile = logFolder + Constants.OUTPUT + instanceId + Constants.DOT_LOG;
+		// get a random number just in case two instances have the same id, which is true for the coordinator
+		int random = (int) (Math.random() * 1001);		
+		
+		String newLogFile = logFolder + Constants.OUTPUT + instanceId + "_" + random + Constants.DOT_LOG;
 		log.info("Copying output log to " + newLogFile);
 		FileUtils.copyFile(logFolder + logFile, newLogFile);
 		
