@@ -19,7 +19,7 @@
 
 package io.ecarf.core.compress.callback;
 
-import io.ecarf.core.compress.NTripleGzipCallback;
+import io.ecarf.core.compress.NxGzipCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
@@ -37,7 +37,7 @@ import org.semanticweb.yars.nx.Node;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class ExtractTermsPartCallback implements NTripleGzipCallback {
+public class ExtractTermsPartCallback implements NxGzipCallback {
 
     private Set<String> resources = new HashSet<>();
 
@@ -52,7 +52,7 @@ public class ExtractTermsPartCallback implements NTripleGzipCallback {
      * @see io.ecarf.core.compress.NTripleGzipCallback#process(org.semanticweb.yars.nx.Node[])
      */
     @Override
-    public String process(Node[] nodes) throws IOException {
+    public String processNTriple(Node[] nodes) throws IOException {
         
         String term;
 
@@ -131,6 +131,11 @@ public class ExtractTermsPartCallback implements NTripleGzipCallback {
      */
     public Set<String> getResources() {
         return resources;
+    }
+
+    @Override
+    public String processNQuad(Node[] nodes) throws IOException {
+        return null;
     }
 
 }

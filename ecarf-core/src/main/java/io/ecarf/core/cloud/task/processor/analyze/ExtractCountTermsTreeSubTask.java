@@ -2,7 +2,7 @@ package io.ecarf.core.cloud.task.processor.analyze;
 
 import io.cloudex.framework.cloud.api.CloudService;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
-import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsTreeCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermRoot;
@@ -62,7 +62,7 @@ public class ExtractCountTermsTreeSubTask implements Callable<TermCounter> {
 
             log.info("Processing file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
 
-            NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
+            NxGzipProcessor processor = new NxGzipProcessor(localFile);
             ExtractTermsTreeCallback callback = new ExtractTermsTreeCallback();
             callback.setCounter(counter);
             processor.read(callback);

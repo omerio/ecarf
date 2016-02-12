@@ -22,7 +22,7 @@ package io.ecarf.core.cloud.task.common;
 
 import io.cloudex.cloud.impl.google.compute.GoogleMetaData;
 import io.cloudex.framework.task.CommonTask;
-import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.dictionary.TermDictionaryGuava;
 import io.ecarf.core.triple.SchemaURIType;
@@ -132,7 +132,7 @@ public class CreateTermDictionaryTask extends CommonTask {
             log.info("Schema file exists locally.");
         }
 
-        NTripleGzipProcessor processor = new NTripleGzipProcessor(localSchemaFile);
+        NxGzipProcessor processor = new NxGzipProcessor(localSchemaFile);
         ExtractTermsCallback callback = new ExtractTermsCallback();
 
         processor.read(callback);

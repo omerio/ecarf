@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,6 +47,8 @@ public class CreateFileItemsTask extends CommonTask {
 	private final static Log log = LogFactory.getLog(CreateFileItemsTask.class);
 	
 	private String bucket;
+	
+	private String fileMatch;
 	
 
 	/* (non-Javadoc)
@@ -64,12 +67,27 @@ public class CreateFileItemsTask extends CommonTask {
 		
 		String triplesFilesStats = null;
 		
+		long totalSize = 0;
+		
 		for(StorageObject object: objects) {
 		    
 			String filename = object.getName();
 			
-			if(filename.endsWith(Constants.COMPRESSED_N_TRIPLES)) {
-				items.add(new Item(filename, object.getSize().longValue()));
+			boolean addFile = false;
+			
+			if(StringUtils.isBlank(fileMatch)) {
+			    // fall back into NTriples compressed
+			    addFile = filename.endsWith(Constants.COMPRESSED_N_TRIPLES);
+			    
+			} else {
+			    
+			    addFile = filename.indexOf(fileMatch) > -1;
+			}
+			
+			if(addFile) {
+			    long size = object.getSize().longValue();
+			    totalSize = totalSize + size;
+				items.add(new Item(filename, size));
 				
 			} else if(FilenameUtils.TRIPLES_FILES_STATS_JSON.equals(filename)) {
 			    
@@ -83,6 +101,8 @@ public class CreateFileItemsTask extends CommonTask {
 		
 		// if the triples files stats is found then use it
 		if(triplesFilesStats != null) {
+		    
+		    totalSize = 0;
 		    
 		    Map<String, Item> fileItems = new HashMap<>();
 		    // quickly key items by filename
@@ -102,8 +122,10 @@ public class CreateFileItemsTask extends CommonTask {
 		            
 		            if(item != null)  {
 		                if(stat.getProcessingTime() != null) {
-		                
-		                    item.setWeight(stat.getProcessingTime().longValue());
+		                    long size = stat.getProcessingTime().longValue();
+		                    totalSize = totalSize + size;
+		                    
+		                    item.setWeight(size);
 		                
 		                } else if(stat.getStatements() != null) {
 		                    
@@ -120,6 +142,7 @@ public class CreateFileItemsTask extends CommonTask {
 		
 		// add the items to the output
 		this.addOutput("fileItems", items);
+		
 		
 		// each node should handle a gigbyte of data
 		// read it the configurations
@@ -138,7 +161,7 @@ public class CreateFileItemsTask extends CommonTask {
 		this.results = new Results();
 		results.setBins(bins);*/
 		
-		log.info("Successfully processed partition load");
+		log.info("Successfully processed partition load, total items: " + items.size() + ", total size: " + totalSize);
 	}
 
 
@@ -155,6 +178,22 @@ public class CreateFileItemsTask extends CommonTask {
      */
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+
+    /**
+     * @return the fileMatch
+     */
+    public String getFileMatch() {
+        return fileMatch;
+    }
+
+
+    /**
+     * @param fileMatch the fileMatch to set
+     */
+    public void setFileMatch(String fileMatch) {
+        this.fileMatch = fileMatch;
     }
 	
 

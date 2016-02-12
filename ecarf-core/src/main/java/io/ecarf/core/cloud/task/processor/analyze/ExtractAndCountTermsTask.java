@@ -24,7 +24,7 @@ import io.cloudex.framework.task.CommonTask;
 import io.cloudex.framework.utils.FileUtils;
 import io.cloudex.framework.utils.ObjectUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
-import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.utils.Constants;
@@ -90,7 +90,7 @@ public class ExtractAndCountTermsTask extends CommonTask {
             cloudService.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
 
             log.info("Processing file: " + localFile + ", timer: " + stopwatch1);
-            NTripleGzipProcessor processor = new NTripleGzipProcessor(localFile);
+            NxGzipProcessor processor = new NxGzipProcessor(localFile);
             ExtractTermsCallback callback = new ExtractTermsCallback();
             callback.setCounter(counter);
             processor.read(callback);

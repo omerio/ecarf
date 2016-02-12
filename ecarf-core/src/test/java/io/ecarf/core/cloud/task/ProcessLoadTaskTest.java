@@ -20,8 +20,8 @@ package io.ecarf.core.cloud.task;
 
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
-import io.ecarf.core.compress.NTripleGzipCallback;
-import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.NxGzipCallback;
+import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.TermPart;
@@ -118,8 +118,8 @@ public class ProcessLoadTaskTest {
         
        // final Set<String> schemaURIParts = Sets.newHashSet("http://www.w3.org/1999/02", "http://www.w3.org/2000/01", "http://www.w3.org/2002/07", "http://www.w3.org/TR");
 
-        NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
-        NTripleGzipCallback callback = new NTripleGzipCallback() {
+        NxGzipProcessor processor = new NxGzipProcessor(filename);
+        NxGzipCallback callback = new NxGzipCallback() {
 
             private TermCounter counter;
             
@@ -130,7 +130,7 @@ public class ProcessLoadTaskTest {
             }
 
             @Override
-            public String process(Node[] nodes) throws IOException {
+            public String processNTriple(Node[] nodes) throws IOException {
                 
                 String term;
 
@@ -197,6 +197,12 @@ public class ProcessLoadTaskTest {
             @Override
             public void setCounter(TermCounter counter) {   
                 this.counter = counter;
+            }
+
+            @Override
+            public String processNQuad(Node[] nodes) throws IOException {
+                // TODO Auto-generated method stub
+                return null;
             }
             
         };
@@ -273,7 +279,7 @@ public class ProcessLoadTaskTest {
         TermCounter counter = new TermCounter();
         counter.setTermsToCount(schemaTerms);
 
-        NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
+        NxGzipProcessor processor = new NxGzipProcessor(filename);
 
         //NTripleGzipCallback callback = new CommonsCsvCallback();
         ExtractTermsCallback callback = new ExtractTermsCallback();

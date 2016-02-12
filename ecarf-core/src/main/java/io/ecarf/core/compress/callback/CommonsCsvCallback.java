@@ -20,7 +20,7 @@
 
 package io.ecarf.core.compress.callback;
 
-import io.ecarf.core.compress.NTripleGzipCallback;
+import io.ecarf.core.compress.NxGzipCallback;
 import io.ecarf.core.term.TermCounter;
 
 import java.io.IOException;
@@ -33,13 +33,13 @@ import org.semanticweb.yars.nx.util.NxUtil;
 
 /**
  * 
- * An implementation of {@link NTripleGzipCallback} that is based on Apache Commons CSV
+ * An implementation of {@link NxGzipCallback} that is based on Apache Commons CSV
  * {@link CSVPrinter}
  * 
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class CommonsCsvCallback implements NTripleGzipCallback {
+public class CommonsCsvCallback implements NxGzipCallback {
     
     private TermCounter counter;
     
@@ -57,7 +57,7 @@ public class CommonsCsvCallback implements NTripleGzipCallback {
      * @see io.ecarf.core.compress.NTripleGzipCallback#process(java.lang.String[])
      */
     @Override
-    public String process(Node[] nodes) throws IOException {
+    public String processNTriple(Node[] nodes) throws IOException {
         
         String[] terms = new String [3];
         
@@ -87,6 +87,11 @@ public class CommonsCsvCallback implements NTripleGzipCallback {
     @Override
     public void setCounter(TermCounter counter) {
         this.counter = counter;
+    }
+
+    @Override
+    public String processNQuad(Node[] nodes) throws IOException {
+        return null;
     }
 
 }

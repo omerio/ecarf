@@ -24,8 +24,8 @@ import io.cloudex.cloud.impl.google.GoogleCloudServiceImpl;
 import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
 import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.cloudex.framework.utils.FileUtils;
-import io.ecarf.core.compress.NTripleGzipCallback;
-import io.ecarf.core.compress.NTripleGzipProcessor;
+import io.ecarf.core.compress.NxGzipCallback;
+import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.StringEscapeCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.triple.TripleUtils;
@@ -68,9 +68,9 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
     public String prepareForBigQueryImport(String filename, final TermCounter counter) throws IOException {
         /*String outFilename = new StringBuilder(FileUtils.TEMP_FOLDER)
               .append(File.separator).append("out_").append(filename).toString();*/
-        NTripleGzipProcessor processor = new NTripleGzipProcessor(filename);
+        NxGzipProcessor processor = new NxGzipProcessor(filename);
         
-        NTripleGzipCallback callback = new StringEscapeCallback();
+        NxGzipCallback callback = new StringEscapeCallback();
 
         callback.setCounter(counter);
         

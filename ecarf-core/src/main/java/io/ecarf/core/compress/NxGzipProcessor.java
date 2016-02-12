@@ -50,9 +50,9 @@ import org.semanticweb.yars.nx.parser.NxParser;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class NTripleGzipProcessor {
+public class NxGzipProcessor {
 
-    private final static Log log = LogFactory.getLog(NTripleGzipProcessor.class);
+    private final static Log log = LogFactory.getLog(NxGzipProcessor.class);
 
     private String inputFile;
 
@@ -64,7 +64,7 @@ public class NTripleGzipProcessor {
      * @param inputFile
      * @param outputFile
      */
-    public NTripleGzipProcessor(String inputFile) {
+    public NxGzipProcessor(String inputFile) {
         super();
         this.inputFile = inputFile;
         // get the file name before the ext
@@ -80,7 +80,7 @@ public class NTripleGzipProcessor {
      * @param callback
      * @throws IOException
      */
-    public void read(NTripleGzipCallback callback) throws IOException {
+    public void read(NxGzipCallback callback) throws IOException {
 
         try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
                 this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
@@ -91,13 +91,13 @@ public class NTripleGzipProcessor {
 
                 Node[] ns = nxp.next();
 
-                //We are only interested in triples, no quads
                 if (ns.length == 3) {
-
-                    callback.process(ns);
+                    //We are only interested in triples, no quads
+                    callback.processNTriple(ns);
 
                 } else {
-                    log.warn("Ignoring line: " + ns);
+                    //log.warn("Ignoring line: " + ns);
+                    callback.processNQuad(ns);
                 }
             }
         }
@@ -109,7 +109,7 @@ public class NTripleGzipProcessor {
      * @param callback
      * @throws IOException 
      */
-    public String process(NTripleGzipCallback callback) throws IOException {
+    public String process(NxGzipCallback callback) throws IOException {
 
         try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
                 this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
@@ -133,13 +133,18 @@ public class NTripleGzipProcessor {
                     //We are only interested in triples, no quads
                     if (ns.length == 3) {
 
-                        outLine = callback.process(ns);
+                        outLine = callback.processNTriple(ns);
                         if(outLine != null) {
                             writer.println(outLine);
                         }
 
                     } else {
-                        log.warn("Ignoring line: " + ns);
+                        //log.warn("Ignoring line: " + ns);
+                        
+                        outLine = callback.processNQuad(ns);
+                        if(outLine != null) {
+                            writer.println(outLine);
+                        }
                     }
                 }
 

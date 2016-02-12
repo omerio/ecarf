@@ -28,7 +28,7 @@ import org.semanticweb.yars.nx.Node;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public interface NTripleGzipCallback {
+public interface NxGzipCallback {
     
     /**
      * The output if we are directly appending to an output
@@ -42,7 +42,15 @@ public interface NTripleGzipCallback {
      * @return
      * @throws IOException
      */
-	public String process(Node[] nodes) throws IOException;
+	public String processNTriple(Node[] nodes) throws IOException;
+	
+	/**
+     * Do actual processing for the provided terms array
+     * @param nodes
+     * @return
+     * @throws IOException
+     */
+    public String processNQuad(Node[] nodes) throws IOException;
 	
 	/**
 	 * Set a term counter if we are counting the terms as well

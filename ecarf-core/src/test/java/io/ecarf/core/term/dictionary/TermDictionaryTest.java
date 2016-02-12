@@ -70,7 +70,7 @@ public class TermDictionaryTest {
             //We are only interested in triples, no quads
             if (ns.length == 3) {
 
-                callback.process(ns);
+                callback.processNTriple(ns);
                 count++;
                 
                 for (int i = 0; i < ns.length; i++)  {
