@@ -48,7 +48,11 @@ public class CreateFileItemsTask extends CommonTask {
 	
 	private String bucket;
 	
+	// add files matching this string, we use indexOf
 	private String fileMatch;
+	
+	// we only want part of the input if this value is provided, 0 means no max
+	private long maxSize;
 	
 
 	/* (non-Javadoc)
@@ -57,7 +61,7 @@ public class CreateFileItemsTask extends CommonTask {
 	@Override
 	public void run() throws IOException {
 		
-		log.info("Processing partition load");
+		log.info("Processing partition load, with maxSize: " + maxSize);
 		
 		//String bucket = this.input.getBucket();
 		
@@ -85,9 +89,15 @@ public class CreateFileItemsTask extends CommonTask {
 			}
 			
 			if(addFile) {
+			    
 			    long size = object.getSize().longValue();
 			    totalSize = totalSize + size;
 				items.add(new Item(filename, size));
+				
+				if(maxSize > 0 && totalSize >= maxSize) {
+				    log.info("Got files with the maximum size of: " + totalSize);
+				    break;
+				}
 				
 			} else if(FilenameUtils.TRIPLES_FILES_STATS_JSON.equals(filename)) {
 			    
@@ -97,6 +107,8 @@ public class CreateFileItemsTask extends CommonTask {
 			} else {
 				log.warn("Skipping file: " + filename);
 			}
+			
+			
 		}
 		
 		// if the triples files stats is found then use it
@@ -121,16 +133,26 @@ public class CreateFileItemsTask extends CommonTask {
 		            Item item = fileItems.get(stat.getFilename());
 		            
 		            if(item != null)  {
+		                
+		                long size = 0;
+		                
 		                if(stat.getProcessingTime() != null) {
-		                    long size = stat.getProcessingTime().longValue();
-		                    totalSize = totalSize + size;
 		                    
+		                    size = stat.getProcessingTime().longValue();     
 		                    item.setWeight(size);
 		                
 		                } else if(stat.getStatements() != null) {
 		                    
-		                    item.setWeight(stat.getStatements());
+		                    size = stat.getStatements();
+		                    item.setWeight(size);
+		                
+		                } else if(stat.getSize() != null) {
+		                    
+		                    size = stat.getSize();
+		                    item.setWeight(size);
 		                }
+		                
+		                totalSize = totalSize + size;
 		            }
 		        }
 
@@ -194,6 +216,22 @@ public class CreateFileItemsTask extends CommonTask {
      */
     public void setFileMatch(String fileMatch) {
         this.fileMatch = fileMatch;
+    }
+
+
+    /**
+     * @return the maxSize
+     */
+    public long getMaxSize() {
+        return maxSize;
+    }
+
+
+    /**
+     * @param maxSize the maxSize to set
+     */
+    public void setMaxSize(long maxSize) {
+        this.maxSize = maxSize;
     }
 	
 

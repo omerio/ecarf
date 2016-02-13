@@ -3,10 +3,12 @@
     "description": "Count all the productive instance triples for LUBM 8K",
     "mode":"Serial",
     "data":{
-        "sourceBucket": "lubm",
+        "sourceBucket": "lubm1",
         "bucket": "lubm-output",
         "schema": "univ-bench.nt",
         "countOnly": "true",
+        "jobId": "2-nodes-run-1",
+        "maxSize": 0,
         "fakeItems": ["item1", "item2"],
         "numberOfProcessors": 2
     },
@@ -106,7 +108,8 @@
             "className":"io.ecarf.core.cloud.task.common.DoUploadOutputLogTask",
             "target":"PROCESSOR",
             "input":{
-                "bucket":"#bucket"
+                "bucket":"#bucket",
+                "jobId":"#jobId"
             },
             "partitioning":{
                 "type":"ITEMS",
@@ -122,7 +125,8 @@
             "className":"io.ecarf.core.cloud.task.common.DoUploadOutputLogTask",
             "target":"COORDINATOR",
             "input":{
-                "bucket":"#bucket"
+                "bucket":"#bucket",
+                "jobId":"#jobId"
             },
             "errorAction":"EXIT"
         }

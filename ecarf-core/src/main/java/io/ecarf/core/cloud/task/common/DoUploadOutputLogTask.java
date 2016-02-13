@@ -26,6 +26,7 @@ import io.ecarf.core.utils.Constants;
 
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,6 +44,8 @@ public class DoUploadOutputLogTask extends CommonTask {
 
 	private String bucket;
 	
+	private String jobId;
+	
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.CommonTask#run()
@@ -59,9 +62,14 @@ public class DoUploadOutputLogTask extends CommonTask {
 		String instanceId = cloudService.getInstanceId();
 		
 		// get a random number just in case two instances have the same id, which is true for the coordinator
-		int random = (int) (Math.random() * 1001);		
+		//int random = (int) (Math.random() * 1001);
+		if(StringUtils.isBlank(jobId)) {
+		    jobId = "_" + Integer.toString((int) (Math.random() * 1001));
+		} else {
+		    jobId = "_" + jobId;
+		}
 		
-		String newLogFile = logFolder + Constants.OUTPUT + instanceId + "_" + random + Constants.DOT_LOG;
+		String newLogFile = logFolder + Constants.OUTPUT + instanceId + jobId + Constants.DOT_LOG;
 		log.info("Copying output log to " + newLogFile);
 		FileUtils.copyFile(logFolder + logFile, newLogFile);
 		
@@ -83,6 +91,20 @@ public class DoUploadOutputLogTask extends CommonTask {
      */
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+    /**
+     * @return the jobId
+     */
+    public String getJobId() {
+        return jobId;
+    }
+
+    /**
+     * @param jobId the jobId to set
+     */
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
     }
 
 }
