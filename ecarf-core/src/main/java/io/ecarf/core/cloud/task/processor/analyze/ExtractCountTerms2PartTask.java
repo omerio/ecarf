@@ -45,6 +45,8 @@ public class ExtractCountTerms2PartTask extends ProcessLoadTask {
     private final static Log log = LogFactory.getLog(ExtractCountTerms2PartTask.class);
     
     private String sourceBucket;
+    
+    private Integer splitLocation;
 
 
     /*
@@ -60,6 +62,12 @@ public class ExtractCountTerms2PartTask extends ProcessLoadTask {
             this.sourceBucket = this.getBucket();
         }
         
+        if(this.splitLocation == null) {
+            this.splitLocation = -1;
+        }
+        
+        log.info("Using split location: " + splitLocation);
+        
         Set<String> schemaTerms = this.getSchemaTerms();
 
         for(final String file: files) {
@@ -72,7 +80,8 @@ public class ExtractCountTerms2PartTask extends ProcessLoadTask {
             }
 
             ExtractCountTerms2PartSubTask task = 
-                    new ExtractCountTerms2PartSubTask(file, this.getBucket(), this.sourceBucket, counter, this.getCloudService());
+                    new ExtractCountTerms2PartSubTask(file, this.getBucket(), 
+                            this.sourceBucket, counter, this.splitLocation, this.getCloudService());
 
             tasks.add(task);
 
@@ -93,6 +102,20 @@ public class ExtractCountTerms2PartTask extends ProcessLoadTask {
      */
     public void setSourceBucket(String sourceBucket) {
         this.sourceBucket = sourceBucket;
+    }
+
+    /**
+     * @return the splitLocation
+     */
+    public Integer getSplitLocation() {
+        return splitLocation;
+    }
+
+    /**
+     * @param splitLocation the splitLocation to set
+     */
+    public void setSplitLocation(Integer splitLocation) {
+        this.splitLocation = splitLocation;
     }
 
 }

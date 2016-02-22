@@ -34,14 +34,16 @@ public class ExtractCountTerms2PartSubTask implements Callable<TermCounter> {
     private TermCounter counter;
     private String bucket;
     private String sourceBucket;
+    private int splitLocation;
 
-    public ExtractCountTerms2PartSubTask(String file, String bucket, String sourceBucket, TermCounter counter, CloudService cloud) {
+    public ExtractCountTerms2PartSubTask(String file, String bucket, String sourceBucket, TermCounter counter, int splitLocation, CloudService cloud) {
         super();
         this.file = file;
         this.cloud = (EcarfGoogleCloudService) cloud;
         this.counter = counter;
         this.bucket = bucket;
         this.sourceBucket = sourceBucket;
+        this.splitLocation = splitLocation;
 
     }
 
@@ -64,6 +66,7 @@ public class ExtractCountTerms2PartSubTask implements Callable<TermCounter> {
             Stopwatch stopwatch1 = Stopwatch.createStarted();
             NxGzipProcessor processor = new NxGzipProcessor(localFile);
             ExtractTerms2PartCallback callback = new ExtractTerms2PartCallback();
+            callback.setSplitLocation(this.splitLocation);
             callback.setCounter(counter);
             processor.read(callback);
             

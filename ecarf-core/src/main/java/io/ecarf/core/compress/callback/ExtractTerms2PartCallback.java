@@ -47,6 +47,8 @@ public class ExtractTerms2PartCallback implements NxGzipCallback {
     
     private int literalCount;
     
+    private int splitLocation;
+    
 
     /* (non-Javadoc)
      * @see io.ecarf.core.compress.NTripleGzipCallback#process(org.semanticweb.yars.nx.Node[])
@@ -78,7 +80,7 @@ public class ExtractTerms2PartCallback implements NxGzipCallback {
                     
                     if(!SchemaURIType.RDF_OWL_TERMS.contains(term)) {
                         
-                        List<String> parts = TermUtils.splitIntoTwo(term);
+                        List<String> parts = TermUtils.splitIntoTwo(term, true, splitLocation);
                         
                         // invalid URIs, e.g. <http:///www.taotraveller.com> is parsed by NxParser as http:///
                         if(!parts.isEmpty()) {
@@ -136,6 +138,10 @@ public class ExtractTerms2PartCallback implements NxGzipCallback {
     @Override
     public String processNQuad(Node[] nodes) throws IOException {
         return null;
+    }
+
+    public void setSplitLocation(int splitLocation) {
+        this.splitLocation = splitLocation;
     }
 
 }

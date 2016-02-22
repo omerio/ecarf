@@ -167,6 +167,13 @@ public class TermUtils {
 	public static List<String> splitIntoTwo(String term) {
 	    return splitIntoTwo(term, true);
 	}
+	
+	/**
+     * Split the provided term into 2 parts using the slash a separator.
+     */
+	public static List<String> splitIntoTwo(String term, boolean hasProtocol) {
+	    return splitIntoTwo(term, hasProtocol, -1);
+	}
     
 	/**
 	 * Split the provided term into 2 parts using the slash a separator. Uses some rules concerning : and ?
@@ -210,9 +217,10 @@ public class TermUtils {
         quiredZoomLevel=3]
 
 	 * @param term
+	 * @param splitLocation - the location of the slash
 	 * @return
 	 */
-    public static List<String> splitIntoTwo(String term, boolean hasProtocol) {
+    public static List<String> splitIntoTwo(String term, boolean hasProtocol, int splitLocation) {
         
         String path;
         
@@ -236,52 +244,48 @@ public class TermUtils {
         //System.out.println(path);
         List<String> parts = new ArrayList<>();
         
-        int slashIdx = path.lastIndexOf(TermUtils.URI_SEP);
-        int colonIdx = path.indexOf(':');
-        int questionIdx = path.indexOf('?');
+        int slashIdx = path.indexOf(TermUtils.URI_SEP);;
         
-        if(((colonIdx > -1) && (slashIdx > colonIdx)) || ((questionIdx > -1) && (slashIdx > questionIdx))) {
+        switch(splitLocation) {
+        
+        case 0: 
+            // the first slash
+            break;
+        
+        case 1:
+            // the second slash
+            slashIdx = path.indexOf(TermUtils.URI_SEP, slashIdx + 1);
+            break;
+
+        case -1:
+        default:
+            // the last slash
+            slashIdx = path.lastIndexOf(TermUtils.URI_SEP);
             
-            int idx = -1;
+            int colonIdx = path.indexOf(':');
+            int questionIdx = path.indexOf('?');
             
-           /* if((colonIdx > -1) && (questionIdx > -1)) {
-                if(colonIdx < questionIdx) {
+            if(((colonIdx > -1) && (slashIdx > colonIdx)) || ((questionIdx > -1) && (slashIdx > questionIdx))) {
+                
+                int idx = -1;
+                
+                boolean colonAndQuestion = (colonIdx > -1) && (questionIdx > -1);
+                
+                if((colonAndQuestion && (colonIdx < questionIdx)) || (colonIdx > -1)) {
                     
                     idx = getCharIdxBeforeOrAfterIdx(path, colonIdx, TermUtils.URI_SEP);
                     
-                } else {
+                } else if((colonAndQuestion && (colonIdx > questionIdx)) || (questionIdx > -1)) {
+                    
                     idx = getCharIdxBeforeOrAfterIdx(path, questionIdx, TermUtils.URI_SEP);
                 }
                 
-            } else if(colonIdx > -1) {
-                
-                idx = getCharIdxBeforeOrAfterIdx(path, colonIdx, TermUtils.URI_SEP);
-                
-            } else if(questionIdx > -1) {
-                
-                idx = getCharIdxBeforeOrAfterIdx(path, questionIdx, TermUtils.URI_SEP);
-            }*/
-            
-            boolean colonAndQuestion = (colonIdx > -1) && (questionIdx > -1);
-            
-            if((colonAndQuestion && (colonIdx < questionIdx)) || (colonIdx > -1)) {
-                
-                idx = getCharIdxBeforeOrAfterIdx(path, colonIdx, TermUtils.URI_SEP);
-                
-            } else if((colonAndQuestion && (colonIdx > questionIdx)) || (questionIdx > -1)) {
-                
-                idx = getCharIdxBeforeOrAfterIdx(path, questionIdx, TermUtils.URI_SEP);
+                if(idx > -1) {
+                    slashIdx = idx;
+                } 
             }
-            
-            if(idx > -1) {
-                slashIdx = idx;
-            } 
         }
-        
-        
-        
-        //System.out.println(slashIdx);
-        
+         
         if(slashIdx > -1) {
             String part = path.substring(0, slashIdx);
             if(part.length() > 0) {
@@ -296,23 +300,6 @@ public class TermUtils {
         } else {
             parts.add(path);
         }
-        
-        
-        
-        
-       /* int foundPosition;
-        int startIndex = 0;
-        String part;
-        while ((foundPosition = path.indexOf(TermUtils.URI_SEP, startIndex)) > -1) {
-            part = path.substring(startIndex, foundPosition);
-            if(part.length() > 0) {
-                parts.add(part);
-            }
-            startIndex = foundPosition + 1;
-        }
-        if(startIndex  < path.length()) {
-            parts.add(path.substring(startIndex));
-        }*/
         
         return parts;
     }
