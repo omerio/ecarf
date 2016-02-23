@@ -120,7 +120,7 @@ public abstract class TermDictionary implements Serializable {
             throw new IllegalArgumentException("Term part not found in the dictionary: " + blankNode);
         }
         
-        value = (value <<= 3) | 0b001;
+        value = (enc <<= 3) | 0b001;
 
         return value;
     }
