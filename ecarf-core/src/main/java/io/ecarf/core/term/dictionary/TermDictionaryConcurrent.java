@@ -157,9 +157,11 @@ public class TermDictionaryConcurrent extends TermDictionary implements Serializ
         Stopwatch stopwatch = Stopwatch.createStarted();
         TermDictionaryCore dict = new TermDictionaryCore();
         dict.setLargestResourceId(this.getLargestResourceId());
-        for(Entry<String, Integer> entry: this.dictionary.entrySet()) {
+        
+        /*for(Entry<String, Integer> entry: this.dictionary.entrySet()) {
             dict.put(entry.getKey(), entry.getValue());
-        }
+        }*/
+        dict.putAll(this.dictionary);
         
         log.info("#TIMER finished creating non concurrent dictionary, memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
         
