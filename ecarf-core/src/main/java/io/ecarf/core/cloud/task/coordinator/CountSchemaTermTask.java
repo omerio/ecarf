@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * the evms
  * 
  * @author Omer Dawelbeit (omerio)
- *
+ * FIXME rename to ExtractSchemaTermTask
  */
 public class CountSchemaTermTask extends CommonTask {
 	

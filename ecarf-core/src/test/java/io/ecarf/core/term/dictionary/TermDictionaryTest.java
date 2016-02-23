@@ -51,6 +51,8 @@ public class TermDictionaryTest {
     private TermDictionary dictionary;
     
     private Set<String> allTerms = new HashSet<>();
+    
+    private Set<String> blankNodes = new HashSet<>();
 
     @Before
     public void setUp() throws Exception {
@@ -61,6 +63,7 @@ public class TermDictionaryTest {
         int count = 0;
         
         ExtractTerms2PartCallback callback = new ExtractTerms2PartCallback();
+        callback.setSplitLocation(-1);
         callback.setCounter(new TermCounter());
 
         while (nxp.hasNext())  {
@@ -85,7 +88,7 @@ public class TermDictionaryTest {
                         if(!(ns[i] instanceof BNode)) {
                            
                             allTerms.add(ns[i].toN3());
-                        }
+                        } 
                     }
                 }
             } 
@@ -110,24 +113,36 @@ public class TermDictionaryTest {
         
         ((TermDictionaryCore) dictionary).inverse();
         
+        this.blankNodes = callback.getBlankNodes();
+        
     }
 
     @Test
     public void testEncodeDecode() {
         String term = "<http://dblp.uni-trier.de/rec/bibtex/books/acm/kim95/BreitbartGS95>";
-        this.validateRoundTrip(term);
+        this.validateRoundTrip(term, false);
         
         term = "<http://www.agronomy.org/>";
-        this.validateRoundTrip(term);
+        this.validateRoundTrip(term, false);
         
         term = "<https://www.createspace.com/282950>";
-        this.validateRoundTrip(term);
+        this.validateRoundTrip(term, false);
         
         term = "<https://dblp.uni-trier.de/rec/bibtex/books/acm/kim95/BreitbartGS95/>";
-        this.validateRoundTrip(term);
+        this.validateRoundTrip(term, false);
+        
+        term = "<http://www.w3.org/2000/01/rdf-schema#subClassOf>";
+        this.validateRoundTrip(term, false);
+        
+        term = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
+        this.validateRoundTrip(term, false);
         
         for(String tm: allTerms) {
-            this.validateRoundTrip(tm);
+            this.validateRoundTrip(tm, false);
+        }
+        
+        for(String tm: blankNodes) {
+            this.validateRoundTrip(tm, true);
         }
     }
     
@@ -137,8 +152,18 @@ public class TermDictionaryTest {
         this.dictionary.toFile(FilenameUtils.getLocalFilePath("dictionary.kryo.gz"), true);
     }
     
-    private void validateRoundTrip(String term) {
-        long id = dictionary.encode(term);
+    
+    
+    private void validateRoundTrip(String term, boolean blankNode) {
+        
+        long id; 
+        
+        if(blankNode) {
+            id = dictionary.encodeBlankNode(term);
+        } else {
+            id = dictionary.encode(term);
+        }
+         
         
         //System.out.println(id + "       " + term);
         
@@ -170,9 +195,27 @@ public class TermDictionaryTest {
         System.out.println("Total time: " + total);
         System.out.println("Average iteration time in milliseconds: " + (total / count));*/
         
-        TermDictionaryCore dictionary = Utils.objectFromFile("/Users/omerio/Downloads/cloudex-processor-1443542175611_dictionary.gz", TermDictionaryCore.class, true, false);
-        System.out.println(dictionary.size());
+        //TermDictionaryCore dictionary = Utils.objectFromFile("/Users/omerio/Downloads/cloudex-processor-1443542175611_dictionary.gz", TermDictionaryCore.class, true, false);
+        //System.out.println(dictionary.size());
+        System.out.println("Reading new file");
+        Set<String> parts = Utils.objectFromFile("/tmp/raw_infobox_property_definitions_en.nt.gz.kryo.gz", HashSet.class, true, false);
         
+        System.out.println("Reading old file");
+        Set<String> parts1 = Utils.objectFromFile("/tmp/raw_infobox_property_definitions_en1.nt.gz.kryo.gz", HashSet.class, true, false);
+        
+        for(String part: parts) {
+            if(!parts1.contains(part)) {
+                System.out.println("String not found in old file: " + part);
+            }
+        }
+        
+        for(String part: parts1) {
+            if(!parts.contains(part)) {
+                System.out.println("String not found in new file: " + part);
+            }
+        }
+        
+        //cloudex-processor-1456247330660_dictionary.gz
     }
 
 

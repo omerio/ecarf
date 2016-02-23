@@ -25,7 +25,14 @@ import io.cloudex.framework.partition.builtin.BinPackingPartition;
 import io.cloudex.framework.partition.entities.Item;
 import io.cloudex.framework.partition.entities.Partition;
 import io.cloudex.framework.task.CommonTask;
+import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
+import io.ecarf.core.compress.NxGzipCallback;
+import io.ecarf.core.compress.NxGzipProcessor;
+import io.ecarf.core.compress.callback.DictionaryEncodeCallback;
+import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
+import io.ecarf.core.compress.callback.StringEscapeCallback;
+import io.ecarf.core.compress.callback.TermCounterCallback;
 import io.ecarf.core.term.dictionary.ConcurrentDictionary;
 import io.ecarf.core.term.dictionary.TermDictionary;
 import io.ecarf.core.term.dictionary.TermDictionaryConcurrent;
@@ -34,7 +41,11 @@ import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
@@ -55,6 +66,16 @@ public class AssembleDictionaryTask extends CommonTask {
     private String bucket;
     
     private String targetBucket;
+    
+    private String schemaBucket;
+    
+    private String schemaFile;
+    
+    private String termStatsFile;
+    
+    private String encodedSchemaFile;
+    
+    private String encodedTermStatsFile;
 
     /* (non-Javadoc)
      * @see io.cloudex.framework.Executable#run()
@@ -145,6 +166,14 @@ public class AssembleDictionaryTask extends CommonTask {
         
         dictionary.toFile(dictionaryFile, true);
         
+        if(StringUtils.isNotBlank(this.schemaFile) && StringUtils.isNotBlank(this.schemaBucket))   {
+            this.encodeSchema(dictionary);
+        }
+        
+        if(StringUtils.isNotBlank(this.termStatsFile)) {
+            this.encodeTermsStats(dictionary);
+        }
+        
         dictionary = null;
         
         log.info("Successfully serialized dictionary with size: " + dicSize + 
@@ -158,6 +187,111 @@ public class AssembleDictionaryTask extends CommonTask {
         
         log.info("Successfully assembled, serialized and uploaded dictionary, memory usage: " + 
                 Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
+
+    }
+    
+    /**
+     * Encode the schema file and term stats
+     * @param dictionary
+     * @throws IOException 
+     */
+    private void encodeSchema(TermDictionary dictionary) throws IOException {
+
+
+        log.info("Extracting schema terms and encoding from: " + this.schemaFile);
+
+        String localFile = Utils.TEMP_FOLDER + schemaFile;
+
+        this.cloudService.downloadObjectFromCloudStorage(schemaFile, localFile, this.schemaBucket);
+
+        // all downloaded, carryon now, process the files
+
+        log.info("Processing schema file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
+
+        NxGzipProcessor processor = new NxGzipProcessor(localFile);
+        ExtractTerms2PartCallback callback = new ExtractTerms2PartCallback();
+        callback.setSplitLocation(-1);
+        callback.setCounter(null);
+        processor.read(callback);
+
+        Set<String> blankNodes = callback.getBlankNodes();
+        Set<String> resources = callback.getResources();
+
+        log.info("Number of schema resource URIs unique parts: " + resources.size());
+        log.info("Number of schema blank nodes: " + blankNodes.size());
+        log.info("Number of schema literals: " + callback.getLiteralCount());
+
+        resources.addAll(blankNodes);
+
+        for(String part: resources) {
+            dictionary.add(part);
+        }
+
+        log.info("Schema terms added to dictionary, final size: " + dictionary.size());
+
+        // now encode the schema
+        // TODO
+        if(StringUtils.isNotBlank(this.encodedSchemaFile)) {
+            
+            // TODO NxGzip processor that writes unzipped files
+            processor = new NxGzipProcessor(localFile);
+
+            DictionaryEncodeCallback callback1 = new DictionaryEncodeCallback();
+
+            callback1.setDictionary(dictionary);
+
+            String outFilename = processor.process(callback1);
+           
+            // upload the file
+            
+        }
+
+
+    }
+    
+    /**
+     * Encode the terms stats file
+     * @param dictionary
+     * @throws IOException
+     */
+    private void encodeTermsStats(TermDictionary dictionary) throws IOException {
+        
+        log.info("Encoding term stats map from: " + this.termStatsFile);
+        
+        String localFile = Utils.TEMP_FOLDER + termStatsFile;
+        
+        this.cloudService.downloadObjectFromCloudStorage(termStatsFile, localFile, this.bucket);
+
+        // all downloaded, carryon now, process the files
+
+        log.info("Processing terms stats file: " + localFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
+
+        // convert from JSON
+        Map<String, Long> termStats = FileUtils.jsonFileToMap(localFile);
+
+        Map<String, Long> encTermStats = new HashMap<>();
+
+        for(Entry<String, Long> term: termStats.entrySet()) {
+            String key = term.getKey();
+            Long value = term.getValue();
+            
+            long enc = dictionary.encode(key);
+            
+            encTermStats.put(Long.toString(enc), value);
+
+        }
+        
+        // if we have a term stats file set then serialize the term stats map to cloud storage
+        if(StringUtils.isNotBlank(this.encodedTermStatsFile)) {
+            log.info("Serializing term stats to file: " + this.encodedTermStatsFile);
+            localFile = Utils.TEMP_FOLDER + this.encodedTermStatsFile;
+            
+            // save to file
+            FileUtils.objectToJsonFile(localFile, encTermStats);
+            
+            // upload the file to cloud storage
+            this.getCloudService().uploadFileToCloudStorage(localFile, targetBucket);
+        }
 
     }
     
@@ -207,6 +341,76 @@ public class AssembleDictionaryTask extends CommonTask {
      */
     public void setTargetBucket(String targetBucket) {
         this.targetBucket = targetBucket;
+    }
+
+    /**
+     * @return the schemaBucket
+     */
+    public String getSchemaBucket() {
+        return schemaBucket;
+    }
+
+    /**
+     * @param schemaBucket the schemaBucket to set
+     */
+    public void setSchemaBucket(String schemaBucket) {
+        this.schemaBucket = schemaBucket;
+    }
+
+    /**
+     * @return the schemaFile
+     */
+    public String getSchemaFile() {
+        return schemaFile;
+    }
+
+    /**
+     * @param schemaFile the schemaFile to set
+     */
+    public void setSchemaFile(String schemaFile) {
+        this.schemaFile = schemaFile;
+    }
+
+    /**
+     * @return the termStatsFile
+     */
+    public String getTermStatsFile() {
+        return termStatsFile;
+    }
+
+    /**
+     * @param termStatsFile the termStatsFile to set
+     */
+    public void setTermStatsFile(String termStatsFile) {
+        this.termStatsFile = termStatsFile;
+    }
+
+    /**
+     * @return the encodedSchemaFile
+     */
+    public String getEncodedSchemaFile() {
+        return encodedSchemaFile;
+    }
+
+    /**
+     * @param encodedSchemaFile the encodedSchemaFile to set
+     */
+    public void setEncodedSchemaFile(String encodedSchemaFile) {
+        this.encodedSchemaFile = encodedSchemaFile;
+    }
+
+    /**
+     * @return the encodedTermStatsFile
+     */
+    public String getEncodedTermStatsFile() {
+        return encodedTermStatsFile;
+    }
+
+    /**
+     * @param encodedTermStatsFile the encodedTermStatsFile to set
+     */
+    public void setEncodedTermStatsFile(String encodedTermStatsFile) {
+        this.encodedTermStatsFile = encodedTermStatsFile;
     }
 
 }

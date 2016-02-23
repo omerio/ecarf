@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,6 +52,8 @@ public class CombineTermStatsTask extends CommonTask {
     //private String schemaTermsFile;
 
     private Collection<String> processors;
+    
+    private String termStatsFile;
 
 
     /* (non-Javadoc)
@@ -96,6 +99,18 @@ public class CombineTermStatsTask extends CommonTask {
                 }
             }
 
+        }
+        
+        // if we have a term stats file set then serialize the term stats map to cloud storage
+        if(StringUtils.isNotBlank(this.termStatsFile)) {
+            log.info("Serializing term stats to file: " + this.termStatsFile);
+            String localFile = Utils.TEMP_FOLDER + this.termStatsFile;
+            
+            // save to file
+            FileUtils.objectToJsonFile(localFile, allTermStats);
+            
+            // upload the file to cloud storage
+            this.getCloudService().uploadFileToCloudStorage(localFile, bucket);
         }
 
         if(!allTermStats.isEmpty()) {
@@ -147,6 +162,22 @@ public class CombineTermStatsTask extends CommonTask {
      */
     public void setProcessors(Collection<String> processors) {
         this.processors = processors;
+    }
+
+
+    /**
+     * @return the termStatsFile
+     */
+    public String getTermStatsFile() {
+        return termStatsFile;
+    }
+
+
+    /**
+     * @param termStatsFile the termStatsFile to set
+     */
+    public void setTermStatsFile(String termStatsFile) {
+        this.termStatsFile = termStatsFile;
     }
 
 }
