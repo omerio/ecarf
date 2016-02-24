@@ -22,6 +22,8 @@ import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
 import io.ecarf.core.cloud.task.processor.files.ProcessFilesTask;
 import io.ecarf.core.term.TermCounter;
+import io.ecarf.core.term.dictionary.TermDictionary;
+import io.ecarf.core.term.dictionary.TermDictionaryCore;
 import io.ecarf.core.utils.Constants;
 import io.ecarf.core.utils.Utils;
 
@@ -62,10 +64,16 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     private String schemaTermsFile;
     
     private String countOnly;
+    
+    private String encode;
 
     private Set<String> schemaTerms;
     
     private Map<String, Integer> count = new HashMap<>();
+    
+    private TermDictionary dictionary;
+    
+    private String dictionaryFile;
 
     /* 
      * // TODO distinguish between files in cloud storage vs files downloaded from http or https url
@@ -75,7 +83,7 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
     @Override
     public void run() throws IOException {
 
-        log.info("START: processing files, timer: 0s");
+        log.info("START: processing files, memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: 0s");
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         EcarfGoogleCloudService cloudService = (EcarfGoogleCloudService) this.getCloudService();
@@ -83,6 +91,32 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
         log.info("Downloading schema terms file: " + schemaTermsFile);
         
         this.schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
+        
+        if(Boolean.valueOf(encode) && StringUtils.isNotBlank(this.dictionaryFile)) {
+            
+            log.info("Downloading and loading dictionary into memory from file: " + this.dictionaryFile);
+            
+            // 1- Download the dictionary
+            String localFile = Utils.TEMP_FOLDER + dictionaryFile;          
+            this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.sourceBucket);
+
+            log.info("Loading the dictionary from file: " + localFile + ", memory usage: " + 
+                    Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);
+
+            // 2- Load the dictionary
+            try {
+                
+                dictionary = Utils.objectFromFile(localFile, TermDictionaryCore.class, true, false);
+                
+            } catch (ClassNotFoundException e) {
+                
+                log.error("Failed to load the dictionary", e);
+                throw new IOException(e);
+            }
+            
+            log.info("Dictionary loaded successfully, memory usage: " + 
+                    Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);
+        }
 
         super.run();
 
@@ -96,8 +130,10 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
         }
 
-        log.info("FINISH: All files are processed and uploaded successfully, timer: " + stopwatch);
+        log.info("FINISH: All files are processed and uploaded successfully,, memory usage: " + 
+                Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);
     }
+    
 
     /**
      * Return all the process tasks
@@ -122,7 +158,7 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
 
             ProcessFilesForBigQuerySubTask task = 
                     new ProcessFilesForBigQuerySubTask(file, bucket, sourceBucket, 
-                            counter, Boolean.valueOf(countOnly), this.getCloudService());
+                            counter, this.dictionary, Boolean.valueOf(countOnly), Boolean.valueOf(encode), this.getCloudService());
             tasks.add(task);
 
         }
@@ -223,6 +259,34 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
      */
     public void setSourceBucket(String sourceBucket) {
         this.sourceBucket = sourceBucket;
+    }
+
+    /**
+     * @return the encode
+     */
+    public String getEncode() {
+        return encode;
+    }
+
+    /**
+     * @param encode the encode to set
+     */
+    public void setEncode(String encode) {
+        this.encode = encode;
+    }
+
+    /**
+     * @return the dictionaryFile
+     */
+    public String getDictionaryFile() {
+        return dictionaryFile;
+    }
+
+    /**
+     * @param dictionaryFile the dictionaryFile to set
+     */
+    public void setDictionaryFile(String dictionaryFile) {
+        this.dictionaryFile = dictionaryFile;
     }
 
 }

@@ -28,11 +28,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -47,7 +49,7 @@ import org.semanticweb.yars.nx.parser.NxParser;
  * to a gzip file
  * 
  * @author Omer Dawelbeit (omerio)
- *
+ * FIXME rename to NxProcessor
  */
 public class NxGzipProcessor {
 
@@ -57,20 +59,33 @@ public class NxGzipProcessor {
 
     private String outputFile;
 
-
+    /**
+     * 
+     * @param inputFile
+     */
+    public NxGzipProcessor(String inputFile) {
+        this(inputFile, null);
+    }
 
     /**
      * @param inputFile
      * @param outputFile
      */
-    public NxGzipProcessor(String inputFile) {
+    public NxGzipProcessor(String inputFile, String outputFile) {
         super();
         this.inputFile = inputFile;
-        // get the file name before the ext
-        String ext = FilenameUtils.getExtension(inputFile);
-        // construct an output file in the format inputfile_out.ext
-        this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
-        this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
+        
+        // no output file is provided, then workout a suitable filename
+        if(StringUtils.isBlank(outputFile)) {
+            // get the file name before the ext
+            String ext = FilenameUtils.getExtension(inputFile);
+            // construct an output file in the format inputfile_out.ext
+            this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
+            this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
+        
+        } else {
+            this.outputFile = outputFile;
+        }
     }
 
     /**
@@ -82,7 +97,7 @@ public class NxGzipProcessor {
     public void read(NxGzipCallback callback) throws IOException {
 
         try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
-                this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
+                this.getDeflatedInputStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
             
             NxParser nxp = new NxParser(deflated);
 
@@ -111,13 +126,11 @@ public class NxGzipProcessor {
     public String process(NxGzipCallback callback) throws IOException {
 
         try(BufferedReader deflated = new BufferedReader(new InputStreamReader(
-                this.getDeflatedStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
+                this.getDeflatedInputStream(new FileInputStream(this.inputFile))), Constants.GZIP_BUF_SIZE);) {
 
 
-            try(//BufferedReader bf = new BufferedReader(new InputStreamReader(deflated, Constants.UTF8));
-                    PrintWriter writer = new PrintWriter(new BufferedOutputStream(
-                            new GZIPOutputStream(new FileOutputStream(this.outputFile), Constants.GZIP_BUF_SIZE), 
-                            Constants.GZIP_BUF_SIZE));) {
+            try(PrintWriter writer = new PrintWriter(new BufferedOutputStream(
+                    this.getInflatedOutputStream(new FileOutputStream(this.outputFile)), Constants.GZIP_BUF_SIZE));) {
                 
                 String outLine;
 
@@ -159,7 +172,7 @@ public class NxGzipProcessor {
      * @return
      * @throws IOException
      */
-    private InputStream getDeflatedStream(InputStream input) throws IOException {
+    private InputStream getDeflatedInputStream(InputStream input) throws IOException {
 
         InputStream deflated = input;
 
@@ -175,12 +188,41 @@ public class NxGzipProcessor {
 
         return deflated;
     }
+    
+    /**
+     * Get inflated output stream form the provided output stream
+     * @param output
+     * @return
+     * @throws IOException
+     */
+    private OutputStream getInflatedOutputStream(OutputStream output) throws IOException {
+        OutputStream inflated = output;
+        
+        // gzip
+        if(GzipUtils.isCompressedFilename(this.inputFile)) {
+            inflated = new GZIPOutputStream(output, Constants.GZIP_BUF_SIZE);
+
+        } 
+        // bz2
+        else if(BZip2Utils.isCompressedFilename(this.inputFile)) {
+            inflated = new BZip2CompressorOutputStream(new BufferedOutputStream(output));
+        }
+        
+        return inflated;
+    }
 
     /**
      * @param inputFile the inputFile to set
      */
     public void setInputFile(String inputFile) {
         this.inputFile = inputFile;
+    }
+
+    /**
+     * @param outputFile the outputFile to set
+     */
+    public void setOutputFile(String outputFile) {
+        this.outputFile = outputFile;
     }
 
 }

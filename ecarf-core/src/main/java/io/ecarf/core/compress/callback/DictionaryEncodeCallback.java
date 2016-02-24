@@ -32,7 +32,8 @@ import org.semanticweb.yars.nx.Literal;
 import org.semanticweb.yars.nx.Node;
 
 /**
- * An implementation of {@link NxGzipCallback} that performs dictionary encoding
+ * An implementation of {@link NxGzipCallback} that performs dictionary encoding, creates
+ * a CSV line of 4 values: subject, predicate, object, object_literal
  * 
  * @author Omer Dawelbeit (omerio)
  *

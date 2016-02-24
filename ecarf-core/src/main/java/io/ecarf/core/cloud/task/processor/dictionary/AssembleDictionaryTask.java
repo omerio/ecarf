@@ -27,12 +27,10 @@ import io.cloudex.framework.partition.entities.Partition;
 import io.cloudex.framework.task.CommonTask;
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudService;
-import io.ecarf.core.compress.NxGzipCallback;
 import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.DictionaryEncodeCallback;
 import io.ecarf.core.compress.callback.ExtractTerms2PartCallback;
-import io.ecarf.core.compress.callback.StringEscapeCallback;
-import io.ecarf.core.compress.callback.TermCounterCallback;
+import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.dictionary.ConcurrentDictionary;
 import io.ecarf.core.term.dictionary.TermDictionary;
 import io.ecarf.core.term.dictionary.TermDictionaryConcurrent;
@@ -76,6 +74,8 @@ public class AssembleDictionaryTask extends CommonTask {
     private String encodedSchemaFile;
     
     private String encodedTermStatsFile;
+    
+    private String dictionaryFile;
 
     /* (non-Javadoc)
      * @see io.cloudex.framework.Executable#run()
@@ -156,8 +156,21 @@ public class AssembleDictionaryTask extends CommonTask {
         log.info("Successfully assembled dictionary with size: " + dicSize + ", max resourceId: " + dictionary.getLargestResourceId() +
                 ", memory usage: " + Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
         
-        String dictionaryFile = FilenameUtils.getLocalFilePath(this.cloudService.getInstanceId()
-                + '_' + FilenameUtils.getSerializedGZipedDictionaryFilename());
+        // extract the terms and encode the schema if needed
+        if(StringUtils.isNotBlank(this.schemaFile) && StringUtils.isNotBlank(this.schemaBucket))   {
+            this.encodeSchema(dictionary);
+        }
+        
+        // encode the term stats file is needed
+        if(StringUtils.isNotBlank(this.termStatsFile) && StringUtils.isNotBlank(this.encodedTermStatsFile)) {
+            this.encodeTermsStats(dictionary);
+        }
+        
+        // if no name provided for the dictionary file then create a default
+        if(StringUtils.isBlank(this.dictionaryFile)) {
+            this.dictionaryFile = FilenameUtils.getLocalFilePath(this.cloudService.getInstanceId()
+                    + '_' + FilenameUtils.getSerializedGZipedDictionaryFilename());
+        }
         
         dictionary = ((ConcurrentDictionary) dictionary).getNonConcurrentDictionary();
         
@@ -165,14 +178,6 @@ public class AssembleDictionaryTask extends CommonTask {
                 Utils.getMemoryUsageInGB() + "GB" + ", timer: " + stopwatch);
         
         dictionary.toFile(dictionaryFile, true);
-        
-        if(StringUtils.isNotBlank(this.schemaFile) && StringUtils.isNotBlank(this.schemaBucket))   {
-            this.encodeSchema(dictionary);
-        }
-        
-        if(StringUtils.isNotBlank(this.termStatsFile)) {
-            this.encodeTermsStats(dictionary);
-        }
         
         dictionary = null;
         
@@ -198,7 +203,7 @@ public class AssembleDictionaryTask extends CommonTask {
     private void encodeSchema(TermDictionary dictionary) throws IOException {
 
 
-        log.info("Extracting schema terms and encoding from: " + this.schemaFile);
+        log.info("Extracting schema terms and encoding from file: " + this.schemaFile);
 
         String localFile = Utils.TEMP_FOLDER + schemaFile;
 
@@ -211,7 +216,7 @@ public class AssembleDictionaryTask extends CommonTask {
         NxGzipProcessor processor = new NxGzipProcessor(localFile);
         ExtractTerms2PartCallback callback = new ExtractTerms2PartCallback();
         callback.setSplitLocation(-1);
-        callback.setCounter(null);
+        callback.setCounter(new TermCounter());
         processor.read(callback);
 
         Set<String> blankNodes = callback.getBlankNodes();
@@ -227,22 +232,27 @@ public class AssembleDictionaryTask extends CommonTask {
             dictionary.add(part);
         }
 
-        log.info("Schema terms added to dictionary, final size: " + dictionary.size());
+        log.info("Schema terms added to the dictionary, final size: " + dictionary.size() + 
+                " , memory usage: " + Utils.getMemoryUsageInGB() + "GB");
 
         // now encode the schema
-        // TODO
         if(StringUtils.isNotBlank(this.encodedSchemaFile)) {
             
-            // TODO NxGzip processor that writes unzipped files
-            processor = new NxGzipProcessor(localFile);
+            log.info("Encoding the schema file to: " + this.encodedSchemaFile);
+            
+            String encLocalFile = Utils.TEMP_FOLDER + this.encodedSchemaFile;
+            
+            // NxGzip processor can write unzipped files
+            processor = new NxGzipProcessor(localFile, encLocalFile);
 
             DictionaryEncodeCallback callback1 = new DictionaryEncodeCallback();
 
             callback1.setDictionary(dictionary);
 
-            String outFilename = processor.process(callback1);
+            processor.process(callback1);
            
             // upload the file
+            this.getCloudService().uploadFileToCloudStorage(encLocalFile, targetBucket);
             
         }
 
@@ -282,17 +292,16 @@ public class AssembleDictionaryTask extends CommonTask {
         }
         
         // if we have a term stats file set then serialize the term stats map to cloud storage
-        if(StringUtils.isNotBlank(this.encodedTermStatsFile)) {
-            log.info("Serializing term stats to file: " + this.encodedTermStatsFile);
-            localFile = Utils.TEMP_FOLDER + this.encodedTermStatsFile;
-            
-            // save to file
-            FileUtils.objectToJsonFile(localFile, encTermStats);
-            
-            // upload the file to cloud storage
-            this.getCloudService().uploadFileToCloudStorage(localFile, targetBucket);
-        }
+        
+        log.info("Serializing term stats to file: " + this.encodedTermStatsFile);
+        localFile = Utils.TEMP_FOLDER + this.encodedTermStatsFile;
 
+        // save to file
+        FileUtils.objectToJsonFile(localFile, encTermStats);
+
+        // upload the file to cloud storage
+        this.getCloudService().uploadFileToCloudStorage(localFile, targetBucket);
+        
     }
     
     /**
@@ -411,6 +420,20 @@ public class AssembleDictionaryTask extends CommonTask {
      */
     public void setEncodedTermStatsFile(String encodedTermStatsFile) {
         this.encodedTermStatsFile = encodedTermStatsFile;
+    }
+
+    /**
+     * @return the dictionaryFile
+     */
+    public String getDictionaryFile() {
+        return dictionaryFile;
+    }
+
+    /**
+     * @param dictionaryFile the dictionaryFile to set
+     */
+    public void setDictionaryFile(String dictionaryFile) {
+        this.dictionaryFile = dictionaryFile;
     }
 
 }

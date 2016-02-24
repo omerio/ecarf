@@ -18,6 +18,7 @@
  */
 package io.ecarf.core.cloud.task.coordinator;
 
+import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.cloudex.framework.cloud.entities.StorageObject;
 import io.cloudex.framework.task.CommonTask;
 import io.ecarf.core.utils.Constants;
@@ -43,6 +44,8 @@ public class LoadBigDataFilesTask extends CommonTask {
 	private String bucket;
 	
 	private String table;
+	
+	private String encode;
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.CommonTask#run()
@@ -50,11 +53,7 @@ public class LoadBigDataFilesTask extends CommonTask {
 	@Override
 	public void run() throws IOException {
 		
-		log.info("Processing import into big data table: " + table);
-		
-		//String bucket = this.input.getBucket();
-		
-		//String table = this.input.getTable();
+		log.info("Processing import into big data table: " + table + ", with encode: " + encode);
 		
 		List<StorageObject> objects = this.getCloudService().listCloudStorageObjects(bucket);
 		
@@ -69,8 +68,18 @@ public class LoadBigDataFilesTask extends CommonTask {
 			}
 		}
 		
-		String jobId = this.getCloudService().loadCloudStorageFilesIntoBigData(files, 
-		        TableUtils.getBigQueryTripleTable(table), true);
+		BigDataTable bigDataTable;
+		
+		if(Boolean.valueOf(encode)) {
+		    
+		    bigDataTable = TableUtils.getBigQueryEncodedTripleTable(table);
+		    
+		} else {
+		    
+		    bigDataTable = TableUtils.getBigQueryTripleTable(table);
+		}
+				
+		String jobId = this.getCloudService().loadCloudStorageFilesIntoBigData(files, bigDataTable, true);
 		
 		log.info("Successfully imported data into big table, completed jodId: " + jobId);
 	}
@@ -101,6 +110,20 @@ public class LoadBigDataFilesTask extends CommonTask {
      */
     public void setTable(String table) {
         this.table = table;
+    }
+
+    /**
+     * @return the encode
+     */
+    public String getEncode() {
+        return encode;
+    }
+
+    /**
+     * @param encode the encode to set
+     */
+    public void setEncode(String encode) {
+        this.encode = encode;
     }
 	
 

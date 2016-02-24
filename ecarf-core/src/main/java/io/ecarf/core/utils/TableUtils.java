@@ -47,5 +47,28 @@ public final class TableUtils {
         return table;
         
     }
+    
+    
+    /**
+     * Get the encoded {@link BigDataTable} for a BigQuery table
+     * @param name
+     * @return
+     */
+    public static BigDataTable getBigQueryEncodedTripleTable(String name) {
+        
+        BigDataTable table = new BigDataTable(name);
+        
+        for(TermType term: TermType.values()) {
+            
+            table.addColumn(term.term(), GoogleMetaData.TYPE_INTEGER);
+        }
+        
+        table.addColumn(TermType.object_literal, GoogleMetaData.TYPE_STRING);
+        
+        return table;
+        
+    }
+    
+    
 
 }

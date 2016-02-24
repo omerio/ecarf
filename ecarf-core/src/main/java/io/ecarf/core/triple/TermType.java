@@ -17,6 +17,8 @@ public enum TermType {
 	public static final String subject = "subject";
 	public static final String predicate = "predicate";
 	public static final String object = "object";
+	public static final String object_literal = "object_literal";
+	
 	/**
 	 * Get the term as lower case
 	 * @return

@@ -20,7 +20,7 @@ package io.ecarf.core.utils;
 
 /**
  * @author Omer Dawelbeit (omerio)
- *
+ * FIXME move all filenames to FilenameUtils.java
  */
 public class Constants {
 	

@@ -95,7 +95,8 @@ public class ProcessLoadTask1Old extends CommonTask {
 				counter.setTermsToCount(schemaTerms);
 			}
 
-			ProcessFilesForBigQuerySubTask task = new ProcessFilesForBigQuerySubTask(file, bucket, bucket, counter, false, this.getCloudService());
+			ProcessFilesForBigQuerySubTask task = new ProcessFilesForBigQuerySubTask(file, 
+			        bucket, bucket, counter, null, false, false, this.getCloudService());
 			tasks.add(task);
 
 		}
