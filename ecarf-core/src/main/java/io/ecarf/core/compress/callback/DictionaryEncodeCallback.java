@@ -26,6 +26,7 @@ import io.ecarf.core.term.dictionary.TermDictionary;
 
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.semanticweb.yars.nx.BNode;
 import org.semanticweb.yars.nx.Literal;
@@ -67,7 +68,7 @@ public class DictionaryEncodeCallback implements NxGzipCallback {
             // instead of CSV https://cloud.google.com/bigquery/preparing-data-for-bigquery
             if((i == 2) && (nodes[i] instanceof Literal)) {
 
-                terms[3] = nodes[i].toN3();
+                terms[3] = StringEscapeUtils.escapeCsv(nodes[i].toN3());
 
             } else {
 
