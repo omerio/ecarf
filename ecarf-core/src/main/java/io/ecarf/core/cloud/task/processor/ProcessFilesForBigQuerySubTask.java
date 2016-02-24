@@ -58,7 +58,8 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 		this.cloud.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
 
 		// all downloaded, carryon now, process the files
-		log.info("Processing file: " + localFile + ", countOnly = " + countOnly + ", encode = " + encode);
+		log.info("Processing file: " + localFile + ", countOnly = " + countOnly + ", encode = " + encode + 
+		        ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
 		
 		String outFile = "";
 		
