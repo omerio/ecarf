@@ -98,7 +98,7 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             
             // 1- Download the dictionary
             String localFile = Utils.TEMP_FOLDER + dictionaryFile;          
-            this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.sourceBucket);
+            this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.bucket);
 
             log.info("Loading the dictionary from file: " + localFile + ", memory usage: " + 
                     Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);

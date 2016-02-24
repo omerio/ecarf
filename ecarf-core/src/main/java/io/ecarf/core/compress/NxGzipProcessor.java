@@ -81,7 +81,7 @@ public class NxGzipProcessor {
             String ext = FilenameUtils.getExtension(inputFile);
             // construct an output file in the format inputfile_out.ext
             this.outputFile = StringUtils.removeEnd(inputFile, "." + ext);	
-            this.outputFile = outputFile + Constants.OUT_FILE_SUFFIX + ext;
+            this.outputFile = this.outputFile + Constants.OUT_FILE_SUFFIX + ext;
         
         } else {
             this.outputFile = outputFile;

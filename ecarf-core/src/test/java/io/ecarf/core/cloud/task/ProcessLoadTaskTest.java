@@ -20,6 +20,7 @@ package io.ecarf.core.cloud.task;
 
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
+import io.ecarf.core.cloud.task.processor.ProcessLoadTask;
 import io.ecarf.core.compress.NxGzipCallback;
 import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.ExtractTermsCallback;
@@ -80,15 +81,20 @@ public class ProcessLoadTaskTest {
      * @throws IOException 
      */
     @Test
-    @Ignore
+    //@Ignore
     public void testRun() throws IOException {
+        
 
-        /*ProcessLoadTask task = new ProcessLoadTask();
+        ProcessLoadTask task = new ProcessLoadTask();
         task.setCloudService(service);
-        task.setBucket("ecarf");
-        task.setFiles("redirects_transitive_en.nt.gz");
+        task.setSourceBucket("swetodblp1");
+        task.setBucket("swetodblp-fullrun-1");
+        task.setCountOnly("false");
+        task.setEncode("true");
+        task.setDictionaryFile("swetodblp_dictionary.kryo.gz");
+        task.setFiles("swetodblp_2008_8.nt.gz");
         task.setSchemaTermsFile("schema_terms.json");
-        task.run();*/
+        task.run();
     }
     
     private static void testExtratCommonURIs() throws IOException {
