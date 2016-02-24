@@ -168,9 +168,10 @@ public class AssembleDictionaryTask extends CommonTask {
         
         // if no name provided for the dictionary file then create a default
         if(StringUtils.isBlank(this.dictionaryFile)) {
-            this.dictionaryFile = FilenameUtils.getLocalFilePath(this.cloudService.getInstanceId()
-                    + '_' + FilenameUtils.getSerializedGZipedDictionaryFilename());
+            this.dictionaryFile = this.cloudService.getInstanceId() + '_' + FilenameUtils.getSerializedGZipedDictionaryFilename();
         }
+        
+        this.dictionaryFile = FilenameUtils.getLocalFilePath(this.dictionaryFile);
         
         dictionary = ((ConcurrentDictionary) dictionary).getNonConcurrentDictionary();
         
