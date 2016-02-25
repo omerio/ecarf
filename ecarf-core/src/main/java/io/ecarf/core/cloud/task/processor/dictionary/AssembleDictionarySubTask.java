@@ -132,7 +132,12 @@ public class AssembleDictionarySubTask implements Callable<Void> {
     private void downloadFile(String file, String localFile, int retries) throws IOException {
         try {
             
-            this.cloud.downloadObjectFromCloudStorage(file, localFile, this.bucket);
+            if(FilenameUtils.fileExists(localFile)) {
+                log.info("Re-using local file: " + localFile);
+                
+            } else {
+                this.cloud.downloadObjectFromCloudStorage(file, localFile, this.bucket);
+            }
             
         } catch(SocketException e) {
             if(retries == 3) {

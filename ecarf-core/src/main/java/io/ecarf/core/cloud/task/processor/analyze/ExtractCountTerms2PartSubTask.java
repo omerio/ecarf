@@ -56,8 +56,13 @@ public class ExtractCountTerms2PartSubTask implements Callable<TermCounter> {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         try {
-
-            this.cloud.downloadObjectFromCloudStorage(file, localFile, this.sourceBucket);
+            
+            if(FilenameUtils.fileExists(localFile)) {
+                log.info("Re-using local file: " + localFile);
+            } else {
+                
+                this.cloud.downloadObjectFromCloudStorage(file, localFile, this.sourceBucket);
+            }
 
             // all downloaded, carryon now, process the files
 

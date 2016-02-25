@@ -25,6 +25,7 @@ import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.dictionary.TermDictionary;
 import io.ecarf.core.term.dictionary.TermDictionaryCore;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -97,8 +98,14 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             log.info("Downloading and loading dictionary into memory from file: " + this.dictionaryFile);
             
             // 1- Download the dictionary
-            String localFile = Utils.TEMP_FOLDER + dictionaryFile;          
-            this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.bucket);
+            String localFile = Utils.TEMP_FOLDER + dictionaryFile;  
+            
+            if(FilenameUtils.fileExists(localFile)) {
+                log.info("Re-using local file: " + localFile);
+                
+            } else {
+                this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.bucket);
+            }
 
             log.info("Loading the dictionary from file: " + localFile + ", memory usage: " + 
                     Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);

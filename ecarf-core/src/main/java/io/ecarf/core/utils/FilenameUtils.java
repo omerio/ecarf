@@ -20,6 +20,9 @@
 
 package io.ecarf.core.utils;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 /**
  * One place for all the filenames used by ECARF.
  * Avoids the mess of the various filenames being composed all over the code
@@ -47,6 +50,16 @@ public final class FilenameUtils {
      */
     public static String getLocalFilePath(String filename) {
         return Utils.TEMP_FOLDER + filename;
+    }
+    
+    /**
+     * Check if a file exists
+     * @param filename
+     * @return
+     */
+    public static boolean fileExists(String filename) {
+        return Files.exists(Paths.get(filename));
+
     }
     
     /**

@@ -7,6 +7,7 @@ import io.ecarf.core.compress.NxGzipProcessor;
 import io.ecarf.core.compress.callback.DictionaryEncodeCallback;
 import io.ecarf.core.term.TermCounter;
 import io.ecarf.core.term.dictionary.TermDictionary;
+import io.ecarf.core.utils.FilenameUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
@@ -53,9 +54,13 @@ public class ProcessFilesForBigQuerySubTask implements Callable<TermCounter> {
 
 		String localFile = Utils.TEMP_FOLDER + file;
 
-		//log.info("Downloading file: " + file);
-
-		this.cloud.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
+		if(FilenameUtils.fileExists(localFile)) {
+            log.info("Re-using local file: " + localFile);
+            
+        } else {
+            
+            this.cloud.downloadObjectFromCloudStorage(file, localFile, sourceBucket);
+        }
 
 		// all downloaded, carryon now, process the files
 		log.info("Processing file: " + localFile + ", countOnly = " + countOnly + ", encode = " + encode + 

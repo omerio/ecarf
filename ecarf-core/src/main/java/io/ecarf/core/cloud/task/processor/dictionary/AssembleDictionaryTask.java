@@ -207,8 +207,14 @@ public class AssembleDictionaryTask extends CommonTask {
         log.info("Extracting schema terms and encoding from file: " + this.schemaFile);
 
         String localFile = Utils.TEMP_FOLDER + schemaFile;
-
-        this.cloudService.downloadObjectFromCloudStorage(schemaFile, localFile, this.schemaBucket);
+        
+        if(FilenameUtils.fileExists(localFile)) {
+            log.info("Re-using local file: " + localFile);
+            
+        } else {
+            
+            this.cloudService.downloadObjectFromCloudStorage(schemaFile, localFile, this.schemaBucket);
+        }
 
         // all downloaded, carryon now, process the files
 

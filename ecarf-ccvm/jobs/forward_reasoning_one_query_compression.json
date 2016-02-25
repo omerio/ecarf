@@ -164,14 +164,28 @@
             "errorAction":"EXIT"
         },
         {
+            "id":"encoded-term-stats-load-task",
+            "description": "Load the encoded terms stats into the job context",
+            "className":"io.ecarf.core.cloud.task.coordinator.LoadEncodedTermStatsTask",
+            "target":"COORDINATOR",
+            "input":{
+                "bucket":"#bucket",
+                "encodedTermStatsFile":"#encodedTermStatsFile"
+            },
+            "output":[
+                "termItems"
+            ],
+            "errorAction":"EXIT"
+        },
+        {
             "id":"process-reason-task",
             "description": "Distribute the reason task between the various processors, each processor then reasons over the terms assigned to it",
-            "className":"io.ecarf.core.cloud.task.processor.reason.phase2.DoReasonTask6",
+            "className":"io.ecarf.core.cloud.task.processor.reason.phase2.DoReasonTask7",
             "target":"PROCESSOR",
             "input":{
                 "bucket":"#bucket",
                 "table":"#table",
-                "schemaFile":"#schema",
+                "schemaFile":"#encodedSchemaFile",
                 "terms":"#termPartitions"
             },
             "partitioning":{
