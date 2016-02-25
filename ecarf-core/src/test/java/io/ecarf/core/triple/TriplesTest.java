@@ -150,7 +150,7 @@ public class TriplesTest {
 	@Test
 	public void testLoadGzippedCSVTriples() throws FileNotFoundException, IOException {
 		Set<Triple> triples = 
-				TripleUtils.loadCompressedCSVTriples("/Users/omerio/SkyDrive/PhD/Experiments/07_01_2015_SwetoDblp_5n_bigquery_direct/1420663781645.inf");
+				TripleUtils.loadCompressedCSVTriples("/Users/omerio/SkyDrive/PhD/Experiments/07_01_2015_SwetoDblp_5n_bigquery_direct/1420663781645.inf", false);
 		assertNotNull(triples);
 		assertFalse(triples.isEmpty());
 		System.out.println(triples.size());

@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
  * triples matching the body of this rule
  * 
  * OWL 2 RL rule prp-spo1
- * T(?p1, rdfs:subPropertyOf, ?p2)
+ * T(?p1, rdfs:subPropertyOf, ?p2) rdfs7
  * T(?x, ?p1, ?y) ->
  * T(?x, ?p2, ?y)
  * 
@@ -48,7 +48,7 @@ public class PrpSpo1Rule extends GenericRule {
 	 */
 	@Override
 	public List<String> select() {
-		return Lists.newArrayList(TermType.subject, TermType.object);
+		return Lists.newArrayList(TermType.subject, TermType.object, TermType.object_literal);
 	}
 	
 	/**
@@ -59,7 +59,15 @@ public class PrpSpo1Rule extends GenericRule {
 	@Override
 	public Map<String, String> where(Triple schemaTriple) {
 		Map<String, String> where = new HashMap<>();
-		where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
+		
+		if(schemaTriple.isEncoded()) {
+            where.put(TermType.predicate, schemaTriple.getSubject().toString());
+            
+        } else {
+            
+            where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
+        }
+		
 		return where;
 	}
 	
@@ -71,7 +79,12 @@ public class PrpSpo1Rule extends GenericRule {
 	 */
 	@Override
 	public Triple head(Triple schemaTriple, Triple instanceTriple) {
-		Triple triple = new Triple(instanceTriple.getSubject(), schemaTriple.getObject(), instanceTriple.getObject());
+		Triple triple = schemaTriple.create(instanceTriple.getSubject(), schemaTriple.getObject(), instanceTriple.getObject());
+		
+		if(schemaTriple.isEncoded() && (instanceTriple.getObject() == null)) {
+		    triple.setObjectLiteral(instanceTriple.getObjectLiteral()); 
+		} 
+		
 		triple.setInferred(true);
 		return triple;
 	}

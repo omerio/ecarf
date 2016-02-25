@@ -5,6 +5,7 @@ package io.ecarf.core.triple;
 
 import io.ecarf.core.utils.Constants;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -43,7 +44,7 @@ public class TripleUtils {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	public static Map<String, Set<Triple>> getRelevantSchemaTriples(String schemaFile, Set<SchemaURIType> relevantUris) 
+	public static Map<String, Set<Triple>> getRelevantSchemaNTriples(String schemaFile, Set<SchemaURIType> relevantUris) 
 			throws FileNotFoundException, IOException {
 
 		Map<String, Set<Triple>> schemaTriples = new HashMap<>();
@@ -73,7 +74,7 @@ public class TripleUtils {
 							SchemaURIType.isRdfTbox(predicate) && 
 							relevantUris.contains(SchemaURIType.getByUri(predicate))) {
 
-						triple = new Triple(subject, predicate, object);
+						triple = new NTriple(subject, predicate, object);
 
 						// subject is used for ABox (instance) reasoning
 						if(!schemaTriples.containsKey(subject)) {
@@ -90,6 +91,60 @@ public class TripleUtils {
 		}
 
 		return schemaTriples;
+	}
+	
+	/**
+	 * 
+	 * @param schemaFile
+	 * @param relevantUris
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static Map<Long, Set<Triple>> getRelevantSchemaETriples(String schemaFile, Set<SchemaURIType> relevantUris) 
+	        throws FileNotFoundException, IOException {
+
+	    Map<Long, Set<Triple>> schemaTriples = new HashMap<>();
+	    ETriple triple;
+
+	    try(Reader reader = new InputStreamReader(new BufferedInputStream(
+	            new FileInputStream(schemaFile), Constants.GZIP_BUF_SIZE), Constants.UTF8)) {
+
+	        Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
+
+
+	        for (CSVRecord record : records) {
+
+	            String [] terms = record.values();
+
+	            /*for (int i = 0; i < ns.length; i++)  {
+                    terms[i] = NxUtil.unescape(ns[i].toN3());
+                }*/
+
+	            // subject = terms[0];
+	            String predicate = terms[1];
+	            //String object = terms[2];
+	            SchemaURIType type = SchemaURIType.getById(predicate);
+
+	            if((type != null) && type.isRdf() && type.isTbox() && relevantUris.contains(type)) {
+
+	                triple = ETriple.fromCSV(terms);
+
+	                Long subject = triple.getSubject();
+
+	                // subject is used for ABox (instance) reasoning
+	                if(!schemaTriples.containsKey(subject)) {
+	                    schemaTriples.put(subject, new HashSet<Triple>());
+	                }
+	                schemaTriples.get(subject).add(triple);
+	            }
+
+	        }
+
+	    }
+
+	    return schemaTriples;
+
 	}
 	
 	/**
@@ -124,7 +179,7 @@ public class TripleUtils {
 					String predicate = terms[1];
 					String object = terms[2];
 
-					triples.add(new Triple(subject, predicate, object));
+					triples.add(new NTriple(subject, predicate, object));
 
 				} else {
 					Log.warn("Ignoring line: " + ns);
@@ -141,15 +196,23 @@ public class TripleUtils {
 	 * @param triplesFile
 	 * @return
 	 */
-	public static Set<Triple> loadCompressedCSVTriples(String triplesFile)  throws FileNotFoundException, IOException  {
+	public static Set<Triple> loadCompressedCSVTriples(String triplesFile, boolean encoded)  throws FileNotFoundException, IOException  {
 		Set<Triple> triples = new HashSet<>();
 		try(Reader reader = new InputStreamReader(new GZIPInputStream(
 				new FileInputStream(triplesFile), Constants.GZIP_BUF_SIZE), Constants.UTF8)) {
 			
 			Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
 
-			for (CSVRecord record : records) {
-				triples.add(Triple.fromCSV(record.values()));
+			if(encoded) {
+			    for (CSVRecord record : records) {
+                    triples.add(ETriple.fromCSV(record.values()));
+                }
+			    
+			} else {
+			    
+			    for (CSVRecord record : records) {
+			        triples.add(NTriple.fromCSV(record.values()));
+			    }
 			}
 
 		}
@@ -157,6 +220,9 @@ public class TripleUtils {
 		return triples;
 		
 	}
+	
+	
+	// -------------------------------------------- NOT USED --------------------------------------------
 
 	/**
 	 * 
@@ -176,9 +242,9 @@ public class TripleUtils {
 	 */
 	public static void addToTriples(Set<Triple> triples, Map<String, Set<Triple>> store) {
 		for(Triple triple: triples) {
-			addToTriples(triple.getSubject(), triple, store);
-			addToTriples(triple.getPredicate(), triple, store);
-			addToTriples(triple.getObject(), triple, store);
+			addToTriples(triple.getSubject().toString(), triple, store);
+			addToTriples(triple.getPredicate().toString(), triple, store);
+			addToTriples(triple.getObject().toString(), triple, store);
 		}
 	}
 

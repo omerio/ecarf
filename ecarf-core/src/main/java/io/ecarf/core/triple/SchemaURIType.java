@@ -71,6 +71,8 @@ public enum SchemaURIType {
 	XML_STRING("<http://www.w3.org/2001/XMLSchema#string>", false, false, false, false, 40),
 	XML_MONTH("<http://www.w3.org/2001/XMLSchema#gMonth>", false, false, false, false, 41),
 	XML_YEAR("<http://www.w3.org/2001/XMLSchema#gYear>", false, false, false, false, 42),
+	
+	OWL_TOP_DATA_PROPERTY("<http://www.w3.org/2002/07/owl#topDataProperty>", false, false, false, false, 43)
 	;
 	
 	public static final String LIST_EXPANSION_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#_";
@@ -105,21 +107,42 @@ public enum SchemaURIType {
 	 * Mappings of schema enum and uri
 	 */
 	private static final Map<String, SchemaURIType> MAPPINGS = new HashMap<>();
+	private static final Map<String, SchemaURIType> EN_MAPPINGS = new HashMap<>();
 	public static final Set<String> RDF_OWL_TERMS = new HashSet<>();
 	static {
 		for(SchemaURIType type: SchemaURIType.values()) {
 			MAPPINGS.put(type.getUri(), type);
 			RDF_OWL_TERMS.add(type.uri);
+			
+			EN_MAPPINGS.put(Integer.toString(type.id), type);
 		}
 	}
 	
-	/**
-	 * Get mappings of the schema enums keyed by uri
-	 * @return
-	 */
-	public static Map<String, SchemaURIType> mappings() {
-		return Collections.unmodifiableMap(MAPPINGS);
-	}
+	 /**
+     * 
+     * @param uri
+     * @return
+     */
+    public static SchemaURIType getById(String id) {
+        return EN_MAPPINGS.get(id);
+    }
+    
+    /**
+     * 
+     * @param uri
+     * @return
+     */
+    public static boolean isSchemaId(String id) {
+        return (EN_MAPPINGS.get(id) != null);
+    }
+    
+    /**
+     * Get mappings of the schema enums keyed by uri
+     * @return
+     */
+    public static Map<String, SchemaURIType> mappings() {
+        return Collections.unmodifiableMap(MAPPINGS);
+    }
 	
 	/**
 	 * 
@@ -138,6 +161,7 @@ public enum SchemaURIType {
 	public static boolean isSchemaUri(String uri) {
 		return (MAPPINGS.get(uri) != null);
 	}
+	
 	
 	/**
 	 * @return true if the provided uri is for a rdf axiom

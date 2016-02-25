@@ -27,6 +27,7 @@ import io.ecarf.core.cloud.task.processor.reason.Term;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.NTriple;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Config;
@@ -137,7 +138,7 @@ public class DoReasonTask5 extends CommonTask {
 		}
 
 		Map<String, Set<Triple>> allSchemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
+				TripleUtils.getRelevantSchemaNTriples(localSchemaFile, TermUtils.RDFS_TBOX);
 
 		// get all the triples we care about
 		Map<Term, Set<Triple>> schemaTerms = new HashMap<>();
@@ -241,7 +242,7 @@ public class DoReasonTask5 extends CommonTask {
 				if(interimInferredTriples <= streamingThreshold) {
 					// stream the data
 					
-					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile);
+					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile, false);
 					log.info("Total triples to stream into Big Data: " + inferredTriples.size());
 					cloud.streamObjectsIntoBigData(inferredTriples, TableUtils.getBigQueryTripleTable(table));
 					
@@ -352,7 +353,7 @@ public class DoReasonTask5 extends CommonTask {
 					if(!inferredAlready.contains(values)) {
 						inferredAlready.add(values);
 
-						Triple instanceTriple = new Triple();
+						NTriple instanceTriple = new NTriple();
 
 						if(select.size() == 1) {
 							instanceTriple.set(select.get(0), record.get(0));

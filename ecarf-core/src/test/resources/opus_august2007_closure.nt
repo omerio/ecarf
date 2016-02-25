@@ -1,0 +1,304 @@
+<http://lsdis.cs.uga.edu/projects/semdis/opus#> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#> <http://www.w3.org/2000/01/rdf-schema#label> "SwetoDblp Ontology" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#> <http://www.w3.org/2000/01/rdf-schema#comment> "This file specifies in RDF Schema format the classes and properties for SwetoDblp.\n    These classes and properties are based on the internal LSDIS Library portal engine.\n    Contact Person is Boanerges Aleman-Meza (baleman at uga dot edu).\n    " .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#> <http://www.w3.org/2002/07/owl#versionInfo> "2007-05-01" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#> <http://purl.org/dc/elements/1.1/creator> "Boanerges Aleman-Meza" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#label> "Article" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#comment> "An article from a journal or magazine." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Article_in_Journal> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Article> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Article> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2000/01/rdf-schema#label> "Article in Proceedings" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2000/01/rdf-schema#comment> "An article in the proceedings of a meeting, such as a conference, workhshop and symposium." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Inproceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Inproceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2000/01/rdf-schema#label> "Book" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2000/01/rdf-schema#comment> "A book with an explicit publisher." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.marcont.org/ontology/marcont.owl#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2000/01/rdf-schema#label> "Book Chapter" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2000/01/rdf-schema#comment> "A part of a book, such as a chapter (or section/preface) and/or a range of pages." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Article_in_Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Inbook> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2000/01/rdf-schema#comment> "A dissertation written to receive a PhD." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2000/01/rdf-schema#label> "Doctoral Dissertation" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#PhD_Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#PhDThesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#PhDThesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Phdthesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#label> "Edited Book" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#comment> "An edited book with an explicit publisher." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#Edited-Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> <http://www.w3.org/2000/01/rdf-schema#label> "Edited Publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> <http://www.w3.org/2000/01/rdf-schema#comment> "An edited publication, that is, it has one or more editors (edited books, etc)" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2000/01/rdf-schema#comment> "A periodical presenting articles on a particular subject." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2000/01/rdf-schema#label> "Journal" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#Journal> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Journal> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2000/01/rdf-schema#comment> "A thesis written to receive a Master's degree." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2000/01/rdf-schema#label> "Masters Thesis" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Master_Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#MasterThesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#MasterThesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Mastersthesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2000/01/rdf-schema#label> "Proceedings" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2000/01/rdf-schema#comment> "A written account of what transpired at a meeting." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#Proceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Proceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2002/07/owl#equivalentClass> <http://purl.org/net/nknouf/ns/bibtex#Proceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2000/01/rdf-schema#label> "Publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2000/01/rdf-schema#comment> "Individual documents and collections of documents such as series, journals, etc." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publishing_Organization> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publishing_Organization> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Organization> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publishing_Organization> <http://www.w3.org/2000/01/rdf-schema#label> "Publisher" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publishing_Organization> <http://www.w3.org/2000/01/rdf-schema#comment> "An organization that, among other things, creates publishing periodicals, books or music." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Publishing_Organization> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#Publishing-House> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#School> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#School> <http://www.w3.org/2000/01/rdf-schema#label> "School" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#School> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Organization> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#School> <http://www.w3.org/2000/01/rdf-schema#comment> "An organization where individuals receive education." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> <http://www.w3.org/2000/01/rdf-schema#label> "Serial Publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> <http://www.w3.org/2000/01/rdf-schema#comment> "A periodical that appears at scheduled times." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Series> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Series> <http://www.w3.org/2000/01/rdf-schema#comment> "Publication Series, such as LNCS, WEUR Workshops, etc. (at this time debatable whether this should be subclassof Publication)" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Series> <http://www.w3.org/2000/01/rdf-schema#label> "Series" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2000/01/rdf-schema#label> "Thesis" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2000/01/rdf-schema#comment> "A treatise advancing a new point of view resulting from research; usually a requirement for an advanced academic degree." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#Thesis> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2000/01/rdf-schema#label> "University" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#School> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2000/01/rdf-schema#comment> "An institution for higher learning with teaching and research facilities constituting a graduate school and professional schools that award master's degrees and doctorates and an undergraduate division that awards bachelor's degrees." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2002/07/owl#equivalentClass> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Organization_Ontology.owl#University> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2002/07/owl#equivalentClass> <http://swrc.ontoware.org/ontology#University> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2002/07/owl#equivalentClass> <http://www.aktors.org/ontology/portal#University> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2002/07/owl#equivalentClass> <http://sw-portal.deri.org/ontologies/swportal#University> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage> <http://www.w3.org/2000/01/rdf-schema#comment> "A webpage, it is subclass of Document because we want to emphasize that the URL of the webpage is used the URI." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Webpage> <http://www.w3.org/2000/01/rdf-schema#label> "Webpage" .
+<http://swrc.ontoware.org/ontology#cite> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://swrc.ontoware.org/ontology#affiliation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://www.aktors.org/ontology/portal#has-affiliation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://sw-portal.deri.org/ontologies/swportal#containedInProceedings> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://swrc.ontoware.org/ontology#booktitle> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasBooktitle> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Chapter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#chapter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#isbn> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasISBN> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasJournal> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#month> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasMonth> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasNumber> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#pages> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://www.aktors.org/ontology/portal#has-page-numbers> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://purl.org/net/nknouf/ns/bibtex#hasPages> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#volume> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://swrc.ontoware.org/ontology#year> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication originates or is related to a specific Organization." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#label> "at organization" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Organization> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_university> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_university> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication originates or is related to a specific University." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_university> <http://www.w3.org/2000/01/rdf-schema#label> "at university" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_university> <http://www.w3.org/2000/01/rdf-schema#range> <http://lsdis.cs.uga.edu/projects/semdis/opus#University> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_university> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a book chapter belongs to a specific book. It is debateable whether this should be subclass of Collection." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of> <http://www.w3.org/2000/01/rdf-schema#range> <http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter_of> <http://www.w3.org/2000/01/rdf-schema#label> "Chapter Of" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cites> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cites> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication cites another publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cites> <http://www.w3.org/2000/01/rdf-schema#label> "Cites" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cites> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cites> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#cite> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication is included in a specific proceedings publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/2000/01/rdf-schema#range> <http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/2000/01/rdf-schema#label> "is Included in Proceedings" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isIncludedIn> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://sw-portal.deri.org/ontologies/swportal#containedInProceedings> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#editor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#editor> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication has a specific editor(s)." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#editor> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#editor> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#editor> <http://www.w3.org/2000/01/rdf-schema#label> "Editor" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a person is affiliated to a specific organization." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2000/01/rdf-schema#label> "Affiliation" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Organization> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#affiliation> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#affiliation> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://www.aktors.org/ontology/portal#has-affiliation> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a Publication is part of a Publication Series." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://www.w3.org/2000/01/rdf-schema#label> "In Series" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://www.w3.org/2000/01/rdf-schema#range> <http://lsdis.cs.uga.edu/projects/semdis/opus#Series> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#in_series> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#author> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#author> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#author> <http://www.w3.org/2000/01/rdf-schema#label> "Author" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#author> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#author> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication is authored by a specific person(s)." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coeditor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coeditor> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a person is co-editor with another person" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coeditor> <http://www.w3.org/2000/01/rdf-schema#label> "coeditor" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coeditor> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coeditor> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coauthor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coauthor> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a person is co-author with another person" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coauthor> <http://www.w3.org/2000/01/rdf-schema#label> "coauthor" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coauthor> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#coauthor> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#sameAffiliation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#sameAffiliation> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a person has same affiliation than another person (this is not necessarily transitive)" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#sameAffiliation> <http://www.w3.org/2000/01/rdf-schema#label> "sameAffiliation" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#sameAffiliation> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#sameAffiliation> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Person> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2000/01/rdf-schema#comment> "An alternative Book Title or the Book Title where an article appears, such as title of proceedings." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2000/01/rdf-schema#label> "book title" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#booktitle> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#book_title> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasBooktitle> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cdrom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cdrom> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cdrom> <http://www.w3.org/2000/01/rdf-schema#comment> "The CDROM location of a Publication, as used by the ACM SIGMOD Anthology." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cdrom> <http://www.w3.org/2000/01/rdf-schema#label> "cdrom" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#cdrom> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#comment> "The chapter number of a publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#label> "chapter" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://knowledgeweb.semanticweb.org/semanticportal/OWL/Documentation_Ontology.owl#Chapter> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#chapter> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#ee> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#ee> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#ee> <http://www.w3.org/2000/01/rdf-schema#comment> "The Electronic Edition of a publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#ee> <http://www.w3.org/2000/01/rdf-schema#label> "ee" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#ee> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#eepresentation> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#eepresentation> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#eepresentation> <http://www.w3.org/2000/01/rdf-schema#comment> "The Electronic Edition of a Presentation of a publication" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#eepresentation> <http://www.w3.org/2000/01/rdf-schema#label> "presentation" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#eepresentation> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2000/01/rdf-schema#comment> "The ISBN of a publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2000/01/rdf-schema#label> "isbn" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#isbn> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#isbn> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasISBN> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/2000/01/rdf-schema#comment> "The name of a Journal, such as where an article appears" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/2000/01/rdf-schema#label> "journal name" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#journal_name> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasJournal> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date> <http://www.w3.org/2000/01/rdf-schema#comment> "The last modified date of a document." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#last_modified_date> <http://www.w3.org/2000/01/rdf-schema#label> "last modified date" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2000/01/rdf-schema#comment> "The month part of the date of a foaf:Document." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2000/01/rdf-schema#label> "month" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#month> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#month> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasMonth> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth> <http://www.w3.org/2000/01/rdf-schema#comment> "The month part of the date of a foaf:Document represented as xsd:gMonth value" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#gMonth> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#gMonth> <http://www.w3.org/2000/01/rdf-schema#label> "gMonth" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/2000/01/rdf-schema#comment> "The Number part of citation of a publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/2000/01/rdf-schema#label> "number" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#number> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasNumber> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#comment> "The Pages part of citation of a publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#label> "pages" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#pages> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://www.aktors.org/ontology/portal#has-page-numbers> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://purl.org/net/nknouf/ns/bibtex#hasPages> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/2000/01/rdf-schema#comment> "The Volume part of citation of a publication." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/2000/01/rdf-schema#label> "volume" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#volume> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#volume> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/2000/01/rdf-schema#comment> "The year part of the date of a foaf:Document." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#gYear> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/2000/01/rdf-schema#label> "year" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#year> <http://www.w3.org/2002/07/owl#equivalentProperty> <http://swrc.ontoware.org/ontology#year> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#abstract> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#abstract> <http://www.w3.org/2000/01/rdf-schema#domain> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#abstract> <http://www.w3.org/2000/01/rdf-schema#comment> "The abstract of a document" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#abstract> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#abstract> <http://www.w3.org/2000/01/rdf-schema#label> "abstract" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article_in_Proceedings> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Doctoral_Dissertation> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Edited_Publication> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Journal> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Masters_Thesis> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Proceedings> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Serial_Publication> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Thesis> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#University> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Organization> .

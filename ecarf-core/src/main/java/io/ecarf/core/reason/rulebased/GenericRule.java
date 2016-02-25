@@ -43,11 +43,19 @@ public abstract class GenericRule implements Rule {
 	
 	public static final Map<String, Rule> RULES = new HashMap<>();
 	
+	public static final Map<Long, Rule> EN_RULES = new HashMap<>();
+	
 	static {	
 		RULES.put(SchemaURIType.RDFS_DOMAIN.getUri(), new PrpDomRule());
 		RULES.put(SchemaURIType.RDFS_RANGE.getUri(), new PrpRngRule());
 		RULES.put(SchemaURIType.RDFS_SUBPROPERTY.getUri(), new PrpSpo1Rule());
 		RULES.put(SchemaURIType.RDFS_SUBCLASS.getUri(), new CaxScoRule());
+		
+		
+		EN_RULES.put((long) SchemaURIType.RDFS_DOMAIN.id, new PrpDomRule());
+		EN_RULES.put((long) SchemaURIType.RDFS_RANGE.id, new PrpRngRule());
+		EN_RULES.put((long) SchemaURIType.RDFS_SUBPROPERTY.id, new PrpSpo1Rule());
+		EN_RULES.put((long) SchemaURIType.RDFS_SUBCLASS.id, new CaxScoRule());
 	}
 	
 	
@@ -94,7 +102,15 @@ public abstract class GenericRule implements Rule {
 	 * @return
 	 */
 	public static Rule getRule(Triple schemaTriple) {
-		return RULES.get(schemaTriple.getPredicate());
+	    Rule rule;
+	    
+	    if(schemaTriple.isEncoded()) {
+	        rule = EN_RULES.get(schemaTriple.getPredicate());
+	    
+	    } else {
+	        rule = RULES.get(schemaTriple.getPredicate());
+	    }
+		return rule;
 	}
 	
 	/**
@@ -106,22 +122,46 @@ public abstract class GenericRule implements Rule {
 	public static List<String> getSelect(Set<Triple> triples) {
 		// make sure we eliminate duplicates, use a set
 		Set<String> select = new HashSet<>();
+		Triple aTriple = null;
 		for(Triple triple: triples) {
 			select.addAll(GenericRule.getRule(triple).select());
+			
+			if(aTriple == null) {
+			    aTriple = triple;
+			}
 		}
 		
 		// make sure we add the terms in the order subject predicate object
-		List<String> selects = new ArrayList<>();
-		if(select.contains(TermType.subject)) {
-			selects.add(TermType.subject);
-		}
-		if(select.contains(TermType.predicate)) {
-			selects.add(TermType.predicate);
-		}
-		if(select.contains(TermType.object)) {
-			selects.add(TermType.object);
+		List<String> selects = getOrderedSelect(select);
+		
+		// only add the object_literal if the triple is encoded
+		if((aTriple != null) && !aTriple.isEncoded()) {
+		    
+		    selects.remove(TermType.object_literal);
 		}
 		return selects;
+	}
+
+	/**
+	 * Get the select terms in the order subject predicate object object_literal
+	 * @param select
+	 * @return
+	 */
+	public static List<String> getOrderedSelect(Set<String> select) {
+	    List<String> selects = new ArrayList<>();
+        if(select.contains(TermType.subject)) {
+            selects.add(TermType.subject);
+        }
+        if(select.contains(TermType.predicate)) {
+            selects.add(TermType.predicate);
+        }
+        if(select.contains(TermType.object)) {
+            selects.add(TermType.object);
+        }
+        if(select.contains(TermType.object_literal)) { 
+            selects.add(TermType.object_literal);
+        }
+        return selects;
 	}
 	
 	/**

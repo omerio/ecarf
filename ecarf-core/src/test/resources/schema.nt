@@ -1,0 +1,8 @@
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates that a publication originates or is related to a specific Organization." .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#label> "at organization" .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#range> <http://xmlns.com/foaf/0.1/Organization> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization> <http://www.w3.org/2000/01/rdf-schema#domain> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://xmlns.com/foaf/0.1/Document> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .

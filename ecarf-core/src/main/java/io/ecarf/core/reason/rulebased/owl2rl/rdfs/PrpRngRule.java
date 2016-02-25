@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
  * A rule that supports SQL like queries for instance 
  * triples matching the body of this rule
  * 
- * OWL 2 RL rule prp-rng
+ * OWL 2 RL rule prp-rng - rdfs3
  * T(?p, rdfs:range, ?c)
  * T(?x, ?p, ?y) ->
  * T(?y, rdf:type, ?c)
@@ -60,7 +60,15 @@ public class PrpRngRule extends GenericRule {
 	@Override
 	public Map<String, String> where(Triple schemaTriple) {
 		Map<String, String> where = new HashMap<>();
-		where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
+		
+		if(schemaTriple.isEncoded()) {
+		    
+            where.put(TermType.predicate, schemaTriple.getSubject().toString());
+            //where.put(TermType.object, "is not null");
+            
+        } else {
+            where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
+        }
 		return where;
 	}
 	
@@ -72,8 +80,25 @@ public class PrpRngRule extends GenericRule {
 	 */
 	@Override
 	public Triple head(Triple schemaTriple, Triple instanceTriple) {
-		Triple triple = new Triple(instanceTriple.getObject(), SchemaURIType.RDF_TYPE.getUri(), schemaTriple.getObject());
-		triple.setInferred(true);
+	    
+	    Triple triple = null;
+	    
+	    // object is null if a literal, we can't generate a triple with a literal in the subject anyway
+	    // skip
+	    if(instanceTriple.getObject() != null) { 
+	        
+	        Object predicate;
+
+	        if(schemaTriple.isEncoded()) {
+	            predicate = SchemaURIType.RDF_TYPE.id;
+	        } else {
+	            predicate = SchemaURIType.RDF_TYPE.getUri();
+	        }
+
+	        triple = schemaTriple.create(instanceTriple.getObject(), predicate, schemaTriple.getObject());
+	        triple.setInferred(true);
+	        
+	    }
 		return triple;
 	}
 

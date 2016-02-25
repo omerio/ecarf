@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
  * A rule that supports SQL like queries for instance 
  * triples matching the body of this rule
  * 
- * OWL 2 RL rule cax-sco
+ * OWL 2 RL rule cax-sco - rdfs9
  * T(?c1, rdfs:subClassOf, ?c2)
  * T(?x, rdf:type, ?c1) ->
  * T(?x, rdf:type, ?c2)
@@ -42,40 +42,58 @@ import com.google.common.collect.Lists;
  *
  */
 public class CaxScoRule extends GenericRule {
-	
-	/**
-	 * return the select column
-	 * @return
-	 */
-	@Override
-	public List<String> select() {
-		return Lists.newArrayList(TermType.subject);
-	}
-	
-	/**
-	 * return the items to use in the select clause
-	 * @param schemaTriple
-	 * @return
-	 */
-	@Override
-	public Map<String, String> where(Triple schemaTriple) {
-		Map<String, String> where = new HashMap<>();
-		where.put(TermType.object, "\"" + schemaTriple.getSubject() + "\"");
-		where.put(TermType.predicate, "\"" + SchemaURIType.RDF_TYPE.getUri() + "\"");
-		return where;
-	}
-	
-	/**
-	 * Generate a triple if this rules fires in the format T(?x, rdf:type, ?c2)
-	 * @param schemaTriple
-	 * @param instanceTriple
-	 * @return
-	 */
-	@Override
-	public Triple head(Triple schemaTriple, Triple instanceTriple) {
-		Triple triple = new Triple(instanceTriple.getSubject(), SchemaURIType.RDF_TYPE.getUri(), schemaTriple.getObject());
-		triple.setInferred(true);
-		return triple;
-	}
+
+    /**
+     * return the select column
+     * @return
+     */
+    @Override
+    public List<String> select() {
+        return Lists.newArrayList(TermType.subject);
+    }
+
+    /**
+     * return the items to use in the select clause
+     * @param schemaTriple
+     * @return
+     */
+    @Override
+    public Map<String, String> where(Triple schemaTriple) {
+        Map<String, String> where = new HashMap<>();
+
+        if(schemaTriple.isEncoded()) {
+
+            where.put(TermType.object,  schemaTriple.getSubject().toString());
+            where.put(TermType.predicate, Integer.toString(SchemaURIType.RDF_TYPE.id));
+
+        } else {
+
+            where.put(TermType.object, "\"" + schemaTriple.getSubject() + "\"");
+            where.put(TermType.predicate, "\"" + SchemaURIType.RDF_TYPE.getUri() + "\"");
+        }
+        return where;
+    }
+
+    /**
+     * Generate a triple if this rules fires in the format T(?x, rdf:type, ?c2)
+     * @param schemaTriple
+     * @param instanceTriple
+     * @return
+     */
+    @Override
+    public Triple head(Triple schemaTriple, Triple instanceTriple) {
+
+        Object predicate;
+
+        if(schemaTriple.isEncoded()) {
+            predicate = SchemaURIType.RDF_TYPE.id;
+        } else {
+            predicate = SchemaURIType.RDF_TYPE.getUri();
+        }
+
+        Triple triple = schemaTriple.create(instanceTriple.getSubject(), predicate, schemaTriple.getObject());
+        triple.setInferred(true);
+        return triple;
+    }
 
 }

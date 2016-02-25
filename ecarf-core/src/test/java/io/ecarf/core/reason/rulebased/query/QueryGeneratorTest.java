@@ -18,36 +18,32 @@
  */
 
 
-package io.ecarf.core.triple;
+package io.ecarf.core.reason.rulebased.query;
 
-import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
-public interface Triple extends BigQueryStreamable {
+public class QueryGeneratorTest {
 
-    public Object getSubject();
-    
-    public Object getPredicate();
-    
-    public Object getObject();
-    
-    public String getObjectLiteral();
-    
-    public void setObjectLiteral(String literal);
-    
-    public boolean isInferred();
-    
-    public void setInferred(boolean inferred);
-    
-    public boolean isEncoded();
-    
-    public Triple create(Object subject, Object predicate, Object object);
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+    }
 
-    public String toCsv();
-
-    public void set(String string, Object value);
+    /**
+     * Test method for {@link io.ecarf.core.reason.rulebased.query.QueryGenerator#getQueries()}.
+     */
+    @Test
+    public void testGetQueries() {
+        fail("Not yet implemented");
+    }
 
 }

@@ -20,6 +20,7 @@ package io.ecarf.core.reason.rulebased;
 
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.NTriple;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 
@@ -63,10 +64,10 @@ public class RuleTest {
 	 * @throws IOException 
 	 * @throws FileNotFoundException 
 	 */
-	@Test
+	//@Test
 	public void testQueryTripleTriple() throws FileNotFoundException, IOException {
 		Map<String, Set<Triple>> schemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(
+				TripleUtils.getRelevantSchemaNTriples(
 						//"/Users/omerio/Ontologies/dbpedia/tbox/dbpedia_3.9_gen_closure.nt",
 						"/Users/omerio/Ontologies/opus_august2007_closure.nt", 
 						TermUtils.RDFS_TBOX);
@@ -80,12 +81,31 @@ public class RuleTest {
 		}
 	}
 	
+
+	//@Test
+	public void testQueryETripleTriple() throws FileNotFoundException, IOException {
+	    Map<Long, Set<Triple>> schemaTriples = 
+	            TripleUtils.getRelevantSchemaETriples(
+	                    //"/Users/omerio/Ontologies/dbpedia/tbox/dbpedia_3.9_gen_closure.nt",
+	                    "/Users/omerio/Downloads/opus_august2007_closure_encoded.csv", 
+	                    TermUtils.RDFS_TBOX);
+	    for(Entry<Long, Set<Triple>> entry: schemaTriples.entrySet()) {
+	        System.out.println("Term: " + entry.getKey());
+	        System.out.println("Triples: " + Joiner.on('\n').join(entry.getValue()));
+	        List<String> select = GenericRule.getSelect(entry.getValue());
+	        System.out.println("\nQuery: " + GenericRule.getQuery(entry.getValue(), "my-table"));
+	        System.out.println("Select: " + select);
+	        System.out.println("------------------------------------------------------------------------------------------------------------");
+	    }
+	}
+	
 	@Test
 	public void testQueryGenerator() throws FileNotFoundException, IOException {
 		Map<String, Set<Triple>> schemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(
-						"/Users/omerio/Ontologies/dbpedia/tbox/dbpedia_3.9_gen_closure.nt",
-						//"/Users/omerio/Ontologies/opus_august2007_closure.nt", 
+				TripleUtils.getRelevantSchemaNTriples(
+						//"/Users/omerio/Ontologies/dbpedia/tbox/dbpedia_3.9_gen_closure.nt",
+						//"/Users/omerio/Ontologies/opus_august2007_closure.nt",
+				        "/Users/omerio/Ontologies/opus_august2007_closure_owl_api.nt",
 						TermUtils.RDFS_TBOX);
 		
 		Map<String, Set<Triple>> schemaTerms = new HashMap<>();
@@ -93,11 +113,28 @@ public class RuleTest {
 			schemaTerms.put(term, schemaTriples.get(term));
 		}
 		
-		QueryGenerator generator = new QueryGenerator(schemaTerms, "table");
+		QueryGenerator<String> generator = new QueryGenerator<String>(schemaTerms, "table");
 		System.out.println(generator.getQueries());
 	}
 	
 	@Test
+    public void testEQueryGenerator() throws FileNotFoundException, IOException {
+        Map<Long, Set<Triple>> schemaTriples = 
+                TripleUtils.getRelevantSchemaETriples(
+                        "/Users/omerio/Downloads/opus_august2007_closure_encoded.csv",
+                        //"/Users/omerio/Ontologies/opus_august2007_closure.nt", 
+                        TermUtils.RDFS_TBOX);
+        
+        Map<Long, Set<Triple>> schemaTerms = new HashMap<>();
+        for(Long term: schemaTriples.keySet()) {
+            schemaTerms.put(term, schemaTriples.get(term));
+        }
+        
+        QueryGenerator<Long> generator = new QueryGenerator<Long>(schemaTerms, "table");
+        System.out.println(generator.getQueries());
+    }
+	
+	//@Test
 	public void testReason() {
 		String term = "<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter>";
 		Map<String, Set<Triple>> schemaTriples = new HashMap<>();
@@ -108,14 +145,14 @@ public class RuleTest {
 		Triple [<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.w3.org/2002/07/owl#topDataProperty>], inferred=false
 		Triple [<http://lsdis.cs.uga.edu/projects/semdis/opus#chapter> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string>], inferred=false
 		 */
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#domain>", "<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter>"));
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>", "<http://www.w3.org/2002/07/owl#topDataProperty>"));
-		triples.add(new Triple(term, "<http://www.w3.org/2000/01/rdf-schema#range>", "<http://www.w3.org/2001/XMLSchema#string>"));
+		triples.add(new NTriple(term, "<http://www.w3.org/2000/01/rdf-schema#domain>", "<http://lsdis.cs.uga.edu/projects/semdis/opus#Book_Chapter>"));
+		triples.add(new NTriple(term, "<http://www.w3.org/2000/01/rdf-schema#subPropertyOf>", "<http://www.w3.org/2002/07/owl#topDataProperty>"));
+		triples.add(new NTriple(term, "<http://www.w3.org/2000/01/rdf-schema#range>", "<http://www.w3.org/2001/XMLSchema#string>"));
 		schemaTriples.put(term, triples);
 		
 		Set<Triple> instanceTriples = new HashSet<>();
-		instanceTriples.add(new Triple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/KlineSL95>", term, "\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
-		instanceTriples.add(new Triple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/SooJS95>", term, "\"27\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
+		instanceTriples.add(new NTriple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/KlineSL95>", term, "\"21\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
+		instanceTriples.add(new NTriple("<http://dblp.uni-trier.de/rec/bibtex/books/kl/snodgrass95/SooJS95>", term, "\"27\"^^<http://www.w3.org/2001/XMLSchema#integer>"));
 		
 		Set<Triple> inferredTriples = new HashSet<>();
 		

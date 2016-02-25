@@ -59,9 +59,15 @@ public class PrpDomRule extends GenericRule {
 	 */
 	@Override
 	public Map<String, String> where(Triple schemaTriple) {
-		Map<String, String> where = new HashMap<>();
-		where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
-		return where;
+	    Map<String, String> where = new HashMap<>();
+	    
+	    if(schemaTriple.isEncoded()) {
+	        where.put(TermType.predicate, schemaTriple.getSubject().toString());
+	    } else {
+	        where.put(TermType.predicate, "\"" + schemaTriple.getSubject() + "\"");
+	    }
+	    
+	    return where;
 	}
 	
 	/**
@@ -72,7 +78,15 @@ public class PrpDomRule extends GenericRule {
 	 */
 	@Override
 	public Triple head(Triple schemaTriple, Triple instanceTriple) {
-		Triple triple = new Triple(instanceTriple.getSubject(), SchemaURIType.RDF_TYPE.getUri(), schemaTriple.getObject());
+	    Object predicate;
+
+        if(schemaTriple.isEncoded()) {
+            predicate = SchemaURIType.RDF_TYPE.id;
+        } else {
+            predicate = SchemaURIType.RDF_TYPE.getUri();
+        }
+        
+		Triple triple = schemaTriple.create(instanceTriple.getSubject(), predicate, schemaTriple.getObject());
 		triple.setInferred(true);
 		return triple;
 	}

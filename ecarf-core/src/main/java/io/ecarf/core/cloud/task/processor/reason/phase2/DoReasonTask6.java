@@ -28,6 +28,7 @@ import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.NTriple;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
@@ -135,7 +136,7 @@ public class DoReasonTask6 extends CommonTask {
 		}
 
 		Map<String, Set<Triple>> allSchemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
+				TripleUtils.getRelevantSchemaNTriples(localSchemaFile, TermUtils.RDFS_TBOX);
 
 		// get all the triples we care about
 		schemaTerms = new HashMap<>();
@@ -152,7 +153,7 @@ public class DoReasonTask6 extends CommonTask {
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
 		String instanceId = cloud.getInstanceId();
 		
-		QueryGenerator generator = new QueryGenerator(schemaTerms, null);
+		QueryGenerator<String> generator = new QueryGenerator<String>(schemaTerms, null);
 		
 		// timestamp loop
 		do {
@@ -245,7 +246,7 @@ public class DoReasonTask6 extends CommonTask {
 				if(interimInferredTriples <= streamingThreshold) {
 					// stream the data
 					
-					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile);
+					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile, false);
 					log.info("Total triples to stream into Big Data: " + inferredTriples.size());
 					cloud.streamObjectsIntoBigData(inferredTriples, TableUtils.getBigQueryTripleTable(table));
 					
@@ -342,7 +343,7 @@ public class DoReasonTask6 extends CommonTask {
 					//if(!inferredAlready.contains(values)) {
 					//inferredAlready.add(values);
 
-					Triple instanceTriple = new Triple();
+					NTriple instanceTriple = new NTriple();
 					instanceTriple.setSubject(record.get(0));
 					instanceTriple.setPredicate(record.get(1));
 					instanceTriple.setObject(record.get(2));

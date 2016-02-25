@@ -29,6 +29,7 @@ import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
 import io.ecarf.core.triple.SchemaURIType;
+import io.ecarf.core.triple.ETriple;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Config;
@@ -73,13 +74,13 @@ public class DoReasonTask7 extends CommonTask {
 	
 	//private static final int MAX_CACHE = 40000000;
 	
-	private int duplicates;
+	//private int duplicates;
 	
 	private BigInteger totalRows = BigInteger.valueOf(0l);
 	
 	private Long totalBytes = 0L;
 	
-	private Map<String, Set<Triple>> schemaTerms;
+	private Map<Long, Set<Triple>> schemaTerms;
 	
 	//private ExecutorService executor;
 	
@@ -91,6 +92,7 @@ public class DoReasonTask7 extends CommonTask {
 	// the encoded schema
 	private String terms;
 	
+	// file if metadata is too long
 	private String termsFile;
 	
 	private String bucket;
@@ -103,17 +105,13 @@ public class DoReasonTask7 extends CommonTask {
 	    
 	    GoogleCloudService cloud = (GoogleCloudService) this.getCloudService();
 
-		//String table = metadata.getValue(EcarfMetaData.ECARF_TABLE);
-		//Set<String> terms = metadata.getTerms();
-		//String schemaFile = metadata.getValue(EcarfMetaData.ECARF_SCHEMA);
-		//String bucket = metadata.getBucket();
 		Stopwatch stopwatch1 = Stopwatch.createUnstarted();
 		Stopwatch stopwatch2 = Stopwatch.createUnstarted();
 		Set<String> termsSet;
 		
 		if(terms == null) {
 			// too large, probably saved as a file
-			//String termsFile = metadata.getValue(EcarfMetaData.ECARF_TERMS_FILE);
+
 			log.info("Using json file for terms: " + termsFile);
 			Validate.notNull(termsFile);
 			
@@ -136,13 +134,16 @@ public class DoReasonTask7 extends CommonTask {
 			localSchemaFile = GzipUtils.getUncompressedFilename(localSchemaFile);
 		}
 
-		Map<String, Set<Triple>> allSchemaTriples = 
-				TripleUtils.getRelevantSchemaTriples(localSchemaFile, TermUtils.RDFS_TBOX);
+		Map<Long, Set<Triple>> allSchemaTriples = 
+				TripleUtils.getRelevantSchemaETriples(localSchemaFile, TermUtils.RDFS_TBOX);
 
 		// get all the triples we care about
 		schemaTerms = new HashMap<>();
 
-		for(String term: termsSet) {
+		for(String termStr: termsSet) {
+		    
+		    Long term = Long.parseLong(termStr);
+		    
 			if(allSchemaTriples.containsKey(term)) {
 				schemaTerms.put(term, allSchemaTriples.get(term));
 			}
@@ -154,12 +155,12 @@ public class DoReasonTask7 extends CommonTask {
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
 		String instanceId = cloud.getInstanceId();
 		
-		QueryGenerator generator = new QueryGenerator(schemaTerms, null);
+		QueryGenerator<Long> generator = new QueryGenerator<Long>(schemaTerms, null);
 		
 		// timestamp loop
 		do {
 
-			Set<String> productiveTerms = new HashSet<>();
+			Set<Long> productiveTerms = new HashSet<>();
 			int interimInferredTriples = 0;
 
 			// First of all run all the queries asynchronously and remember the jobId and filename for each term
@@ -247,7 +248,7 @@ public class DoReasonTask7 extends CommonTask {
 				if(interimInferredTriples <= streamingThreshold) {
 					// stream the data
 					
-					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile);
+					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile, true);
 					log.info("Total triples to stream into Big Data: " + inferredTriples.size());
 					cloud.streamObjectsIntoBigData(inferredTriples, TableUtils.getBigQueryTripleTable(table));
 					
@@ -298,7 +299,7 @@ public class DoReasonTask7 extends CommonTask {
 		
 		//executor.shutdown();
 		log.info("Finished reasoning, total inferred triples = " + totalInferredTriples);
-		log.info("Number of avoided duplicate terms = " + this.duplicates);
+		//log.info("Number of avoided duplicate terms = " + this.duplicates);
 		log.info("Total rows retrieved from big data = " + this.totalRows);
 		log.info("Total processed GBytes = " + ((double) this.totalBytes / FileUtils.ONE_GB));
 		log.info("Total process reasoning time (serialization in inf file) = " + stopwatch1);
@@ -317,7 +318,7 @@ public class DoReasonTask7 extends CommonTask {
 	 * @return
 	 * @throws IOException
 	 */
-	private int inferAndSaveTriplesToFile(QueryResult queryResult, Set<String> productiveTerms, String table, PrintWriter writer) throws IOException {
+	private int inferAndSaveTriplesToFile(QueryResult queryResult, Set<Long> productiveTerms, String table, PrintWriter writer) throws IOException {
 
 		//Term term, List<String> select, Set<Triple> schemaTriples
 		log.info("********************** Starting Inference Round **********************");
@@ -335,7 +336,7 @@ public class DoReasonTask7 extends CommonTask {
 
 			try {
 				
-				String term;
+				Long term;
 				
 				for (CSVRecord record : records) {
 
@@ -344,15 +345,20 @@ public class DoReasonTask7 extends CommonTask {
 					//if(!inferredAlready.contains(values)) {
 					//inferredAlready.add(values);
 
-					Triple instanceTriple = new Triple();
+				    /*ETriple instanceTriple = new ETriple();
 					instanceTriple.setSubject(record.get(0));
 					instanceTriple.setPredicate(record.get(1));
-					instanceTriple.setObject(record.get(2));
+					instanceTriple.setObject(record.get(2));*/
+				    
+				    ETriple instanceTriple = ETriple.fromCSV(record.values());
 					
 					// TODO review for OWL ruleset
-					if(SchemaURIType.RDF_TYPE.getUri().equals(instanceTriple.getPredicate())) {
+					if(SchemaURIType.RDF_TYPE.id == instanceTriple.getPredicate()) {
+					    
 						term = instanceTriple.getObject(); // object
+						
 					} else {
+					    
 						term = instanceTriple.getPredicate(); // predicate
 					}
 
@@ -364,8 +370,11 @@ public class DoReasonTask7 extends CommonTask {
 						for(Triple schemaTriple: schemaTriples) {
 							Rule rule = GenericRule.getRule(schemaTriple);
 							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-							writer.println(inferredTriple.toCsv());
-							inferredTriples++;
+							
+							if(inferredTriple != null) {
+							    writer.println(inferredTriple.toCsv());
+							    inferredTriples++;
+							}
 						}
 					}
 

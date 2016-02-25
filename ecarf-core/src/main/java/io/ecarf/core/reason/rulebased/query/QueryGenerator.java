@@ -19,6 +19,8 @@
 package io.ecarf.core.reason.rulebased.query;
 
 import io.ecarf.core.reason.rulebased.GenericRule;
+import io.ecarf.core.reason.rulebased.Rule;
+import io.ecarf.core.triple.TermType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Utils;
 
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,19 +44,23 @@ import com.google.common.base.Joiner;
  * @author Omer Dawelbeit (omerio)
  *
  */
-public class QueryGenerator {
+public class QueryGenerator<T> {
 	
 	private final static Log log = LogFactory.getLog(QueryGenerator.class);
 	
-	private static final String SELECT_FROM = "select subject, predicate, object from ";
+	//private static final String SELECT_FROM = "select subject, predicate, object from ";
+	
+	private static final String SELECT = "select ";
+	
+	private static final String FROM = " from ";
 	
 	private String decoratedTable;
-	private Map<String, Set<Triple>> schemaTerms; 
+	private Map<T, Set<Triple>> schemaTerms; 
 
 	/**
 	 * 
 	 */
-	public QueryGenerator(Map<String, Set<Triple>> schemaTerms, String decoratedTable) {
+	public QueryGenerator(Map<T, Set<Triple>> schemaTerms, String decoratedTable) {
 		this.decoratedTable = decoratedTable;
 		this.schemaTerms = schemaTerms;
 	}
@@ -62,12 +69,25 @@ public class QueryGenerator {
 		List<String> queries = new ArrayList<String>();
 		
 		Map<Integer, Map<String, Set<String>>> parts = new HashMap<Integer, Map<String, Set<String>>>();
+		Set<String> selects = new HashSet<>();
+		boolean encoded = false;
 				
-		for(String term: schemaTerms.keySet()) {
+		for(T term: schemaTerms.keySet()) {
 			Set<Triple> triples = schemaTerms.get(term);
-			Triple schemaTriple = triples.iterator().next();
 			
-			Map<String, String> where = GenericRule.getRule(schemaTriple).where(schemaTriple);
+			Triple schemaTriple = null;
+			Rule rule = null;
+			
+			for(Triple sTriple: triples) {
+			    rule = GenericRule.getRule(sTriple);
+			    selects.addAll(rule.select());
+			    if(schemaTriple == null) {
+			        schemaTriple = sTriple;
+			        encoded = schemaTriple.isEncoded();
+			    }
+			}
+			
+			Map<String, String> where = rule.where(schemaTriple);
 			
 			Integer size = where.size();
 			
@@ -87,7 +107,17 @@ public class QueryGenerator {
 			}
 		}
 		
-		StringBuilder query = new StringBuilder(SELECT_FROM).append(decoratedTable).append(" where ");
+		selects.add(TermType.predicate);
+		
+		// only add the object_literal if the triple is encoded
+		if(!encoded) {
+		    selects.remove(TermType.object_literal);
+		}
+		
+		String columns = StringUtils.join(GenericRule.getOrderedSelect(selects), ", ");
+		
+		StringBuilder query = new StringBuilder(SELECT).append(columns)
+		    .append(FROM).append(decoratedTable).append(" where ");
 		Set<String> conditions = new HashSet<String>();
 		
 		Joiner joiner;
