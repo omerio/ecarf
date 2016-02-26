@@ -83,19 +83,22 @@ public class PrpRngRule extends GenericRule {
 	    
 	    Triple triple = null;
 	    
+	    Object object = instanceTriple.getObject();
+	    
 	    // object is null if a literal, we can't generate a triple with a literal in the subject anyway
 	    // skip
-	    if(instanceTriple.getObject() != null) { 
+	    if(((object != null) && schemaTriple.isEncoded())
+	            || (!schemaTriple.isEncoded() && ((String) object).startsWith("<") )) { 
 	        
 	        Object predicate;
 
 	        if(schemaTriple.isEncoded()) {
-	            predicate = SchemaURIType.RDF_TYPE.id;
+	            predicate = (long) SchemaURIType.RDF_TYPE.id;
 	        } else {
 	            predicate = SchemaURIType.RDF_TYPE.getUri();
 	        }
 
-	        triple = schemaTriple.create(instanceTriple.getObject(), predicate, schemaTriple.getObject());
+	        triple = schemaTriple.create(object, predicate, schemaTriple.getObject());
 	        triple.setInferred(true);
 	        
 	    }

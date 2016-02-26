@@ -69,7 +69,7 @@ import com.google.common.collect.Lists;
  * Reason task that saves all the inferred triples in each round in a single file then uploads it to Cloud storage then Big data. 
  * Hybrid big data streaming for inferred triples of 100,000 or smaller
  * @author Omer Dawelbeit (omerio)
- *
+ * @deprecated use DoReasonTask6 or DoReasonTask7
  */
 public class DoReasonTask5 extends CommonTask {
 	
@@ -365,8 +365,11 @@ public class DoReasonTask5 extends CommonTask {
 						for(Triple schemaTriple: schemaTriples) {
 							Rule rule = GenericRule.getRule(schemaTriple);
 							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-							writer.println(inferredTriple.toCsv());
-							inferredTriples++;
+							
+							if(inferredTriple != null) {
+							    writer.println(inferredTriple.toCsv());
+							    inferredTriples++;
+							}
 						}
 
 						// this is just to avoid any memory issues

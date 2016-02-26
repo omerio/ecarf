@@ -81,7 +81,7 @@ public class PrpDomRule extends GenericRule {
 	    Object predicate;
 
         if(schemaTriple.isEncoded()) {
-            predicate = SchemaURIType.RDF_TYPE.id;
+            predicate = (long) SchemaURIType.RDF_TYPE.id;
         } else {
             predicate = SchemaURIType.RDF_TYPE.getUri();
         }

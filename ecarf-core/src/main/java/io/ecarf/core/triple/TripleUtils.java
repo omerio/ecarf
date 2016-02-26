@@ -13,8 +13,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -148,6 +151,91 @@ public class TripleUtils {
 	}
 	
 	/**
+	 * Convert a csv file to triples
+	 * @param triplesFile
+	 * @param encoded
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Triple> csvToTriples(String triplesFile, boolean encoded) throws IOException {
+	    
+	    List<Triple> triples = new ArrayList<>();
+	    
+	    try (BufferedReader r = new BufferedReader(new FileReader(triplesFile), Constants.GZIP_BUF_SIZE)) {
+
+	        triples.addAll(csvToTriples(r, encoded));
+	    }
+	    
+	    return triples;
+	}
+	
+	/**
+	 * Get triples from a reader
+	 * @param reader
+	 * @param encoded
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<Triple> csvToTriples(Reader reader, boolean encoded) throws IOException {
+	    
+	    List<Triple> triples = new ArrayList<>();
+	    
+	    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(reader);
+
+        for (CSVRecord record : records) {
+
+            if(encoded) {
+                triples.add(ETriple.fromCSV(record.values()));
+                
+            } else {
+                triples.add(NTriple.fromCSV(record.values()));
+            }
+        }
+        
+        return triples;
+	}
+	
+	/**
+	 * Populate the provided collection with the loaded triples
+	 * @param triplesFile
+	 * @param triples
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static void loadNTriples(String triplesFile, Collection<Triple> triples) throws FileNotFoundException, IOException {
+	    try (BufferedReader r = new BufferedReader(new FileReader(triplesFile))) {
+
+            String[] terms;
+            NxParser nxp = new NxParser(r);
+
+            while (nxp.hasNext())  {
+
+                Node[] ns = nxp.next();
+
+                //We are only interested in triples, no quads
+                if (ns.length == 3) {
+                    terms = new String [3];
+
+                    for (int i = 0; i < ns.length; i++)  {
+                        terms[i] = NxUtil.unescape(ns[i].toN3());
+                    }
+
+                    String subject = terms[0];
+                    String predicate = terms[1];
+                    String object = terms[2];
+
+                    triples.add(new NTriple(subject, predicate, object));
+
+                } else {
+                    Log.warn("Ignoring line: " + ns);
+                }
+            }
+
+        }
+	   
+	}
+
+	/**
 	 * Load N triples from a file
 	 * @param triplesFile
 	 * @return
@@ -158,35 +246,7 @@ public class TripleUtils {
 
 		Set<Triple> triples = new HashSet<>();
 
-		try (BufferedReader r = new BufferedReader(new FileReader(triplesFile))) {
-
-			String[] terms;
-			NxParser nxp = new NxParser(r);
-
-			while (nxp.hasNext())  {
-
-				Node[] ns = nxp.next();
-
-				//We are only interested in triples, no quads
-				if (ns.length == 3) {
-					terms = new String [3];
-
-					for (int i = 0; i < ns.length; i++)  {
-						terms[i] = NxUtil.unescape(ns[i].toN3());
-					}
-
-					String subject = terms[0];
-					String predicate = terms[1];
-					String object = terms[2];
-
-					triples.add(new NTriple(subject, predicate, object));
-
-				} else {
-					Log.warn("Ignoring line: " + ns);
-				}
-			}
-
-		}
+		loadNTriples(triplesFile, triples);
 
 		return triples;
 	}

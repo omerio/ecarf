@@ -66,7 +66,7 @@ import com.google.common.collect.Lists;
  * Reason task that saves all the inferred triples in each round in a single file then uploads it to Cloud storage then Big data. 
  * Hybrid big data streaming for inferred triples of 100,000 or smaller
  * @author Omer Dawelbeit (omerio)
- *
+ * @deprecated use DoReasonTask6 or DoReasonTask7
  */
 public class DoReasonTask4 extends CommonTask {
 	

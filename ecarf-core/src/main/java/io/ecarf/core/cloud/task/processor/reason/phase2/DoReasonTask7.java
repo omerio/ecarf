@@ -318,7 +318,7 @@ public class DoReasonTask7 extends CommonTask {
 	 * @return
 	 * @throws IOException
 	 */
-	private int inferAndSaveTriplesToFile(QueryResult queryResult, Set<Long> productiveTerms, String table, PrintWriter writer) throws IOException {
+	protected int inferAndSaveTriplesToFile(QueryResult queryResult, Set<Long> productiveTerms, String table, PrintWriter writer) throws IOException {
 
 		//Term term, List<String> select, Set<Triple> schemaTriples
 		log.info("********************** Starting Inference Round **********************");
@@ -482,6 +482,14 @@ public class DoReasonTask7 extends CommonTask {
      */
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+
+    /**
+     * @param schemaTerms the schemaTerms to set
+     */
+    protected void setSchemaTerms(Map<Long, Set<Triple>> schemaTerms) {
+        this.schemaTerms = schemaTerms;
     }
 	
 }

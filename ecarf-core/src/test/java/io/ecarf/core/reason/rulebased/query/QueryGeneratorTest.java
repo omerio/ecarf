@@ -20,30 +20,189 @@
 
 package io.ecarf.core.reason.rulebased.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.Triple;
+import io.ecarf.core.triple.TripleUtils;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
+//import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class QueryGeneratorTest {
 
+    private static final String Q_PART_1 = "select subject, predicate, object from ";
+    
+    private static final String Q_PART_1_A = "select subject, predicate, object, object_literal from ";
+    
+    private static final String Q_PART_2 = " where (object=\"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article>\" "
+            + "and predicate=\"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>\") OR "
+            + "(predicate IN (\"<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization>\",\"<http://lsdis.cs.uga.edu/projects/semdis/opus#pages>\"));";
+    
+    private static final String Q_PART_2_A = " where (predicate=\"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>\" "
+            + "and object IN (\"<http://lsdis.cs.uga.edu/projects/semdis/opus#Book>\",\"<http://lsdis.cs.uga.edu/projects/semdis/opus#Article>\")) "
+            + "OR (predicate IN (\"<http://lsdis.cs.uga.edu/projects/semdis/opus#at_organization>\",\"<http://lsdis.cs.uga.edu/projects/semdis/opus#pages>\"));";
+    
+    
+    private static final String Q_PART_2_B = " where (object=306863398384 "
+            + "and predicate=0) OR (predicate IN (1200228370848,370280483312));";
+    
+    
+    private static final String Q_PART_2_C = " where (object IN (352848615584,306863398384) and predicate=0) "
+            + "OR (predicate IN (1200228370848,370280483312));";
+    
+    
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setUp() throws Exception {
     }
-
+    
     /**
-     * Test method for {@link io.ecarf.core.reason.rulebased.query.QueryGenerator#getQueries()}.
+     * Test that QG will use = rather than IN when only one item in the list   
+     * @throws FileNotFoundException
+     * @throws IOException
      */
     @Test
-    public void testGetQueries() {
-        fail("Not yet implemented");
+    public void testQueryGeneratorOneObject() throws FileNotFoundException, IOException {
+        
+        String table = "my-table-1";
+                
+        QueryGenerator<String> generator = this.getQueryGenerator("/schema.nt", table, false);
+        
+        List<String> queries = generator.getQueries();
+        
+        
+        String expQuery = Q_PART_1 + table + Q_PART_2;
+        
+        validateQuery(queries, expQuery); 
+        
+    }
+    
+    /**
+     * Test that QG will use IN operator when more than one item
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    @Test
+    public void testQueryGeneratorMultiObject() throws FileNotFoundException, IOException {
+        
+        String table = "my-table-2";
+                
+        QueryGenerator<String> generator = this.getQueryGenerator("/schema1.nt", table, false);
+        
+        List<String> queries = generator.getQueries();
+        
+        
+        String expQuery = Q_PART_1 + table + Q_PART_2_A;
+        
+        validateQuery(queries, expQuery); 
+        
+    }
+    
+    /**
+     * Test that QG will use = rather than IN when only one item in the list   
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    @Test
+    public void testEQueryGeneratorOneObject() throws FileNotFoundException, IOException {
+        
+        String table = "my-table-3";
+                
+        QueryGenerator<Long> generator = this.getQueryGenerator("/schema.csv", table, true);
+        
+        List<String> queries = generator.getQueries();
+        
+        
+        String expQuery = Q_PART_1 + table + Q_PART_2_B;
+        
+        validateQuery(queries, expQuery); 
+        
+    }
+    
+    /**
+     * Test that QG will use IN operator when more than one item
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    @Test
+    public void testEQueryGeneratorMultiObject() throws FileNotFoundException, IOException {
+        
+        String table = "my-table-4";
+                
+        QueryGenerator<Long> generator = this.getQueryGenerator("/schema1.csv", table, true);
+        
+        List<String> queries = generator.getQueries();
+        
+        
+        String expQuery = Q_PART_1_A + table + Q_PART_2_C;
+        
+        validateQuery(queries, expQuery); 
+        
+    }
+    
+    private void validateQuery(List<String> queries, String expQuery) {
+        System.out.println(queries);
+        
+        assertEquals(1, queries.size());
+        
+        String query = queries.get(0);
+        
+        assertEquals(expQuery, query); 
     }
 
+    /**
+     * 
+     * @param schemaFile
+     * @return
+     * @throws IOException 
+     * @throws FileNotFoundException 
+     */
+    private QueryGenerator getQueryGenerator(String schemaFile, String table, boolean encoded) throws FileNotFoundException, IOException {
+
+        QueryGenerator generator = null;
+
+        URL schemaUrl = QueryGeneratorTest.class.getResource(schemaFile);
+
+        if(encoded) {
+
+            Map<Long, Set<Triple>> schemaTriples = 
+                    TripleUtils.getRelevantSchemaETriples(schemaUrl.getPath(), TermUtils.RDFS_TBOX);
+
+           /* Map<Long, Set<Triple>> schemaTerms = new HashMap<>();
+            for(Long term: schemaTriples.keySet()) {
+                schemaTerms.put(term, schemaTriples.get(term));
+            }*/
+
+            generator = new QueryGenerator<Long>(schemaTriples, table);
+
+        } else {
+
+            Map<String, Set<Triple>> schemaTriples = 
+                    TripleUtils.getRelevantSchemaNTriples(schemaUrl.getPath(), TermUtils.RDFS_TBOX);
+
+            /*Map<String, Set<Triple>> schemaTerms = new HashMap<>();
+            for(String term: schemaTriples.keySet()) {
+                schemaTerms.put(term, schemaTriples.get(term));
+            }*/
+
+            generator = new QueryGenerator<String>(schemaTriples, table);
+        }
+
+        return generator;
+    }
 }

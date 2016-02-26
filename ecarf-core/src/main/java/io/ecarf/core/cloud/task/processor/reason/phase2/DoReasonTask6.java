@@ -316,7 +316,7 @@ public class DoReasonTask6 extends CommonTask {
 	 * @return
 	 * @throws IOException
 	 */
-	private int inferAndSaveTriplesToFile(QueryResult queryResult, Set<String> productiveTerms, String table, PrintWriter writer) throws IOException {
+	protected int inferAndSaveTriplesToFile(QueryResult queryResult, Set<String> productiveTerms, String table, PrintWriter writer) throws IOException {
 
 		//Term term, List<String> select, Set<Triple> schemaTriples
 		log.info("********************** Starting Inference Round **********************");
@@ -343,10 +343,11 @@ public class DoReasonTask6 extends CommonTask {
 					//if(!inferredAlready.contains(values)) {
 					//inferredAlready.add(values);
 
-					NTriple instanceTriple = new NTriple();
-					instanceTriple.setSubject(record.get(0));
+					NTriple instanceTriple = (NTriple) NTriple.fromCSV(record.values());//new NTriple();
+					
+					/*instanceTriple.setSubject(record.get(0));
 					instanceTriple.setPredicate(record.get(1));
-					instanceTriple.setObject(record.get(2));
+					instanceTriple.setObject(record.get(2));*/
 					
 					// TODO review for OWL ruleset
 					if(SchemaURIType.RDF_TYPE.getUri().equals(instanceTriple.getPredicate())) {
@@ -363,8 +364,11 @@ public class DoReasonTask6 extends CommonTask {
 						for(Triple schemaTriple: schemaTriples) {
 							Rule rule = GenericRule.getRule(schemaTriple);
 							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-							writer.println(inferredTriple.toCsv());
-							inferredTriples++;
+							
+							if(inferredTriple != null) {
+							    writer.println(inferredTriple.toCsv());
+							    inferredTriples++;
+							}
 						}
 					}
 
@@ -472,6 +476,14 @@ public class DoReasonTask6 extends CommonTask {
      */
     public void setBucket(String bucket) {
         this.bucket = bucket;
+    }
+
+
+    /**
+     * @param schemaTerms the schemaTerms to set
+     */
+    protected void setSchemaTerms(Map<String, Set<Triple>> schemaTerms) {
+        this.schemaTerms = schemaTerms;
     }
 	
 }

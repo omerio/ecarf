@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import com.google.common.base.Preconditions;
@@ -149,11 +150,11 @@ public class ETriple implements Triple {
 	        triple.setPredicate(Long.parseLong(terms[1]));
 	    }
 	    
-	    if(terms[2] != null) {
+	    if(StringUtils.isNotBlank(terms[2])) {
 	        triple.setObject(Long.parseLong(terms[2]));
 	    }
 	    
-	    if(terms.length > 3) {
+	    if((terms.length > 3) && StringUtils.isNotBlank(terms[3])) {
 	        // we have object literal
 	        triple.setObjectLiteral(terms[3]);
 	    }
@@ -273,6 +274,7 @@ public class ETriple implements Triple {
 		.append(this.subject, rhs.subject)
 		.append(this.predicate, rhs.predicate)
 		.append(this.object, rhs.object)
+		.append(this.objectLiteral, rhs.objectLiteral)
 		.isEquals();
 	}
 
@@ -283,7 +285,7 @@ public class ETriple implements Triple {
 	 */
 	@Override
 	public String toString() {
-		return "Triple [" + subject + " " + predicate + " " + object  + "]" + ", inferred=" + inferred;
+		return "Triple [" + subject + " " + predicate + " " + object  + " " + objectLiteral  + "]" + ", inferred=" + inferred;
 	}
 	
 	/**
@@ -314,12 +316,23 @@ public class ETriple implements Triple {
 	 * @return
 	 */
 	public String toCsv() {
-		 return new StringBuilder()
+		 StringBuilder csv = new StringBuilder()
 		            .append(this.subject).append(',')
-					.append(this.predicate).append(',')
-					.append(this.object).append(',')
-					.append(StringEscapeUtils.escapeCsv(this.objectLiteral))
-					.toString();
+					.append(this.predicate).append(',');
+		 
+		 // do we have a literal
+		 if(this.object != null) {
+		     csv.append(this.object);
+		 }
+		 
+		 csv.append(',');
+		 
+		 // populate the literal
+		 if(StringUtils.isNotBlank(this.objectLiteral)) {
+		     csv.append(StringEscapeUtils.escapeCsv(this.objectLiteral));
+		 }
+					 
+		 return csv.toString();
 	}
 	
 	/**

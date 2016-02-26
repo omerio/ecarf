@@ -7,3 +7,4 @@
 <http://lsdis.cs.uga.edu/projects/semdis/opus#Article> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
 <http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
 <http://lsdis.cs.uga.edu/projects/semdis/opus#pages> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://www.w3.org/2002/07/owl#topDataProperty> .
+<http://lsdis.cs.uga.edu/projects/semdis/opus#Book> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://lsdis.cs.uga.edu/projects/semdis/opus#Publication> .
