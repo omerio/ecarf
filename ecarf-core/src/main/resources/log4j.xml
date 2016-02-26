@@ -28,6 +28,10 @@
 		<level value="ALL" />
 		<appender-ref ref="ConsoleAppender" />
 	</logger>
+    <logger name="io.cloudex" additivity="false">
+        <level value="ALL" />
+        <appender-ref ref="ConsoleAppender" />
+    </logger>
 
 	<root>
 		<level value="INFO" />

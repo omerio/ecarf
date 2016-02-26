@@ -250,7 +250,7 @@ public class DoReasonTask7 extends CommonTask {
 					
 					Set<Triple> inferredTriples = TripleUtils.loadCompressedCSVTriples(inferredTriplesFile, true);
 					log.info("Total triples to stream into Big Data: " + inferredTriples.size());
-					cloud.streamObjectsIntoBigData(inferredTriples, TableUtils.getBigQueryTripleTable(table));
+					cloud.streamObjectsIntoBigData(inferredTriples, TableUtils.getBigQueryEncodedTripleTable(table));
 					
 					log.info("All inferred triples are streamed into Big Data table");
 					
@@ -263,7 +263,7 @@ public class DoReasonTask7 extends CommonTask {
 					log.info("File " + file + ", uploaded successfully. Now loading it into big data.");
 					
 					String jobId = cloud.loadCloudStorageFilesIntoBigData(Lists.newArrayList(file.getUri()), 
-					        TableUtils.getBigQueryTripleTable(table), false);
+					        TableUtils.getBigQueryEncodedTripleTable(table), false);
 					log.info("All inferred triples are loaded into Big Data table through cloud storage, completed jobId: " + jobId);
 					
 				}
