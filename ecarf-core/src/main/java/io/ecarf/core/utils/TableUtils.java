@@ -41,7 +41,7 @@ public final class TableUtils {
         
         for(TermType term: TermType.values()) {
             
-            table.addColumn(term.term(), GoogleMetaData.TYPE_STRING);
+            table.addColumn(term.term(), GoogleMetaData.TYPE_STRING, false);
         }
         
         return table;
@@ -55,18 +55,16 @@ public final class TableUtils {
      * @return
      */
     public static BigDataTable getBigQueryEncodedTripleTable(String name) {
-        
+
         BigDataTable table = new BigDataTable(name);
-        
-        for(TermType term: TermType.values()) {
-            
-            table.addColumn(term.term(), GoogleMetaData.TYPE_INTEGER);
-        }
-        
-        table.addColumn(TermType.object_literal, GoogleMetaData.TYPE_STRING);
-        
+
+        table.addColumn(TermType.SUBJECT.term(), GoogleMetaData.TYPE_INTEGER, true);
+        table.addColumn(TermType.PREDICATE.term(), GoogleMetaData.TYPE_INTEGER, true);
+        table.addColumn(TermType.OBJECT.term(), GoogleMetaData.TYPE_INTEGER, false);
+        table.addColumn(TermType.object_literal, GoogleMetaData.TYPE_STRING, false);
+
         return table;
-        
+
     }
     
     
