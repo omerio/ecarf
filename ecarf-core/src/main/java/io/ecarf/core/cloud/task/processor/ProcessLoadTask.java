@@ -93,27 +93,29 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
         
         this.schemaTerms = cloudService.getSetFromCloudStorageFile(schemaTermsFile, bucket);
         
+        String localDictionaryFile = null;
+        
         if(Boolean.valueOf(encode) && StringUtils.isNotBlank(this.dictionaryFile)) {
             
             log.info("Downloading and loading dictionary into memory from file: " + this.dictionaryFile);
             
             // 1- Download the dictionary
-            String localFile = Utils.TEMP_FOLDER + dictionaryFile;  
+            localDictionaryFile = Utils.TEMP_FOLDER + dictionaryFile;  
             
-            if(FilenameUtils.fileExists(localFile)) {
-                log.info("Re-using local file: " + localFile);
+            if(FilenameUtils.fileExists(localDictionaryFile)) {
+                log.info("Re-using local file: " + localDictionaryFile);
                 
             } else {
-                this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localFile, this.bucket);
+                this.cloudService.downloadObjectFromCloudStorage(dictionaryFile, localDictionaryFile, this.bucket);
             }
 
-            log.info("Loading the dictionary from file: " + localFile + ", memory usage: " + 
+            log.info("Loading the dictionary from file: " + localDictionaryFile + ", memory usage: " + 
                     Utils.getMemoryUsageInGB() + "GB, timer: " + stopwatch);
 
             // 2- Load the dictionary
             try {
                 
-                dictionary = Utils.objectFromFile(localFile, TermDictionaryCore.class, true, false);
+                dictionary = Utils.objectFromFile(localDictionaryFile, TermDictionaryCore.class, true, false);
                 
             } catch (ClassNotFoundException e) {
                 
@@ -135,6 +137,13 @@ public class ProcessLoadTask extends ProcessFilesTask<TermCounter> {
             FileUtils.objectToJsonFile(countStatsFile, count);
 
             cloudService.uploadFileToCloudStorage(countStatsFile, bucket);
+        }
+        
+        // delete the dictionary file, free up some space
+        if(localDictionaryFile != null) {
+            FileUtils.deleteFile(localDictionaryFile);
+            // garbage collection
+            this.dictionary = null;
         }
 
         log.info("FINISH: All files are processed and uploaded successfully,, memory usage: " + 
