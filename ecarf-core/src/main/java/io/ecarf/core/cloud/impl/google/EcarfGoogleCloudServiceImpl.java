@@ -136,4 +136,23 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
         }
     }
 
+    /*public void listTableData(final String datasetId,
+            final String tableId, String file) throws IOException {
+        
+        // this returns the first 100,000 table rows in CSV format
+        try(OutputStream stream = new BufferedOutputStream(new FileOutputStream(file), Constants.GZIP_BUF_SIZE)) {
+                        //new GZIPOutputStream(new FileOutputStream(file), Constants.GZIP_BUF_SIZE))) {
+            Bigquery bigquery = this.getBigquery();
+            bigquery.tabledata().list(this.getProjectId(), datasetId, tableId).setAlt("CSV")
+            .setOauthToken(this.getOAuthToken())
+            .executeAndDownloadTo(stream);
+
+            //stream.flush();
+        }
+        
+        
+    }*/
+
+  
+
 }

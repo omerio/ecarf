@@ -19,6 +19,7 @@
 package io.ecarf.core.cloud.task.processor.reason.phase2;
 
 import io.cloudex.framework.cloud.entities.QueryStats;
+import io.ecarf.core.utils.Utils;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -29,9 +30,9 @@ public class QueryResult {
 	private QueryStats stats;
 	
 	private String filename;
-	
+		
 	private String jobId;
-
+	
 	/**
 	 * @return the stats
 	 */
@@ -80,5 +81,13 @@ public class QueryResult {
 	public static QueryResult create() {
 		return new QueryResult();
 	}
+
+    /**
+     * @return the localFilename
+     */
+    public String getLocalFilename() {
+        return Utils.TEMP_FOLDER + filename;
+    }
+
 
 }

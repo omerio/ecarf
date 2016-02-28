@@ -88,6 +88,7 @@ public class Constants {
 	public static final String ACCESS_SCOPES_KEY = "ecarf.io.vm.access.scopes";
 	public static final String REASON_SLEEP_KEY = "ecarf.io.reasoning.sleep.time";
 	public static final String REASON_RETRY_KEY = "ecarf.io.reasoning.retry.times";
+	public static final String REASON_DATA_DIRECT_DOWNLOAD_LIMIT = "ecarf.io.reasoning.query.direct.download.limit";
 	public static final String OUTPUT_FILE_KEY = "ecarf.io.output.log.file";
 	public static final String OUTPUT_FOLDER_KEY = "ecarf.io.output.log.folder";
 }
