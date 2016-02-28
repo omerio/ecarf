@@ -89,5 +89,18 @@ public class QueryResult {
         return Utils.TEMP_FOLDER + filename;
     }
 
+    /**
+     * Delegate for stats.getTotalRows
+     * @return
+     */
+    public long getTotalRows() {
+        long rows = 0;
+        
+        if((this.stats != null) && (this.stats.getTotalRows() != null)) {
+            rows = this.stats.getTotalRows().longValue();
+        }
+        
+        return rows;
+    }
 
 }

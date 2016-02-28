@@ -28,8 +28,8 @@ import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.reason.rulebased.query.QueryGenerator;
 import io.ecarf.core.term.TermUtils;
-import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.ETriple;
+import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 import io.ecarf.core.utils.Config;
@@ -38,9 +38,11 @@ import io.ecarf.core.utils.TableUtils;
 import io.ecarf.core.utils.Utils;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
@@ -96,6 +99,9 @@ public class DoReasonTask8 extends CommonTask {
 	private String termsFile;
 	
 	private String bucket;
+	
+	// direct download rows limit
+	private int ddLimit;
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.Task#run()
@@ -153,7 +159,7 @@ public class DoReasonTask8 extends CommonTask {
 		int emptyRetries = 0;
 		int totalInferredTriples = 0;
 		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
-		int ddLimit = Config.getIntegerProperty(Constants.REASON_DATA_DIRECT_DOWNLOAD_LIMIT, 1_200_000);
+		this.ddLimit = Config.getIntegerProperty(Constants.REASON_DATA_DIRECT_DOWNLOAD_LIMIT, 1_200_000);
 		String instanceId = cloud.getInstanceId();
 		
 		QueryGenerator<Long> generator = new QueryGenerator<Long>(schemaTerms, null);
@@ -192,7 +198,7 @@ public class DoReasonTask8 extends CommonTask {
 			for(QueryResult queryResult: queryResults) {
 				try {
 					// block and wait for each job to complete then save results to a file
-					QueryStats stats = cloud.saveBigQueryResultsToFile(queryResult.getJobId(), queryResult.getFilename(), this.bucket, ddLimit);
+					QueryStats stats = cloud.saveBigQueryResultsToFile(queryResult.getJobId(), queryResult.getFilename(), this.bucket, this.ddLimit);
 					queryResult.setStats(stats);
 
 				} catch(IOException ioe) {
@@ -307,6 +313,27 @@ public class DoReasonTask8 extends CommonTask {
 		log.info("Total time spent in empty inference cycles = " + stopwatch2);
 	}
 	
+	/**
+	 * Get a reader based on if the query results are compressed or not
+	 * @param filename
+	 * @param compressed
+	 * @return
+	 * @throws IOException
+	 */
+	private BufferedReader getQueryResultsReader(String filename, boolean compressed) throws IOException {
+
+	    BufferedReader reader;
+
+	    if(compressed) {
+	        reader = new BufferedReader(new InputStreamReader(
+	                new GZIPInputStream(new FileInputStream(filename), Constants.GZIP_BUF_SIZE)), Constants.GZIP_BUF_SIZE);
+
+	    } else {
+	        reader = new BufferedReader(new FileReader(filename), Constants.GZIP_BUF_SIZE);
+	    }
+
+	    return reader;
+	}
 
 	/**
 	 * 
@@ -326,11 +353,21 @@ public class DoReasonTask8 extends CommonTask {
 		
 		int inferredTriples = 0;
 		//int failedTriples = 0;
+		
+		boolean compressed = queryResult.getTotalRows() > this.ddLimit;
 
 		// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-		try (BufferedReader r = new BufferedReader(new FileReader(queryResult.getLocalFilename()), Constants.GZIP_BUF_SIZE)) {
+		try (BufferedReader r = this.getQueryResultsReader(queryResult.getLocalFilename(), compressed); ) {
 
-			Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(r);
+			Iterable<CSVRecord> records;
+			
+			if(compressed) {
+			    // ignore first row subject,predicate,object
+			    records = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().parse(r);
+			
+			} else {
+			    records = CSVFormat.DEFAULT.parse(r);
+			}
 
 			// records will contain lots of duplicates
 			//Set<String> inferredAlready = new HashSet<String>();
@@ -398,7 +435,7 @@ public class DoReasonTask8 extends CommonTask {
 
 		log.info("Total Rows: " + queryResult.getStats().getTotalRows() + 
 				", Total Processed Bytes: " + queryResult.getStats().getTotalProcessedGBytes() + " GB" + 
-				", Inferred: " + inferredTriples);
+				", Inferred: " + inferredTriples + ", compressed = " + compressed);
 
 		log.info("********************** Completed Inference Round **********************");
 		
