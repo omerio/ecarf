@@ -20,7 +20,7 @@
 
 package io.ecarf.core.cloud.task.processor.reason.phase2;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import io.ecarf.core.cloud.impl.google.EcarfGoogleCloudServiceImpl;
 import io.ecarf.core.triple.ETriple;
 import io.ecarf.core.utils.Constants;
@@ -61,16 +61,12 @@ public class DoReasonTask8IntTest {
     @Test
     
     public void testRun() throws IOException {
-        DoReasonTask8 task = new DoReasonTask8();
+        DoReasonTask9 task = new DoReasonTask9();
         task.setCloudService(service);
-        task.setBucket("swetodblp-fullrun-2");
-        task.setTable("ontologies.swetodblp2");
-        task.setSchemaFile("opus_august2007_closure_encoded.csv");
-        task.setTerms("99714255280,46866513000000,357392157088,1200228370848,79293028576,306863398384,"
-                    + "370280483312,27422070944,369944612064,95080668400,83256854752,306925456608,"
-                    + "285204270496,30705355936,352848615584,306929376416,1110018005408,83335567856,"
-                    + "27706181856,4412645760496,30638312928,5511101257888,1406102575520,1113037199584,"
-                    + "1127201020336,100767866352,17893680928928,354175405552");
+        task.setBucket("dbpedia-fullrun-3");
+        task.setTable("ontologies.dbpedia2");
+        task.setSchemaFile("dbpedia_3.9_gen_closure_encoded.csv");
+        task.setTerms("23055324594068088,18485755362496296,23055260239613800,23072920822418984,23056360843075176,23055259984027448,23059722439237224,23059997534259816,23061114226805544,23056652564238200,16331882755874496,23059659092664120");
         task.run();
     }
     

@@ -252,12 +252,25 @@ public class TripleUtils {
 	}
 	
 	/**
+     * load CSV triples from a file
+     * @param triplesFile
+     * @return
+     */
+    public static Set<Triple> loadCompressedCSVTriples(String triplesFile, boolean encoded)  throws FileNotFoundException, IOException  {
+        return loadCompressedCSVTriples(triplesFile, encoded, null);
+    }
+	
+	/**
 	 * load CSV triples from a file
 	 * @param triplesFile
 	 * @return
 	 */
-	public static Set<Triple> loadCompressedCSVTriples(String triplesFile, boolean encoded)  throws FileNotFoundException, IOException  {
-		Set<Triple> triples = new HashSet<>();
+	public static Set<Triple> loadCompressedCSVTriples(String triplesFile, boolean encoded, Set<Triple> triples)  throws FileNotFoundException, IOException  {
+	    
+	    if(triples == null) {
+	        triples = new HashSet<>();
+	    }
+	    
 		try(Reader reader = new InputStreamReader(new GZIPInputStream(
 				new FileInputStream(triplesFile), Constants.GZIP_BUF_SIZE), Constants.UTF8)) {
 			

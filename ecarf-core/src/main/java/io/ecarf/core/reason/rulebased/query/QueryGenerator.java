@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 
 /**
  * This class takes in schema terms and their triples and generates a combined query for all the rules.
@@ -66,7 +67,11 @@ public class QueryGenerator<T> {
 	}
 	
 	public List<String> getQueries() {
-		List<String> queries = new ArrayList<String>();
+	    return Lists.newArrayList(this.getQuery());
+	}
+	
+	public String getQuery() {
+		//List<String> queries = new ArrayList<String>();
 		
 		Map<Integer, Map<String, Set<String>>> parts = new HashMap<Integer, Map<String, Set<String>>>();
 		Set<String> selects = new HashSet<>();
@@ -151,10 +156,10 @@ public class QueryGenerator<T> {
 		query.append(joiner.join(conditions)).append(';');
 		
 		log.debug("Query size: " + Utils.getStringSize(query.toString()));
-		queries.add(query.toString());
+		//queries.add(query.toString());
 		// TODO take care of query size
 		
-		return queries;
+		return query.toString();
 	}
 
 	/**

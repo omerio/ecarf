@@ -68,7 +68,8 @@ import com.google.common.collect.Lists;
 
 /**
  * Reason task that saves all the inferred triples in each round in a single file then uploads it to Cloud storage then Big data. 
- * Hybrid big data streaming for inferred triples of 100,000 or smaller. This class reasons over compressed data
+ * Hybrid big data streaming for inferred triples of 100,000 or smaller. This class reasons over compressed data. BigQuery results
+ * exported to cloud storage files which are in compressed CSV format
  * @author Omer Dawelbeit (omerio)
  *
  */
@@ -199,7 +200,8 @@ public class DoReasonTask8 extends CommonTask {
 			for(QueryResult queryResult: queryResults) {
 				try {
 					// block and wait for each job to complete then save results to a file
-					QueryStats stats = cloud.saveBigQueryResultsToFile(queryResult.getJobId(), queryResult.getFilename(), this.bucket, this.ddLimit);
+					QueryStats stats = cloud.saveBigQueryResultsToFile(queryResult.getJobId(), queryResult.getFilename(), 
+					        this.bucket, null, this.ddLimit);
 					queryResult.setStats(stats);
 
 				} catch(IOException ioe) {
@@ -228,7 +230,7 @@ public class DoReasonTask8 extends CommonTask {
 						
 						stopwatch1.start();
 						
-						int inferredTriplesCount = this.inferAndSaveTriplesToFile(queryResult, productiveTerms, decoratedTable, writer);
+						int inferredTriplesCount = this.inferAndSaveTriplesToFile(queryResult, productiveTerms, writer);
 
 						interimInferredTriples += inferredTriplesCount;
 						
@@ -347,7 +349,7 @@ public class DoReasonTask8 extends CommonTask {
 	 * @return
 	 * @throws IOException
 	 */
-	protected int inferAndSaveTriplesToFile(QueryResult queryResult, Set<Long> productiveTerms, String table, PrintWriter writer) throws IOException {
+	protected int inferAndSaveTriplesToFile(QueryResult queryResult, Set<Long> productiveTerms, PrintWriter writer) throws IOException {
 
 		//Term term, List<String> select, Set<Triple> schemaTriples
 		log.info("********************** Starting Inference Round **********************");
