@@ -20,11 +20,14 @@
 
 package io.ecarf.core.cloud.impl.google;
 
+import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.cloudex.framework.cloud.entities.QueryStats;
+import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.utils.TestUtils;
-import io.ecarf.core.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +40,7 @@ public class TestBigQueryResultDownload {
     
     private EcarfGoogleCloudServiceImpl service;
     
-    private static final String QUERY = "select subject, predicate, object from ontologies.swetodblp1 where "
+    private static final String QUERY = "select subject, predicate, object from ontologies.swetodblp3 where "
             + "(predicate=0 and object IN (305857022128,1195933142240,1125875632288,1113242393776,1182785047712,4412935998960,289499154672,1114044538032)) OR "
             + "(predicate IN (285450340512,96426690800,30638312928,1113323182256,374308002272,79293028576,1194864924832,95402494176,"
             + "27422070944,1177684974000,17877322877088,95151901920,1130502277552,1400733949360,1388133125296,1469738568160,"
@@ -121,15 +124,15 @@ public class TestBigQueryResultDownload {
 }
      * @throws IOException
      */
-    @Test
+    //@Test
     public void test() throws IOException {
         
-        //String jobId = service.startBigDataQuery(QUERY);
+        String jobId = service.startBigDataQuery(QUERY, new BigDataTable("ontologies.swetodblp3"));
         
         //String completedJob = service.checkBigQueryJobResults1(jobId, true, false);
         String token = "BFJ5QRJIKMAQAAASA4EAAEEAQCAAKGQIBCQI2BQQUCGQMIFQVYKQ====";
         
-        String jobId = "job_xv-fLy1jvP19OKnXXfJbRZvhr9k";
+       // String jobId = "job_xv-fLy1jvP19OKnXXfJbRZvhr9k";
         
         String datasetId = "_aeda0cdb9ddd1481c7e8d6b0414066988d7f5216";
         
@@ -148,6 +151,43 @@ public class TestBigQueryResultDownload {
         System.out.println("Processed bytes: " + stats.getTotalProcessedGBytes() + "GB");
         System.out.println("Query result rows: " + stats.getTotalRows());
         
+    }
+    
+    @Test
+    public void testLargeQuery() throws IOException {
+        /**
+         * Downloading 61825926 rows from BigQuery for jobId: job_gW11WEy0LnT6ueL2-4NfkpgrNCQ
+            29/02/2016 13:28:10 [DEBUG] [main] impl.google.GoogleCloudServiceImpl - Saving table: 
+            {"datasetId":"ontologies","projectId":"ecarf-1000","tableId":"dbpedia2_cloudex_processor_1456752400618_1456752468034"}, 
+            to cloud storage file: gs://dbpedia-fullrun-3/cloudex-processor-1456752400618_1456752468023_QueryResults_0
+         */
+        
+        /*QueryStats stats = service.saveBigQueryResultsToFile("job_gW11WEy0LnT6ueL2-4NfkpgrNCQ", 
+                 "cloudex-processor-1456752400618_1456752468023_QueryResults_0", "swetodblp-local" ,1_200_000);
+        
+        for(String file: stats.getOutputFiles()) {
+            System.out.println(file);
+        }*/
+        
+        List<io.cloudex.framework.cloud.entities.StorageObject> objects = this.service.listCloudStorageObjects("swetodblp-local");
+        
+        List<String> files = new ArrayList<>();
+        
+        for(io.cloudex.framework.cloud.entities.StorageObject object: objects) {
+            String name = object.getName();
+            if(name.startsWith("cloudex-processor-1456752400618_1456752468023_QueryResults_0")) {
+                files.add(name);
+            }
+        }
+        
+        for(String file: files) {
+
+            System.out.println("Downloading query results file: " + file);
+            
+            String localFile = FileUtils.TEMP_FOLDER + file;
+            
+            System.out.println(localFile);
+        }
     }
 
 }

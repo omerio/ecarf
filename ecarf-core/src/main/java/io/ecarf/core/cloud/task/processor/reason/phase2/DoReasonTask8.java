@@ -356,82 +356,87 @@ public class DoReasonTask8 extends CommonTask {
 		//int failedTriples = 0;
 		
 		boolean compressed = queryResult.getTotalRows() > this.ddLimit;
+		
+		List<String> files = queryResult.getStats().getOutputFiles();
+		
+		for(String file: files) {
+		    
+		    // loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
+		    try (BufferedReader r = this.getQueryResultsReader(file, compressed); ) {
 
-		// loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
-		try (BufferedReader r = this.getQueryResultsReader(queryResult.getLocalFilename(), compressed); ) {
+		        Iterable<CSVRecord> records;
 
-			Iterable<CSVRecord> records;
-			
-			if(compressed) {
-			    // ignore first row subject,predicate,object
-			    records = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().parse(r);
-			
-			} else {
-			    records = CSVFormat.DEFAULT.parse(r);
-			}
+		        if(compressed) {
+		            // ignore first row subject,predicate,object
+		            records = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().parse(r);
 
-			// records will contain lots of duplicates
-			//Set<String> inferredAlready = new HashSet<String>();
+		        } else {
+		            records = CSVFormat.DEFAULT.parse(r);
+		        }
 
-			try {
-				
-				Long term;
-				
-				for (CSVRecord record : records) {
+		        // records will contain lots of duplicates
+		        //Set<String> inferredAlready = new HashSet<String>();
 
-					//String values = ((select.size() == 1) ? record.get(0): StringUtils.join(record.values(), ','));
+		        try {
 
-					//if(!inferredAlready.contains(values)) {
-					//inferredAlready.add(values);
+		            Long term;
 
-				    /*ETriple instanceTriple = new ETriple();
-					instanceTriple.setSubject(record.get(0));
-					instanceTriple.setPredicate(record.get(1));
-					instanceTriple.setObject(record.get(2));*/
-				    
-				    ETriple instanceTriple = ETriple.fromCSV(record.values());
-					
-					// TODO review for OWL ruleset
-					if(SchemaURIType.RDF_TYPE.id == instanceTriple.getPredicate()) {
-					    
-						term = instanceTriple.getObject(); // object
-						
-					} else {
-					    
-						term = instanceTriple.getPredicate(); // predicate
-					}
+		            for (CSVRecord record : records) {
 
-					Set<Triple> schemaTriples = schemaTerms.get(term);
+		                //String values = ((select.size() == 1) ? record.get(0): StringUtils.join(record.values(), ','));
 
-					if((schemaTriples != null) && !schemaTriples.isEmpty()) {
-						productiveTerms.add(term);
-						
-						for(Triple schemaTriple: schemaTriples) {
-							Rule rule = GenericRule.getRule(schemaTriple);
-							Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
-							
-							if(inferredTriple != null) {
-							    writer.println(inferredTriple.toCsv());
-							    inferredTriples++;
-							}
-						}
-					}
+		                //if(!inferredAlready.contains(values)) {
+		                //inferredAlready.add(values);
 
-					// this is just to avoid any memory issues
-					//if(inferredAlready.size() > MAX_CACHE) {
-					//	inferredAlready.clear();
-					//	log.info("Cleared cache of inferred terms");
-					//}
-					//} else {
-					//this.duplicates++;
-					//}
+		                /*ETriple instanceTriple = new ETriple();
+    					instanceTriple.setSubject(record.get(0));
+    					instanceTriple.setPredicate(record.get(1));
+    					instanceTriple.setObject(record.get(2));*/
 
-				}
-			} catch(Exception e) {
-				log.error("Failed to parse selected terms", e);
-				throw new IOException(e);
-				//failedTriples++;
-			}
+		                ETriple instanceTriple = ETriple.fromCSV(record.values());
+
+		                // TODO review for OWL ruleset
+		                if(SchemaURIType.RDF_TYPE.id == instanceTriple.getPredicate()) {
+
+		                    term = instanceTriple.getObject(); // object
+
+		                } else {
+
+		                    term = instanceTriple.getPredicate(); // predicate
+		                }
+
+		                Set<Triple> schemaTriples = schemaTerms.get(term);
+
+		                if((schemaTriples != null) && !schemaTriples.isEmpty()) {
+		                    productiveTerms.add(term);
+
+		                    for(Triple schemaTriple: schemaTriples) {
+		                        Rule rule = GenericRule.getRule(schemaTriple);
+		                        Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+
+		                        if(inferredTriple != null) {
+		                            writer.println(inferredTriple.toCsv());
+		                            inferredTriples++;
+		                        }
+		                    }
+		                }
+
+		                // this is just to avoid any memory issues
+		                //if(inferredAlready.size() > MAX_CACHE) {
+		                //	inferredAlready.clear();
+		                //	log.info("Cleared cache of inferred terms");
+		                //}
+		                //} else {
+		                //this.duplicates++;
+		                //}
+
+		            }
+		        } catch(Exception e) {
+		            log.error("Failed to parse selected terms", e);
+		            throw new IOException(e);
+		            //failedTriples++;
+		        }
+		    }
 		}
 
 		log.info("Total Rows: " + queryResult.getStats().getTotalRows() + 
