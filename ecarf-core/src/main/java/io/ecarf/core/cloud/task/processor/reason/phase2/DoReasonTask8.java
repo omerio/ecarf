@@ -20,6 +20,7 @@ package io.ecarf.core.cloud.task.processor.reason.phase2;
 
 import io.cloudex.cloud.impl.google.GoogleCloudService;
 import io.cloudex.framework.cloud.api.ApiUtils;
+import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.cloudex.framework.cloud.entities.QueryStats;
 import io.cloudex.framework.cloud.entities.StorageObject;
 import io.cloudex.framework.task.CommonTask;
@@ -180,7 +181,7 @@ public class DoReasonTask8 extends CommonTask {
 			String queryResultFilePrefix = instanceId + '_' + System.currentTimeMillis() + "_QueryResults_";
 			int fileCount = 0;
 			for(String query: queries) {
-				String jobId = cloud.startBigDataQuery(query);
+				String jobId = cloud.startBigDataQuery(query, new BigDataTable(this.table));
 				queryResults.add(QueryResult.create().setFilename(queryResultFilePrefix + fileCount).setJobId(jobId));
 				fileCount++;
 			}
@@ -202,9 +203,9 @@ public class DoReasonTask8 extends CommonTask {
 					queryResult.setStats(stats);
 
 				} catch(IOException ioe) {
-					// transient backend errors
-					log.warn("failed to save query results to file, jobId: " + queryResult.getJobId(), ioe);
-					//TODO should throw an exception
+					
+					log.error("failed to save query results to file, jobId: " + queryResult.getJobId(), ioe);
+					throw ioe;
 				}
 			}
 			
