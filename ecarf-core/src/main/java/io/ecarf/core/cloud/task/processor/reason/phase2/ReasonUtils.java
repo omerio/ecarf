@@ -20,12 +20,14 @@
 
 package io.ecarf.core.cloud.task.processor.reason.phase2;
 
+import io.ecarf.core.cloud.task.processor.reason.phase3.DuplicatesBuster;
 import io.ecarf.core.reason.rulebased.GenericRule;
 import io.ecarf.core.reason.rulebased.Rule;
 import io.ecarf.core.triple.ETriple;
 import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Constants;
+import io.ecarf.core.utils.Utils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -64,7 +66,7 @@ public class ReasonUtils {
     public static int reason(String inFile, String outFile, boolean compressed, 
             Map<Long, Set<Triple>> schemaTerms, Set<Long> productiveTerms) throws IOException {
         
-        log.info("Reasoning for file: " + inFile);
+        log.info("Reasoning for file: " + inFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
 
         int inferredTriples = 0;
 
@@ -110,6 +112,76 @@ public class ReasonUtils {
                         Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
 
                         if(inferredTriple != null) {
+                            writer.println(inferredTriple.toCsv());
+                            inferredTriples++;
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+        return inferredTriples;
+    }
+    
+    /**
+     * 
+     * @param file
+     * @param writer
+     * @param compressed
+     * @return
+     * @throws IOException 
+     */
+    public static int reason(String inFile, String outFile, boolean compressed, 
+            Map<Long, Set<Triple>> schemaTerms, Set<Long> productiveTerms, DuplicatesBuster duplicatesBuster) throws IOException {
+        
+        log.info("Reasoning for file: " + inFile + ", memory usage: " + Utils.getMemoryUsageInGB() + "GB");
+
+        int inferredTriples = 0;
+
+        // loop through the instance triples probably stored in a file and generate all the triples matching the schema triples set
+        try (BufferedReader reader = getQueryResultsReader(inFile, compressed); 
+             PrintWriter writer = 
+                        new PrintWriter(new BufferedOutputStream(new GZIPOutputStream(
+                                new FileOutputStream(outFile), Constants.GZIP_BUF_SIZE), Constants.GZIP_BUF_SIZE));) {
+
+            Iterable<CSVRecord> records;
+
+            if(compressed) {
+                // ignore first row subject,predicate,object
+                records = CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord().parse(reader);
+
+            } else {
+                records = CSVFormat.DEFAULT.parse(reader);
+            }
+
+            Long term;
+
+            for (CSVRecord record : records) {
+
+                ETriple instanceTriple = ETriple.fromCSV(record.values());
+
+                // TODO review for OWL ruleset
+                if(SchemaURIType.RDF_TYPE.id == instanceTriple.getPredicate()) {
+
+                    term = instanceTriple.getObject(); // object
+
+                } else {
+
+                    term = instanceTriple.getPredicate(); // predicate
+                }
+
+                Set<Triple> schemaTriples = schemaTerms.get(term);
+
+                if((schemaTriples != null) && !schemaTriples.isEmpty()) {
+                    productiveTerms.add(term);
+
+                    for(Triple schemaTriple: schemaTriples) {
+                        Rule rule = GenericRule.getRule(schemaTriple);
+                        Triple inferredTriple = rule.head(schemaTriple, instanceTriple);
+
+                        if((inferredTriple != null) && !duplicatesBuster.isDuplicate(inferredTriple)) {
                             writer.println(inferredTriple.toCsv());
                             inferredTriples++;
                         }

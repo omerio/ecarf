@@ -72,10 +72,6 @@ public class DoReasonTask9 extends CommonTask {
 	
 	private Long totalBytes = 0L;
 	
-	private Map<Long, Set<Triple>> schemaTerms;
-	
-	private ExecutorService executor;
-	
 	private String table;
 	
 	// the encoded schema file
@@ -90,7 +86,11 @@ public class DoReasonTask9 extends CommonTask {
 	private String bucket;
 	
 	// direct download rows limit
-	private int ddLimit;
+	protected int ddLimit;
+	
+	protected Map<Long, Set<Triple>> schemaTerms;
+    
+    protected ExecutorService executor;
 
 	/**
 	 * Carryout the setup of the schema terms
