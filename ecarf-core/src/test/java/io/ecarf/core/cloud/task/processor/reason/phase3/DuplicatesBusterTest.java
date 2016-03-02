@@ -20,15 +20,24 @@
 
 package io.ecarf.core.cloud.task.processor.reason.phase3;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import io.ecarf.core.reason.rulebased.query.QueryGeneratorTest;
+import io.ecarf.core.triple.NTriple;
+import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +97,66 @@ public class DuplicatesBusterTest {
         assertEquals(rdfTypeTriples.size(), duplicates);
         
         
+    }
+    
+    public static void main(String [] args) throws FileNotFoundException, IOException {
+        Set<Triple> triples = new HashSet<>();
+        
+        String triple = null;
+
+        try (BufferedReader r = new BufferedReader(new FileReader("/Users/omerio/Ontologies/swetodblp_2008_closure.nt"))) {
+
+            do {
+
+                triple = r.readLine();
+
+                if(triple != null) {
+
+                    String[] values = new String[3];
+
+                    // Parse subject
+                    if (triple.startsWith("<")) {
+                        values[0] = triple.substring(0, triple.indexOf('>') + 1);
+                    } else { // Is a bnode
+
+                        values[0] = triple.substring(0, triple.indexOf(' '));
+
+                    }
+
+                    triple = triple.substring(triple.indexOf(' ') + 1);
+                    // Parse predicate. It can be only a URI
+                    values[1] = triple.substring(0, triple.indexOf('>') + 1);
+
+                    // Parse object
+                    triple = triple.substring(values[1].length() + 1);
+                    if (triple.startsWith("<")) { // URI
+                        values[2] = triple.substring(0, triple.indexOf('>') + 1);
+                    } else if (triple.charAt(0) == '"') { // Literal
+                        values[2] = triple.substring(0,
+                                triple.substring(1).indexOf('"') + 2);
+                        triple = triple.substring(values[2].length(), triple.length());
+                        values[2] += triple.substring(0, triple.indexOf(' '));
+                    } else { // Bnode
+
+                        values[2] = triple.substring(0, triple.indexOf(' '));
+
+                    }
+
+
+                    if(SchemaURIType.RDF_TYPE.uri.endsWith(values[1])) {
+                        values[1] = null;
+                    }
+
+
+                    triples.add(new NTriple(values[0], values[1], values[2]));
+                }
+
+
+            } while(triple != null);
+        }
+        
+        System.out.println(triples.size());
+            
     }
 
 }

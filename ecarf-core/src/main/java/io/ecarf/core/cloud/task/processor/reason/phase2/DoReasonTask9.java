@@ -91,6 +91,10 @@ public class DoReasonTask9 extends CommonTask {
 	protected Map<Long, Set<Triple>> schemaTerms;
     
     protected ExecutorService executor;
+    
+    private Integer retries;
+    
+    private Integer sleep;
 
 	/**
 	 * Carryout the setup of the schema terms
@@ -159,7 +163,23 @@ public class DoReasonTask9 extends CommonTask {
 		String decoratedTable = table;
 		int emptyRetries = 0;
 		int totalInferredTriples = 0;
-		int maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
+		
+		int maxRetries;
+		if(this.retries == null) {
+		    maxRetries = Config.getIntegerProperty(Constants.REASON_RETRY_KEY, 6);
+		
+		} else {
+		    maxRetries = this.retries;
+		}
+		
+		int cycleSleep;
+		if(this.sleep == null) {
+		    cycleSleep = Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20);
+		} else {
+		    
+		    cycleSleep = this.sleep;
+		}
+		
 		this.ddLimit = Config.getIntegerProperty(Constants.REASON_DATA_DIRECT_DOWNLOAD_LIMIT, 1_200_000);
 		int streamingThreshold = Config.getIntegerProperty("ecarf.io.reasoning.streaming.threshold", 100000);
 		String instanceId = cloud.getInstanceId();
@@ -275,7 +295,7 @@ public class DoReasonTask9 extends CommonTask {
 			log.info("Total inferred triples so far = " + totalInferredTriples + ", current retry count: " + emptyRetries);
 			
 			if(emptyRetries < maxRetries) {
-				ApiUtils.block(Config.getIntegerProperty(Constants.REASON_SLEEP_KEY, 20));
+				ApiUtils.block(cycleSleep);
 
 				// FIXME move into the particular cloud implementation service
 				long elapsed = System.currentTimeMillis() - start;
@@ -473,6 +493,34 @@ public class DoReasonTask9 extends CommonTask {
      */
     protected void setSchemaTerms(Map<Long, Set<Triple>> schemaTerms) {
         this.schemaTerms = schemaTerms;
+    }
+
+    /**
+     * @return the retries
+     */
+    public Integer getRetries() {
+        return retries;
+    }
+
+    /**
+     * @param retries the retries to set
+     */
+    public void setRetries(Integer retries) {
+        this.retries = retries;
+    }
+
+    /**
+     * @return the sleep
+     */
+    public Integer getSleep() {
+        return sleep;
+    }
+
+    /**
+     * @param sleep the sleep to set
+     */
+    public void setSleep(Integer sleep) {
+        this.sleep = sleep;
     }
 	
 }
