@@ -24,7 +24,6 @@ import io.ecarf.core.triple.TermType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.utils.Utils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -117,6 +116,9 @@ public class QueryGenerator<T> {
 		// only add the object_literal if the triple is encoded
 		if(!encoded) {
 		    selects.remove(TermType.object_literal);
+		} else {
+		    selects.add(TermType.subject);
+		    selects.add(TermType.object);
 		}
 		
 		String columns = StringUtils.join(GenericRule.getOrderedSelect(selects), ", ");

@@ -22,6 +22,7 @@ package io.ecarf.core.reason.rulebased.query;
 
 import static org.junit.Assert.assertEquals;
 import io.ecarf.core.term.TermUtils;
+import io.ecarf.core.triple.SchemaURIType;
 import io.ecarf.core.triple.Triple;
 import io.ecarf.core.triple.TripleUtils;
 
@@ -35,6 +36,8 @@ import java.util.Set;
 import org.junit.Before;
 //import org.junit.Ignore;
 import org.junit.Test;
+
+import com.google.common.collect.Sets;
 
 /**
  * @author Omer Dawelbeit (omerio)
@@ -64,12 +67,15 @@ public class QueryGeneratorTest {
             + "OR (predicate IN (1200228370848,370280483312));";
     
     
+    private static final String Q_PART_2_D = " where (object=306863398384 and predicate=0);";
+    
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setUp() throws Exception {
     }
+    
     
     /**
      * Test that QG will use = rather than IN when only one item in the list   
@@ -81,7 +87,7 @@ public class QueryGeneratorTest {
         
         String table = "my-table-1";
                 
-        QueryGenerator<String> generator = this.getQueryGenerator("/schema.nt", table, false);
+        QueryGenerator<String> generator = this.getQueryGenerator("/schema.nt", table, false, TermUtils.RDFS_TBOX);
         
         List<String> queries = generator.getQueries();
         
@@ -102,7 +108,7 @@ public class QueryGeneratorTest {
         
         String table = "my-table-2";
                 
-        QueryGenerator<String> generator = this.getQueryGenerator("/schema1.nt", table, false);
+        QueryGenerator<String> generator = this.getQueryGenerator("/schema1.nt", table, false, TermUtils.RDFS_TBOX);
         
         List<String> queries = generator.getQueries();
         
@@ -123,12 +129,33 @@ public class QueryGeneratorTest {
         
         String table = "my-table-3";
                 
-        QueryGenerator<Long> generator = this.getQueryGenerator("/schema.csv", table, true);
+        QueryGenerator<Long> generator = this.getQueryGenerator("/schema.csv", table, true, TermUtils.RDFS_TBOX);
         
         List<String> queries = generator.getQueries();
         
         
         String expQuery = Q_PART_1 + table + Q_PART_2_B;
+        
+        validateQuery(queries, expQuery); 
+        
+    }
+    
+    /**
+     * //select subject, predicate from lubm_tables.lubm8n where (predicate=0 and object IN (826230032144,825156026960,1719301948992));
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    @Test
+    public void testEQueryGeneratorRDFTypeSchemaTriples() throws FileNotFoundException, IOException {
+        
+        String table = "my-table-3";
+                
+        QueryGenerator<Long> generator = this.getQueryGenerator("/schema.csv", table, true, Sets.newHashSet(SchemaURIType.RDFS_SUBCLASS));
+        
+        List<String> queries = generator.getQueries();
+        
+        
+        String expQuery = Q_PART_1 + table + Q_PART_2_D;
         
         validateQuery(queries, expQuery); 
         
@@ -144,7 +171,7 @@ public class QueryGeneratorTest {
         
         String table = "my-table-4";
                 
-        QueryGenerator<Long> generator = this.getQueryGenerator("/schema1.csv", table, true);
+        QueryGenerator<Long> generator = this.getQueryGenerator("/schema1.csv", table, true, TermUtils.RDFS_TBOX);
         
         List<String> queries = generator.getQueries();
         
@@ -172,7 +199,8 @@ public class QueryGeneratorTest {
      * @throws IOException 
      * @throws FileNotFoundException 
      */
-    private QueryGenerator getQueryGenerator(String schemaFile, String table, boolean encoded) throws FileNotFoundException, IOException {
+    private QueryGenerator getQueryGenerator(String schemaFile, String table, boolean encoded, 
+            Set<SchemaURIType> predicates) throws FileNotFoundException, IOException {
 
         QueryGenerator generator = null;
 
@@ -181,7 +209,7 @@ public class QueryGeneratorTest {
         if(encoded) {
 
             Map<Long, Set<Triple>> schemaTriples = 
-                    TripleUtils.getRelevantSchemaETriples(schemaUrl.getPath(), TermUtils.RDFS_TBOX);
+                    TripleUtils.getRelevantSchemaETriples(schemaUrl.getPath(), predicates);
 
            /* Map<Long, Set<Triple>> schemaTerms = new HashMap<>();
             for(Long term: schemaTriples.keySet()) {
@@ -193,7 +221,7 @@ public class QueryGeneratorTest {
         } else {
 
             Map<String, Set<Triple>> schemaTriples = 
-                    TripleUtils.getRelevantSchemaNTriples(schemaUrl.getPath(), TermUtils.RDFS_TBOX);
+                    TripleUtils.getRelevantSchemaNTriples(schemaUrl.getPath(), predicates);
 
             /*Map<String, Set<Triple>> schemaTerms = new HashMap<>();
             for(String term: schemaTriples.keySet()) {
