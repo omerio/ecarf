@@ -46,6 +46,10 @@ public class DoUploadOutputLogTask extends CommonTask {
 	
 	private String jobId;
 	
+	private String logFile;
+	
+	private String logFolder;
+	
 
 	/* (non-Javadoc)
 	 * @see io.ecarf.core.cloud.task.CommonTask#run()
@@ -57,8 +61,14 @@ public class DoUploadOutputLogTask extends CommonTask {
 		
 		CloudService cloudService = this.getCloudService();
 		
-		String logFile = Config.getProperty(Constants.OUTPUT_FILE_KEY);
-		String logFolder = Config.getProperty(Constants.OUTPUT_FOLDER_KEY);
+		if(StringUtils.isBlank(logFile)) {
+		    logFile = Config.getProperty(Constants.OUTPUT_FILE_KEY);
+		}
+		
+		if(StringUtils.isBlank(logFolder)) {
+		    logFolder = Config.getProperty(Constants.OUTPUT_FOLDER_KEY);
+		}
+		
 		String instanceId = cloudService.getInstanceId();
 		
 		// get a random number just in case two instances have the same id, which is true for the coordinator
@@ -105,6 +115,34 @@ public class DoUploadOutputLogTask extends CommonTask {
      */
     public void setJobId(String jobId) {
         this.jobId = jobId;
+    }
+
+    /**
+     * @return the logFile
+     */
+    public String getLogFile() {
+        return logFile;
+    }
+
+    /**
+     * @param logFile the logFile to set
+     */
+    public void setLogFile(String logFile) {
+        this.logFile = logFile;
+    }
+
+    /**
+     * @return the logFolder
+     */
+    public String getLogFolder() {
+        return logFolder;
+    }
+
+    /**
+     * @param logFolder the logFolder to set
+     */
+    public void setLogFolder(String logFolder) {
+        this.logFolder = logFolder;
     }
 
 }
