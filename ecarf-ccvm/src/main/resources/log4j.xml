@@ -15,7 +15,7 @@
 
 	<!-- Define an appender for the Trace level logging  -->
 	<appender name="DebugRollingFileAppender" class="org.apache.log4j.DailyRollingFileAppender">
-		<param name="File"	value="${user.home}/output.log" />
+		<param name="File"	value="${user.home}/$${env:LOG_FILE}" />
 		<param name="DatePattern" value="'.'yyyy-MM-dd" />
 		<param name="Append" value="true" />
 		<param name="Threshold" value="DEBUG" />
