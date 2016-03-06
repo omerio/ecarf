@@ -85,6 +85,12 @@ public class LogParser {
     
     private static final String BIGQUERY_JOB_ELAPSED = "[main] impl.google.GoogleCloudServiceImpl - Job Status: DONE, elapsed time (secs): ";
     
+    private static final String ASSEMBLE_DICTIONARY_SUBTASK = "processor.dictionary.AssembleDictionarySubTask";
+    
+    private static final String TERM_DICT_CON = "term.dictionary.TermDictionaryConcurrent";
+    
+    private static final String TERM_DICT = "term.dictionary.TermDictionary - TIMER#";
+    
     private EcarfGoogleCloudServiceImpl service;
     
     private Set<String> files = new HashSet<>();
@@ -94,6 +100,8 @@ public class LogParser {
     private List<CoordinatorStats> coordinators = new ArrayList<>();
     
     private List<ProcessorStats> processors = new ArrayList<>();
+    
+    private List<DictionaryStats> dictionaries = new ArrayList<>();
     
     
     
@@ -181,6 +189,7 @@ public class LogParser {
         }
     }
     
+        
     private static final String R_INFERRED = "Finished reasoning, total inferred triples = ";
     private static final String R_ROWS = "Total rows retrieved from big data = ";
     private static final String R_GBYTES = "Total processed GBytes = ";
@@ -225,14 +234,125 @@ public class LogParser {
         
         return this.parseStopwatchTime(timer, ignoreMillis); 
     }
+
     
-    private double sum(List<Double> values) {
-        double sum = 0;
-        for(double value: values) {
-            sum += value;
+    /**
+     *  - Processing file: /tmp/wordnet_links.nt.gz.kryo.gz, dictionary items: 49382611, memory usage: 14.336268931627274GB, timer: 290.0 ms
+     * /tmp/wikipedia_links_en.nt.gz.kryo.gz, dictionary items: 44, memory usage: 0.013648882508277893GB, timer: 2.636 s
+     *                      START: Downloading file: interlanguage_links_chapters_en.nt.gz.kryo.gz, memory usage: 0.0GB
+     * @param line
+     * @param after
+     * @return
+     */
+    private double [] extractAndGetMemoryDictionaryItems(String line) {
+        double memory = 0;
+        double items = 0;
+        String memoryStr = null;
+        
+        if(line.contains(TIMER_PREFIX)) {
+            memoryStr = StringUtils.substringBetween(line, MEM_USE, TIMER_PREFIX);
+            
+            if(line.contains(DIC_ITEMS)) {
+                String itemsStr = StringUtils.trim(StringUtils.substringBetween(line, DIC_ITEMS, MEM_USE));
+
+                items = Double.parseDouble(itemsStr);
+            }
+            
+        } else {
+            memoryStr = StringUtils.substringAfter(line, MEM_USE);
         }
-        return sum;
+        
+        if(memoryStr != null) {
+            memoryStr = StringUtils.remove(memoryStr, "GB");
+            memoryStr = StringUtils.strip(memoryStr);
+        }
+        
+        memory = Double.parseDouble(memoryStr);
+        
+        double [] values = new double [] {memory, items};
+        return values;
     }
+    
+    /**
+     * processor.dictionary.AssembleDictionarySubTask - Dictionary size: 44817045
+     * @param line
+     * @return
+     */
+    private int extractDictionarySize(String line) {
+        return Integer.parseInt(StringUtils.substringAfter(line, DIC_SIZE));
+    }
+      
+    private static final String TIMER_PREFIX = ", timer:";  
+    private static final String MEM_USE = ", memory usage:";
+    private static final String DIC_SIZE = "Dictionary size: ";
+    private static final String DIC_ITEMS = "dictionary items: ";
+    
+    private static final String DIC_ASSEMBLE = "Successfully assembled dictionary with size: ";
+    private static final String MAX_RES_ID = ", max resourceId: ";
+    
+    private static final String NON_CON_TIMER = "#TIMER finished creating non concurrent dictionary";
+    private static final String TERM_DIC_TIMER = "TIMER# serialized dictionary to file:";
+    private static final String SERIAL_DICT = "Successfully serialized dictionary with size: ";
+    private static final String SCHEMA_TERMS = "Schema terms added to the dictionary, final size: ";
+    private static final String TERM_PARTS = " term parts ";
+    private static final String PROCESSING = "- Processing: ";
+    
+    /**
+     * Dictionary
+     * @param dStats
+     * @param line
+     */
+    private void extractDictionaryStats(DictionaryStats dStats, String line) {
+        
+        if(line.contains(MEM_USE)) {
+            double[] values = this.extractAndGetMemoryDictionaryItems(line);
+            double memory = values[0];
+            dStats.memoryFootprint.add(memory);
+            
+            if(values[1] > 0) {
+                dStats.memoryUsage.add(new MemUsage((int) values[1], memory));
+            }
+        
+        } else if(line.contains(DIC_SIZE)) {
+            int size = this.extractDictionarySize(line);
+            
+            dStats.memoryUsage.add(new MemUsage(size, dStats.getLatestMemoryUsage()));
+        
+        } 
+        
+        if(line.contains(DIC_ASSEMBLE)) {
+            //Successfully assembled dictionary with size: 53550116, max resourceId: 54291281, memory usage: 14.449545934796333GB, timer: 5.010 min
+            dStats.items = Integer.parseInt(StringUtils.substringBetween(line, DIC_ASSEMBLE, MAX_RES_ID));
+            dStats.maxResourceId = Integer.parseInt(StringUtils.substringBetween(line, MAX_RES_ID, MEM_USE));
+            dStats.assemble = this.extractAndGetTimer(line, TIMER_PREFIX);
+        }
+        
+        /**
+         * term.dictionary.TermDictionaryConcurrent - Creating non concurrent dictionary, memory usage: 11.166048146784306
+           term.dictionary.TermDictionaryConcurrent - #TIMER finished creating non concurrent dictionary, memory usage: 13.966991074383259GB, timer: 1.577 min
+           processor.dictionary.AssembleDictionaryTask - Successfully created non concurrent dictionary for serialization, memory usage: 13.966991074383259GB, timer: 6.992 min
+           core.utils.Utils - Serializing object of class: class io.ecarf.core.term.dictionary.TermDictionaryCore to file: /tmp/dbpedia_dictionary_8c.kryo.gz, with compress = true
+           term.dictionary.TermDictionary - TIMER# serialized dictionary to file: /tmp/dbpedia_dictionary_8c.kryo.gz, in: 3.274 min
+           processor.dictionary.AssembleDictionaryTask - Successfully serialized dictionary with size: 53550116, memory usage: 13.964397609233856GB, timer: 10.27 min
+         */
+        
+        if(line.contains(NON_CON_TIMER)) {
+            dStats.nonConcurrent = this.extractAndGetTimer(line, TIMER_PREFIX);
+        
+        } else if(line.contains(TERM_DIC_TIMER)) {
+            dStats.serialize = this.extractAndGetTimer(line, " in:");
+            
+        } else if(line.contains(SCHEMA_TERMS)) {
+            //processor.dictionary.AssembleDictionaryTask - Schema terms added to the dictionary, final size: 53550784 , memory usage: 14.449545934796333GB
+            dStats.itemsAfterSchema = Integer.parseInt(StringUtils.trim(StringUtils.substringBetween(line, SCHEMA_TERMS, MEM_USE)));
+        }
+        //processor.dictionary.AssembleDictionarySubTask - Processing: 1718527 term parts , memory usage: 17.80723436176777GB, timer: 4.839 s
+        if(line.contains(TERM_PARTS)) {
+            dStats.parts += Integer.parseInt(StringUtils.trim(StringUtils.substringBetween(line, PROCESSING, TERM_PARTS)));
+        }
+
+    }
+
     
     /**
      * 
@@ -247,6 +367,7 @@ public class LogParser {
             boolean coordinator = file.contains(COORDINATOR);
             
             Stats stats;
+            Stats dStats = null;
             
             List<Double> bigQuerySave = null;
             List<Double> bigQueryLoad = null;
@@ -263,6 +384,9 @@ public class LogParser {
                 bigQueryLoad = new ArrayList<>();
                 bigQueryQueriesElapsed = new ArrayList<>();
                 
+                dStats = new DictionaryStats();
+                dStats.filename = file;
+                this.dictionaries.add((DictionaryStats) dStats);
             }
             
             stats.filename = file;
@@ -309,6 +433,11 @@ public class LogParser {
                                     
                                 }
                             }
+                        } else if(line.indexOf(ASSEMBLE_DICTIONARY_SUBTASK) > -1 || 
+                                line.contains(ASSEMBLE_DICT_TASK) ||
+                                line.contains(TERM_DICT_CON) ||
+                                line.contains(TERM_DICT)) {
+                            this.extractDictionaryStats((DictionaryStats) dStats, line);
                         }
 
                     }
@@ -319,7 +448,9 @@ public class LogParser {
             if(!coordinator) {
                 ((ProcessorStats) stats).bigQuerySave = this.sum(bigQuerySave);
                 ((ProcessorStats) stats).bigQueryInsert = this.sum(bigQueryLoad);
-                ((ProcessorStats) stats).bigQueryAverageQuery = this.sum(bigQueryQueriesElapsed) / bigQueryQueriesElapsed.size();
+                if(!bigQueryQueriesElapsed.isEmpty()) {
+                    ((ProcessorStats) stats).bigQueryAverageQuery = this.sum(bigQueryQueriesElapsed) / bigQueryQueriesElapsed.size();
+                }
             }
             
             
@@ -330,7 +461,15 @@ public class LogParser {
         }
         
     }
-    
+
+    private double sum(List<Double> values) {
+        double sum = 0;
+        for(double value: values) {
+            sum += value;
+        }
+        return sum;
+    }
+
     /**
      * return the value in minutes
      * @param timer
@@ -406,6 +545,15 @@ public class LogParser {
         for(ProcessorStats processor: processors) {
             System.out.println(processor);
         }
+        
+        System.out.println();
+        for(DictionaryStats dictionary: this.dictionaries) {
+            System.out.println(DictionaryStats.HEADER);
+            System.out.println(dictionary);
+            //System.out.println();
+            System.out.print(dictionary.getMemoryStatsString());
+            System.out.println();
+        }
     }
 
     /**
@@ -444,6 +592,108 @@ public class LogParser {
             
             return this.filename.compareTo(o.filename);
         }
+    }
+    
+    public class MemUsage {
+        
+        int parts;
+        
+        double memory;
+
+        /**
+         * @param parts
+         * @param memory
+         */
+        public MemUsage(int parts, double memory) {
+            super();
+            this.parts = parts;
+            this.memory = memory;
+        }
+        
+        
+    }
+    
+    public class DictionaryStats extends Stats {
+        
+        int parts;
+        
+        int itemsAfterSchema;
+        
+        int items;
+        
+        int maxResourceId;
+        
+        double assemble;
+        
+        List<Double> memoryFootprint = new ArrayList<>();
+        
+        double nonConcurrent;
+        
+        double serialize;
+        
+        double upload;
+        
+        List<MemUsage> memoryUsage = new ArrayList<>();
+        
+        /**
+         * 
+         * @return
+         */
+        public double getLatestMemoryUsage() {
+            double memory = 0;
+            if(!memoryFootprint.isEmpty()) {
+                memory = this.memoryFootprint.get(this.memoryFootprint.size() - 1);
+            }
+            return memory;
+        }
+        
+        static final String HEADER = 
+                "Filename, Parts, Dictionary Items After Schema, Dictionary Items,Max Resource Id, Assemble Time (min),Min memory (GB), "
+                + "Max memory(GB),Create Non Concurrent(sec), Serialize Time(min), Upload Time (sec)";
+        
+        /* (non-Javadoc)
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            
+            double minMem = 0;
+            double maxMem = 0;
+            
+            if(!this.memoryFootprint.isEmpty()) {
+                Collections.sort(this.memoryFootprint);
+                
+                minMem = this.memoryFootprint.get(0);
+                maxMem = this.memoryFootprint.get(this.memoryFootprint.size() - 1);
+            }
+            return new StringBuilder(filename).append(',')
+                    .append(parts).append(',')
+                    .append(itemsAfterSchema).append(',')
+                    .append(items).append(',')
+                    .append(maxResourceId).append(',')
+                    .append(assemble).append(',')
+                    .append(minMem).append(',')
+                    .append(maxMem).append(',')
+                    .append(nonConcurrent * 60).append(',')
+                    .append(serialize).append(',')
+                    .append(upload * 60)
+                    .toString();
+        }
+        
+        /**
+         * 
+         * @return
+         */
+        public String getMemoryStatsString() {
+            StringBuilder memory = new StringBuilder("Dictionary Size, Memory\n");
+            for(MemUsage usage: this.memoryUsage) {
+                
+                memory.append(usage.parts).append(',').append(usage.memory).append('\n');
+                
+            }
+            return memory.toString();
+        }
+        
     }
     
     public class CoordinatorStats extends Stats {

@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -66,6 +67,7 @@ public class CreateFileItemsTaskTest {
      * @throws IOException 
      */
     @Test
+    @Ignore
     public void testRun() throws IOException {
         CreateFileItemsTask task = new CreateFileItemsTask();
         task.setCloudService(service);
@@ -121,7 +123,76 @@ public class CreateFileItemsTaskTest {
     }
     
     private void updateMaps() {
-        triplesStat.put("raw_infobox_properties1_en.nt.gz",              35099568L);
+        
+        
+        triplesStat.put("revyu_links.nt.gz", 14L);
+        triplesStat.put("pnd_en.nt.gz", 44L);
+        triplesStat.put("eurostat_wbsg_links.nt.gz", 193L);
+        triplesStat.put("factbook_links.nt.gz", 338L);
+        triplesStat.put("gho_links.nt.gz", 385L);
+        triplesStat.put("dblp_links.nt.gz", 394L);
+        triplesStat.put("cordis_links.nt.gz", 416L);
+        triplesStat.put("eurostat_linkedstatistics_links.nt.gz", 479L);
+        triplesStat.put("openei_links.nt.gz", 818L);
+        triplesStat.put("bbcwildlife_links.nt.gz", 830L);
+        triplesStat.put("amsterdammuseum_links.nt.gz", 910L);
+        triplesStat.put("dbtune_links.nt.gz", 1161L);
+        triplesStat.put("tcm_links.nt.gz", 1290L);
+        triplesStat.put("dailymed_links.nt.gz", 1484L);
+        triplesStat.put("diseasome_links.nt.gz", 3382L);
+        triplesStat.put("sider_links.nt.gz", 3693L);
+        triplesStat.put("gutenberg_links.nt.gz", 5000L);
+        triplesStat.put("drugbank_links.nt.gz", 7833L);
+        triplesStat.put("bookmashup_links.nt.gz", 8807L);
+        triplesStat.put("wikicompany_links.nt.gz", 9149L);
+        triplesStat.put("bricklink_links.nt.gz", 10098L);
+        triplesStat.put("italian_public_schools_links.nt.gz", 11641L);
+        triplesStat.put("nytimes_links.nt.gz", 18332L);
+        triplesStat.put("eunis_links.nt.gz", 22189L);
+        triplesStat.put("linkedmdb_links.nt.gz", 26218L);
+        triplesStat.put("geospecies_links.nt.gz", 28825L);
+        triplesStat.put("uscensus_links.nt.gz", 29060L);
+        triplesStat.put("musicbrainz_links.nt.gz", 44181L);
+        triplesStat.put("raw_infobox_property_definitions_en.nt.gz", 51851L);
+        triplesStat.put("opencyc_links.nt.gz", 54224L);
+        triplesStat.put("gadm_links.nt.gz", 74711L);
+        triplesStat.put("linkedgeodata_links.nt.gz", 202928L);
+        triplesStat.put("wordnet_links.nt.gz", 426192L);
+        triplesStat.put("yago_taxonomy.nt.gz", 445062L);
+        triplesStat.put("geo_coordinates_en.nt.gz", 497564L);
+        triplesStat.put("specific_mappingbased_properties_en.nt.gz", 505186L);
+        triplesStat.put("instance_types_heuristic_en.nt.gz", 631709L);
+        triplesStat.put("umbel_links.nt.gz", 661193L);
+        triplesStat.put("geonames_links.nt.gz", 848233L);
+        triplesStat.put("homepages_en.nt.gz", 985829L);
+        triplesStat.put("category_labels_en.nt.gz", 995912L);
+        triplesStat.put("skos_categories_en.nt.gz", 1000076L);
+        triplesStat.put("persondata_en.nt.gz", 1129756L);
+        triplesStat.put("disambiguations_en.nt.gz", 1323104L);
+        triplesStat.put("iri_same_as_uri_en.nt.gz", 1562836L);
+        triplesStat.put("yago_types1.nt.gz", 1718527L);
+        triplesStat.put("yago_types2.nt.gz", 1790145L);
+        triplesStat.put("raw_infobox_properties1_en.nt.gz", 2417509L);
+        triplesStat.put("raw_infobox_properties2_en.nt.gz", 2418755L);
+        triplesStat.put("yago_links.nt.gz", 3142363L);
+        triplesStat.put("instance_types_en.nt.gz", 3247038L);
+        triplesStat.put("short_abstracts_en.nt.gz", 4008126L);
+        triplesStat.put("long_abstracts_en.nt.gz", 4008128L);
+        triplesStat.put("mappingbased_properties_cleaned_en.nt.gz", 4098189L);
+        triplesStat.put("flickrwrappr_links.nt.gz", 4402896L);
+        triplesStat.put("article_categories_en.nt.gz", 4883119L);
+        triplesStat.put("images_en.nt.gz", 7263285L);
+        triplesStat.put("freebase_links.nt.gz", 7750480L);
+        triplesStat.put("redirects_transitive_en.nt.gz", 8189477L);
+        triplesStat.put("external_links_en.nt.gz", 8707964L);
+        triplesStat.put("labels_en.nt.gz", 10138289L);
+        triplesStat.put("wikipedia_links_en.nt.gz", 10876483L);
+        triplesStat.put("page_ids_en.nt.gz", 12458122L);
+        triplesStat.put("revision_ids_en.nt.gz", 12458122L);
+        triplesStat.put("interlanguage_links_chapters_en.nt.gz", 14566827L);
+        triplesStat.put("revision_uris_en.nt.gz", 24941716L);
+        
+       /* triplesStat.put("raw_infobox_properties1_en.nt.gz",              35099568L);
         triplesStat.put("raw_infobox_properties2_en.nt.gz",              35099567L);
         triplesStat.put("wikipedia_links_en.nt.gz",                      30424452L);
         triplesStat.put("mappingbased_properties_cleaned_en.nt.gz",      25896865L);
@@ -255,7 +326,7 @@ public class CreateFileItemsTaskTest {
         triplesTimeStat.put("gho_links.nt.gz", 358.9);
         triplesTimeStat.put("eurostat_wbsg_links.nt.gz", 859.0);
         triplesTimeStat.put("pnd_en.nt.gz", 280.6);
-        triplesTimeStat.put("revyu_links.nt.gz", 278.3);
+        triplesTimeStat.put("revyu_links.nt.gz", 278.3); */
         
        /* triplesTimeStat.put("raw_infobox_properties1_en.nt.gz", 116520.0);
         triplesTimeStat.put("raw_infobox_properties2_en.nt.gz", 192240.0);
