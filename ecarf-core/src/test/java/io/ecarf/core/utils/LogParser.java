@@ -165,14 +165,14 @@ public class LogParser {
      * @param stats
      * @param line
      */
-    private void parseTaskTimer(Stats stats, String line) {
+    private void parseTaskTimer(Stats stats, String line, boolean coordinator) {
         
         double timer = this.extractAndGetTimer(line, COMPLETED_IN);
         
-        if(line.indexOf(TIMER + DUMMY_TASK + COMPLETED_IN) > -1) { 
+        if(coordinator && line.indexOf(TIMER + DUMMY_TASK + COMPLETED_IN) > -1) { 
              ((CoordinatorStats) stats).evmAcquis = timer;
 
-        } else if(line.indexOf(TIMER + LOAD_TASK) > -1) {
+        } else if(coordinator && line.indexOf(TIMER + LOAD_TASK) > -1) {
             
             ((CoordinatorStats) stats).bigQueryLoad = timer;
 
@@ -405,7 +405,7 @@ public class LogParser {
                     if(line != null) {
 
                         if(line.indexOf(TIMER) > -1) {
-                            this.parseTaskTimer(stats, line);
+                            this.parseTaskTimer(stats, line, coordinator);
                         
                         } else if(line.indexOf(ELAPSED_JOB) > -1 && coordinator) {
                             ((CoordinatorStats) stats).endToEnd = this.extractAndGetTimer(line, ELAPSED_JOB);
@@ -427,9 +427,19 @@ public class LogParser {
                                     bigQueryLoad.add(this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true));
                                     
                                 } else if(line1.indexOf("\"query\" : {") > -1) {
-                                    double value = this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true);
-                                    if(value > 0) {
-                                        bigQueryQueriesElapsed.add(value);
+                                    
+                                    // fast forward to this line
+                                    //"recordsWritten" : "0",
+                                    
+                                    do {
+                                        line1 = r.readLine(); 
+                                    } while (!line1.contains("\"recordsWritten\" :"));
+                                    
+                                    if(!line1.contains("\"recordsWritten\" : \"0\",")) {
+                                        double value = this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true);
+                                        if(value > 0) {
+                                            bigQueryQueriesElapsed.add(value);
+                                        }
                                     }
                                     
                                 } else if(line1.indexOf("\"extract\" : {") > -1) {
@@ -580,6 +590,7 @@ public class LogParser {
     public static void main(String [] args) throws Exception {
         if(args.length != 1) {
             System.out.println("Usage: LogParser gs://<bucket> or LogParser /path/to/directory");
+            System.exit(-1);
         }
         
         String path = args[0];
