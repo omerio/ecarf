@@ -91,11 +91,14 @@ public class LogParser {
     
     private static final String TERM_DICT = "term.dictionary.TermDictionary - TIMER#";
     
+    private static final String JSON_NUM_VM = "\"numberOfProcessors\":";
+    private static final String JSON_VM_TYPE = "\"vmType\":";
+    
     private EcarfGoogleCloudServiceImpl service;
     
     private Set<String> files = new HashSet<>();
     
-    private List<Double> jobElapsedTimes = new ArrayList<>();
+    //private List<Double> jobElapsedTimes = new ArrayList<>();
        
     private List<CoordinatorStats> coordinators = new ArrayList<>();
     
@@ -292,7 +295,7 @@ public class LogParser {
     
     private static final String NON_CON_TIMER = "#TIMER finished creating non concurrent dictionary";
     private static final String TERM_DIC_TIMER = "TIMER# serialized dictionary to file:";
-    private static final String SERIAL_DICT = "Successfully serialized dictionary with size: ";
+    //private static final String SERIAL_DICT = "Successfully serialized dictionary with size: ";
     private static final String SCHEMA_TERMS = "Schema terms added to the dictionary, final size: ";
     private static final String TERM_PARTS = " term parts ";
     private static final String PROCESSING = "- Processing: ";
@@ -385,11 +388,11 @@ public class LogParser {
                 bigQueryQueriesElapsed = new ArrayList<>();
                 
                 dStats = new DictionaryStats();
-                dStats.filename = file;
+                dStats.filename = StringUtils.substringAfterLast(file, "/");
                 this.dictionaries.add((DictionaryStats) dStats);
             }
             
-            stats.filename = file;
+            stats.filename = StringUtils.substringAfterLast(file, "/");
             
             //System.out.println(file);
             String line = null;
@@ -404,8 +407,8 @@ public class LogParser {
                         if(line.indexOf(TIMER) > -1) {
                             this.parseTaskTimer(stats, line);
                         
-                        } else if(line.indexOf(ELAPSED_JOB) > -1) {
-                            this.jobElapsedTimes.add(this.extractAndGetTimer(line, ELAPSED_JOB));
+                        } else if(line.indexOf(ELAPSED_JOB) > -1 && coordinator) {
+                            ((CoordinatorStats) stats).endToEnd = this.extractAndGetTimer(line, ELAPSED_JOB);
                         
                         } else if(line.indexOf(REASON_TASK_SUMMARY) > -1) {
                             this.extractProcessorReasoningStats(line, (ProcessorStats) stats);
@@ -438,6 +441,19 @@ public class LogParser {
                                 line.contains(TERM_DICT_CON) ||
                                 line.contains(TERM_DICT)) {
                             this.extractDictionaryStats((DictionaryStats) dStats, line);
+                            
+                        } else if(coordinator) {
+                            if(line.contains(JSON_NUM_VM)) {
+                                //"numberOfProcessors": 8.0
+                                ((CoordinatorStats) stats).numOfProcessors = (int) Double.parseDouble(StringUtils.substringAfter(line, JSON_NUM_VM + " "));
+                                
+                                
+                            } else if(line.contains(JSON_VM_TYPE)) {
+                              //"vmType": "n1-standard-2",
+                                ((CoordinatorStats) stats).vmType = StringUtils.substringBetween(line, JSON_VM_TYPE + " \"", "\",");
+                            }
+                            
+                            
                         }
 
                     }
@@ -456,9 +472,9 @@ public class LogParser {
             
         }
         
-        if(!this.jobElapsedTimes.isEmpty()) {
-            this.coordinators.get(0).endToEnd = this.jobElapsedTimes.get(this.jobElapsedTimes.size() - 1);
-        }
+        //if(!this.jobElapsedTimes.isEmpty()) {
+         //   this.coordinators.get(0).endToEnd = this.jobElapsedTimes.get(this.jobElapsedTimes.size() - 1);
+        //}
         
     }
 
@@ -706,8 +722,14 @@ public class LogParser {
         
         double endToEnd;
         
+        String vmType;
+        
+        int numOfProcessors;
+        
+        //List<Double> jobElapsedTimes = new ArrayList<>();
+        
         static final String HEADER = 
-                "Filename,EVM acquisition time (min),ExtractCountTerms2PartTask,AssembleDictionaryTask,ProcessLoadTask,"
+                "Filename,VM Type, No of VMs,EVM acquisition time (min),ExtractCountTerms2PartTask,AssembleDictionaryTask,ProcessLoadTask,"
                 + "Loading Phase,Bigquery load time (sec),Reasoning Phase (min),End to End (min)";
 
         /* (non-Javadoc)
@@ -716,6 +738,8 @@ public class LogParser {
         @Override
         public String toString() {
             return new StringBuilder(filename).append(',')
+                    .append(vmType).append(',')
+                    .append(numOfProcessors).append(',')
                     .append(evmAcquis).append(',')
                     .append(extractCountTerms).append(',')
                     .append(assembleDictionary).append(',')

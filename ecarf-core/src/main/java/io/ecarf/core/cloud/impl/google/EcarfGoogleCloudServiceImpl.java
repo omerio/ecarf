@@ -22,6 +22,7 @@ package io.ecarf.core.cloud.impl.google;
 
 import io.cloudex.cloud.impl.google.GoogleCloudServiceImpl;
 import io.cloudex.cloud.impl.google.bigquery.BigQueryStreamable;
+import io.cloudex.framework.cloud.api.ApiUtils;
 import io.cloudex.framework.cloud.entities.BigDataTable;
 import io.cloudex.framework.utils.FileUtils;
 import io.ecarf.core.compress.NxGzipCallback;
@@ -38,12 +39,20 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.api.services.bigquery.Bigquery;
+import com.google.api.services.bigquery.model.TableList;
+import com.google.api.services.bigquery.model.TableList.Tables;
 
 /**
  * @author Omer Dawelbeit (omerio)
  *
  */
 public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implements EcarfGoogleCloudService {
+    
+    private final static Log log = LogFactory.getLog(EcarfGoogleCloudServiceImpl.class);
 
 
     /**
@@ -135,7 +144,66 @@ public class EcarfGoogleCloudServiceImpl extends GoogleCloudServiceImpl implemen
             }
         }
     }
+    
+    /**
+     * Delete BigQuery tables that match the provided string
+     * @param datasetId
+     * @param match
+     * @throws IOException
+     */
+    public void deleteTables(String datasetId, String match) throws IOException {
 
+       /* Datasets.List datasetRequest = bigquery.datasets().list(projectId);
+        DatasetList datasetList = datasetRequest.execute();
+        if (datasetList.getDatasets() != null) {
+            List<DatasetList.Datasets> datasets = datasetList.getDatasets();
+            System.out.println("Available datasets\n----------------");
+            System.out.println(datasets.toString());
+            for (DatasetList.Datasets dataset : datasets) {
+                System.out.format("%s\n", dataset.getDatasetReference().getDatasetId());
+            }
+        }*/
+        
+        Bigquery bigquery = this.getBigquery();
+        TableList tables = bigquery.tables().list(this.getProjectId(), datasetId)
+                .setOauthToken(this.getOAuthToken()).execute();
+        
+        if(tables.getTables() != null) {
+            for(Tables table: tables.getTables()) {
+                String tableId = table.getTableReference().getTableId();
+                
+                if(tableId.contains(match)) {
+                    log.info("Deleting table: " + tableId);
+                    bigquery.tables().delete(this.getProjectId(), datasetId, tableId).setKey(table.getId()).setOauthToken(this.getOAuthToken()).execute();
+                    ApiUtils.block(this.getApiRecheckDelay());
+                }
+            }
+        }
+
+    }
+    
+    /**
+     * Display all BigQuery datasets associated with a project.
+     *
+     * @param bigquery  an authorized BigQuery client
+     * @param projectId a string containing the current project ID
+     * @throws IOException Thrown if there is a network error connecting to
+     *                     Bigquery.
+     */
+   /* public static void listDatasets(final Bigquery bigquery, final String projectId)
+        throws IOException {
+      Datasets.List datasetRequest = bigquery.datasets().list(projectId);
+      DatasetList datasetList = datasetRequest.execute();
+      if (datasetList.getDatasets() != null) {
+        List<DatasetList.Datasets> datasets = datasetList.getDatasets();
+        System.out.println("Available datasets\n----------------");
+        System.out.println(datasets.toString());
+        for (DatasetList.Datasets dataset : datasets) {
+          System.out.format("%s\n", dataset.getDatasetReference().getDatasetId());
+        }
+      }
+    }
+*/
     /*public void listTableData(final String datasetId,
             final String tableId, String file) throws IOException {
         

@@ -94,6 +94,11 @@ public class GoogleCloudServiceTest {
 		assertTrue(outFile.endsWith("_out.gz")); //
 	}
 	
+	@Test
+	public void testCleanBigqueryTables() throws IOException {
+	    this.service.deleteTables("lubm_tables", "_cloudex_processor_");
+	}
+	
 	/*@Test
 	public void testGetCompletedBigQueryJob() throws IOException, URISyntaxException {
 		
@@ -195,6 +200,7 @@ public class GoogleCloudServiceTest {
 	}
 
 	@Test
+	@Ignore
 	public void testDownloadFileFromCloudStorage() throws IOException {
 		this.service.init();
 		
