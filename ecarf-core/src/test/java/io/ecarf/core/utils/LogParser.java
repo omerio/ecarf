@@ -424,7 +424,7 @@ public class LogParser {
                         } else if(line.indexOf(BIGQUERY_JOB_ELAPSED) > -1) {
                             r.readLine();
                             String line1 = r.readLine();
-                            if(line1.indexOf("\"configuration\" : {") > -1) {
+                            if(line1 != null && line1.indexOf("\"configuration\" : {") > -1) {
                                 
                                 line1 = r.readLine();
                                 
@@ -438,9 +438,9 @@ public class LogParser {
                                     
                                     do {
                                         line1 = r.readLine(); 
-                                    } while (!line1.contains("\"recordsWritten\" :"));
+                                    } while (line1 != null && !line1.contains("\"recordsWritten\" :"));
                                     
-                                    if(!line1.contains("\"recordsWritten\" : \"0\",")) {
+                                    if(line1 != null && !line1.contains("\"recordsWritten\" : \"0\",")) {
                                         double value = this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true);
                                         if(value > 0) {
                                             bigQueryQueriesElapsed.add(value);
