@@ -38,10 +38,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.Lists;
 
 /**
  * Parses coordinator & processor log files, must end with .log
@@ -93,6 +96,8 @@ public class LogParser {
     
     private static final String JSON_NUM_VM = "\"numberOfProcessors\":";
     private static final String JSON_VM_TYPE = "\"vmType\":";
+    
+    private static final String FILE_ITEMS = "processor.files.ProcessFilesTask - Processing files: ";
     
     private EcarfGoogleCloudServiceImpl service;
     
@@ -464,6 +469,14 @@ public class LogParser {
                             }
                             
                             
+                        } else if(!coordinator && line.contains(FILE_ITEMS)) {
+                            // line occurs twice per file, so only add if hasn't been added yet
+                            if(((ProcessorStats) stats).fileItems.isEmpty()) {
+                                String items = StringUtils.substringAfter(line, FILE_ITEMS);
+                                //processor.files.ProcessFilesTask - Processing files: [revision_ids_en.nt.gz, revision_uris_en.nt.gz, yago_taxonomy.nt.gz, interlanguage_links_chapters_en.nt.gz, geo_coordinates_en.nt.gz]
+                                List<String> fileItems = Lists.newArrayList(StringUtils.substringBetween(items, "[", "]").split(", "));
+                                ((ProcessorStats) stats).fileItems.addAll(fileItems);
+                            }
                         }
 
                     }
@@ -559,20 +572,73 @@ public class LogParser {
      */
     public void printStats() {
 
+        System.out.println("------------------------------------------------ Coordinators ---------------------------------------");
+        
         for(CoordinatorStats coordinator: this.coordinators) {
             System.out.println(CoordinatorStats.HEADER);
             System.out.println(coordinator);
             System.out.println();
         }
+        
+        // Marry up processors containing the same items, may be multiple runs
+        Map<String, Set<ProcessorStats>> joined = new HashMap<>();
 
+        System.out.println("------------------------------------------------ Processors ---------------------------------------");
         Collections.sort(processors);
         System.out.println();
         System.out.println(ProcessorStats.HEADER);
         for(ProcessorStats processor: processors) {
             System.out.println(processor);
+            
+            if(!processor.fileItems.isEmpty()) {
+                String fileItem = processor.fileItems.toString();
+                
+                if(joined.containsKey(fileItem)) {
+                    joined.get(fileItem).add(processor);
+                
+                } else {
+                    Set<ProcessorStats> stats = new HashSet<>();
+                    stats.add(processor);
+                    joined.put(fileItem, stats);
+                }
+            }
         }
         
         System.out.println();
+        System.out.println("------------------------------------------------ Joined Processors ---------------------------------------");
+        
+        StringBuilder joinedUp = new StringBuilder("File items,ExtractCountTerms2PartTask,ProcessLoadTask\n");
+        
+        for(Entry<String, Set<ProcessorStats>> entry: joined.entrySet()) {
+            Set<ProcessorStats> values = entry.getValue();
+            if(values.size() > 1) {
+                System.out.println("------------------------------------------------ Joined up multi-experiment processors with same file items ---------------------------------------");
+                System.out.println("Filename, File items,ExtractCountTerms2PartTask,ProcessLoadTask");
+                double extractCountTermsAvg = 0;
+                double processLoadAvg = 0;
+                String fileItems = entry.getKey().replace(',', ';');
+                for(ProcessorStats stats: values) {
+                    System.out.println(stats.filename + ',' + fileItems + ',' + stats.extractCountTerms + ',' + stats.processLoad);
+                    
+                    extractCountTermsAvg += stats.extractCountTerms;
+                    processLoadAvg += stats.processLoad;
+                }
+                
+                extractCountTermsAvg = extractCountTermsAvg / values.size();
+                processLoadAvg = processLoadAvg / values.size();
+                
+                // averages
+                joinedUp.append(fileItems).append(',').append(extractCountTermsAvg).append(',').append(processLoadAvg).append('\n');
+                
+
+                System.out.println();
+            }
+        }
+        
+        System.out.println(joinedUp.toString());
+        
+        System.out.println();
+        System.out.println("------------------------------------------------ Dictionary ---------------------------------------");
         for(DictionaryStats dictionary: this.dictionaries) {
             System.out.println(DictionaryStats.HEADER);
             System.out.println(dictionary);
@@ -783,6 +849,8 @@ public class LogParser {
         double bigQueryAverageQuery;
         
         double bigQueryInsert;
+        
+        List<String> fileItems = new ArrayList<>();
         
         static final String HEADER = "Filename,ExtractCountTerms2PartTask,AssembleDictionaryTask,ProcessLoadTask,Inferred,Retrieved Bigquery Rows,"
                 + "Bigquery results save time (min),Big Query Table size GB,Big Query Table rows,Bigquery Total Bytes Processed (GB),"
