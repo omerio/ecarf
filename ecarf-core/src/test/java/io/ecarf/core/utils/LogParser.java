@@ -78,9 +78,10 @@ public class LogParser {
     private static final String ASSEMBLE_DICT_TASK = "processor.dictionary.AssembleDictionaryTask";
     private static final String PROCESS_LOAD_TASK = "processor.ProcessLoadTask";
     private static final String LOAD_TASK = "coordinator.LoadBigDataFilesTask";
-    private static final String DO_REASON_TASK = "processor.reason.phase2.DoReasonTask9";
+    private static final String DO_REASON_TASK = "processor.reason.phase2.DoReasonTask";
+    private static final String DO_REASON_TASK1 = "processor.reason.phase3.DoReasonTask";
     
-    private static final String REASON_TASK_SUMMARY = " [main] reason.phase2.DoReasonTask9 - ";
+    private static final String REASON_TASK_SUMMARY = " [main] reason.phase2.DoReasonTask";
     
     private static final String ELAPSED_JOB = "framework.components.Coordinator - TIMER# Job elapsed time:";
     
@@ -190,7 +191,7 @@ public class LogParser {
         } else if(line.indexOf(TIMER + PROCESS_LOAD_TASK) > -1) {
             stats.processLoad = timer;
 
-        } else if(line.indexOf(TIMER + DO_REASON_TASK) > -1) {
+        } else if(line.indexOf(TIMER + DO_REASON_TASK) > -1 || line.indexOf(TIMER + DO_REASON_TASK1) > -1) {
 
             stats.reasonPhase = timer;
 
