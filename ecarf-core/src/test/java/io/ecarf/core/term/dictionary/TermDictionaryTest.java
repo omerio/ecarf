@@ -284,9 +284,25 @@ public class TermDictionaryTest {
             }
         }*/
 
-        testSwetodblpSchemaDecode();
+        //testSwetodblpSchemaDecode();
 
         //cloudex-processor-1456247330660_dictionary.gz
+        TermDictionaryCore dictionary = Utils.objectFromFile("/Users/omerio/Downloads/lubm_dictionary.gz", TermDictionaryCore.class, true, false);
+        
+        System.out.println(dictionary.encode("<http://www.Department0.University0.edu/GraduateCourse0>"));
+        
+            
+            
+            
+        System.out.println("<http://www.Department0.University0.edu/GraduateStudent101> " + 
+            dictionary.encode("<http://www.Department0.University0.edu/GraduateStudent101>"));
+        System.out.println("<http://www.Department0.University0.edu/GraduateStudent124> " + 
+            dictionary.encode("<http://www.Department0.University0.edu/GraduateStudent124>"));
+        System.out.println("<http://www.Department0.University0.edu/GraduateStudent142> " + 
+            dictionary.encode("<http://www.Department0.University0.edu/GraduateStudent142>"));
+        System.out.println("<http://www.Department0.University0.edu/GraduateStudent44> " + 
+            dictionary.encode("<http://www.Department0.University0.edu/GraduateStudent44>"));
+        
     }
 
 
