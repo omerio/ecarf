@@ -100,6 +100,9 @@ public class LogParser {
     
     private static final String FILE_ITEMS = "processor.files.ProcessFilesTask - Processing files: ";
     
+    private static final String DICT_DOWNLOAD = "task.processor.ProcessLoadTask - Loading the dictionary from file: ";
+    private static final String DICT_LOAD = "task.processor.ProcessLoadTask - Dictionary loaded successfully, memory usage: ";
+    
     private EcarfGoogleCloudServiceImpl service;
     
     private Set<String> files = new HashSet<>();
@@ -478,6 +481,18 @@ public class LogParser {
                                 List<String> fileItems = Lists.newArrayList(StringUtils.substringBetween(items, "[", "]").split(", "));
                                 ((ProcessorStats) stats).fileItems.addAll(fileItems);
                             }
+                        
+                        } else if(line.contains(DICT_DOWNLOAD)) {
+                            //task.processor.ProcessLoadTask - Loading the dictionary from file: /tmp/dbpedia_dictionary.kryo.gz, memory usage: 1.8702433556318283GB, timer: 9.671 s
+                            ((ProcessorStats) stats).dictionaryDowload = this.extractAndGetTimer(line, TIMER_PREFIX, true);
+                            double[] values = this.extractAndGetMemoryDictionaryItems(line);
+                            ((ProcessorStats) stats).dictionaryMemBefore = values[0];
+                            
+                        } else if (line.contains(DICT_LOAD)) {
+                            //task.processor.ProcessLoadTask - Dictionary loaded successfully, memory usage: 3.9780617877840996GB, timer: 1.160 min
+                            ((ProcessorStats) stats).dictionaryLoad = this.extractAndGetTimer(line, TIMER_PREFIX);
+                            double[] values = this.extractAndGetMemoryDictionaryItems(line);
+                            ((ProcessorStats) stats).dictionaryMemAfter = values[0];
                         }
 
                     }
@@ -851,11 +866,20 @@ public class LogParser {
         
         double bigQueryInsert;
         
+        double dictionaryDowload;
+        
+        double dictionaryLoad;
+        
+        double dictionaryMemBefore;
+        
+        double dictionaryMemAfter;
+        
         List<String> fileItems = new ArrayList<>();
         
         static final String HEADER = "Filename,ExtractCountTerms2PartTask,AssembleDictionaryTask,ProcessLoadTask,Inferred,Retrieved Bigquery Rows,"
                 + "Bigquery results save time (min),Big Query Table size GB,Big Query Table rows,Bigquery Total Bytes Processed (GB),"
-                + "Node Reasoning Time(sec),8 retries with 10s sleep,Bigquery average Query time (sec),Bigquery Reason insert(min),Reasoning Phase (min)";
+                + "Node Reasoning Time(sec),8 retries with 10s sleep,Bigquery average Query time (sec),Bigquery Reason insert(min),Reasoning Phase (min),"
+                + "Dictionary Download (s), Dictionary Load (min), Dictionary Memory Before (GB), Dictionary Memory After (GB)";
         
         /* (non-Javadoc)
          * @see java.lang.Object#toString()
@@ -875,7 +899,12 @@ public class LogParser {
                     .append(retries).append(',')
                     .append(bigQueryAverageQuery * 60).append(',')
                     .append(bigQueryInsert).append(',')
-                    .append(reasonPhase)
+                    .append(reasonPhase).append(',')
+                    
+                    .append(dictionaryDowload * 60).append(',')
+                    .append(dictionaryLoad).append(',')
+                    .append(dictionaryMemBefore).append(',')
+                    .append(dictionaryMemAfter)
                     .toString();
         }
 
