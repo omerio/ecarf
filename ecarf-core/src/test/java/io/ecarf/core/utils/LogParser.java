@@ -103,6 +103,14 @@ public class LogParser {
     private static final String DICT_DOWNLOAD = "task.processor.ProcessLoadTask - Loading the dictionary from file: ";
     private static final String DICT_LOAD = "task.processor.ProcessLoadTask - Dictionary loaded successfully, memory usage: ";
     
+    private static final String BIGQUERY_ROWS = " rows from BigQuery for jobId: ";
+    
+    private static final String DOWNLOADING = "[main] impl.google.GoogleCloudServiceImpl - Downloading ";
+    
+    private static final String INSERTING = "[main] reason.phase2.DoReasonTask9 - Inserting ";
+    private static final String INSERTING8 = "[main] reason.phase2.DoReasonTask8 - Inserting ";
+    private static final String BIGQUERY_INF = ", inferred triples into Big Data table for ";
+    
     private EcarfGoogleCloudServiceImpl service;
     
     private Set<String> files = new HashSet<>();
@@ -114,6 +122,10 @@ public class LogParser {
     private List<ProcessorStats> processors = new ArrayList<>();
     
     private List<DictionaryStats> dictionaries = new ArrayList<>();
+    
+    private List<Rows> bigQueryExport = new ArrayList<>();
+    
+    private List<Rows> bigQueryImport = new ArrayList<>();
     
     
     
@@ -406,13 +418,16 @@ public class LogParser {
             //System.out.println(file);
             String line = null;
             
+            int rows = 0;
+            int inferred = 0;
+            
             try (BufferedReader r = new BufferedReader(new FileReader(file))) {
                 do {
                     
                     line = r.readLine();
                     
                     if(line != null) {
-
+                        
                         if(line.indexOf(TIMER) > -1) {
                             this.parseTaskTimer(stats, line, coordinator);
                         
@@ -425,7 +440,12 @@ public class LogParser {
                         } else if(line.indexOf(BIGQUERY_SAVE) > -1) {
                             bigQuerySave.add(this.extractAndGetTimer(line, BIGQUERY_SAVE, true));
                         
+                        } else if(line.contains(BIGQUERY_ROWS)) {
+                            
+                            rows = Integer.parseInt(StringUtils.substringBetween(line, DOWNLOADING, BIGQUERY_ROWS));
+                            
                         } else if(line.indexOf(BIGQUERY_JOB_ELAPSED) > -1) {
+                            double value = this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true);
                             r.readLine();
                             String line1 = r.readLine();
                             if(line1 != null && line1.indexOf("\"configuration\" : {") > -1) {
@@ -433,7 +453,12 @@ public class LogParser {
                                 line1 = r.readLine();
                                 
                                 if(line1.indexOf("\"load\" : {") > -1) {
-                                    bigQueryLoad.add(this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true));
+                                    bigQueryLoad.add(value);
+                                    
+                                    if(inferred > 0) {
+                                        this.bigQueryImport.add(new Rows(inferred, value));
+                                        inferred = 0;
+                                    }
                                     
                                 } else if(line1.indexOf("\"query\" : {") > -1) {
                                     
@@ -445,7 +470,7 @@ public class LogParser {
                                     } while (line1 != null && !line1.contains("\"recordsWritten\" :"));
                                     
                                     if(line1 != null && !line1.contains("\"recordsWritten\" : \"0\",")) {
-                                        double value = this.extractAndGetTimer(line, BIGQUERY_JOB_ELAPSED, true);
+                                        
                                         if(value > 0) {
                                             bigQueryQueriesElapsed.add(value);
                                         }
@@ -453,6 +478,10 @@ public class LogParser {
                                     
                                 } else if(line1.indexOf("\"extract\" : {") > -1) {
                                     
+                                    if(rows > 0) {
+                                        this.bigQueryExport.add(new Rows(rows, value));
+                                        rows = 0;
+                                    }
                                 }
                             }
                         } else if(line.indexOf(ASSEMBLE_DICTIONARY_SUBTASK) > -1 || 
@@ -493,6 +522,16 @@ public class LogParser {
                             ((ProcessorStats) stats).dictionaryLoad = this.extractAndGetTimer(line, TIMER_PREFIX);
                             double[] values = this.extractAndGetMemoryDictionaryItems(line);
                             ((ProcessorStats) stats).dictionaryMemAfter = values[0];
+                        }
+                        
+                        if(line.contains(BIGQUERY_INF)) {
+                            //System.out.println(line);
+                            if(line.contains("DoReasonTask8")) {
+                                inferred = Integer.parseInt(StringUtils.substringBetween(line, INSERTING8, BIGQUERY_INF));
+                            } else {
+                                inferred = Integer.parseInt(StringUtils.substringBetween(line, INSERTING, BIGQUERY_INF));
+                            }
+
                         }
 
                     }
@@ -661,6 +700,20 @@ public class LogParser {
             //System.out.println();
             System.out.print(dictionary.getMemoryStatsString());
             System.out.println();
+        }
+        
+        System.out.println("------------------------------------------------ BigQuery Export Stats ---------------------------------------");
+        
+        System.out.println("Rows,Time");
+        for(Rows rows: this.bigQueryExport) {
+            System.out.println(rows.rows + "," + (int) (rows.time * 60));
+        }
+        
+        System.out.println("------------------------------------------------ BigQuery Import Stats ---------------------------------------");
+        
+        System.out.println("Rows,Time");
+        for(Rows rows: this.bigQueryImport) {
+            System.out.println(rows.rows + "," + (int) (rows.time * 60));
         }
     }
 
@@ -847,6 +900,19 @@ public class LogParser {
         
     }
     
+    public class Rows {
+        int rows;
+        double time;
+        /**
+         * @param rows
+         * @param time
+         */
+        public Rows(int rows, double time) {
+            super();
+            this.rows = rows;
+            this.time = time;
+        }
+    }
     
     public class ProcessorStats extends Stats {
                 
