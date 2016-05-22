@@ -1,5 +1,5 @@
 # ecarf
-Elastic Cloud Based RDF Management Framework 
+Elastic Cloud Based RDF Triple Store 
 
 The current implementation of ECARF provides the following features:
 
