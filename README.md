@@ -1,4 +1,6 @@
 # ecarf
+
+[![Join the chat at https://gitter.im/omerio/ecarf](https://badges.gitter.im/omerio/ecarf.svg)](https://gitter.im/omerio/ecarf?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Elastic Cloud Based RDF Triple Store 
 
 The current implementation of ECARF provides the following features:
